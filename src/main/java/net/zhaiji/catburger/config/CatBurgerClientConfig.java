@@ -6,7 +6,7 @@ public class CatBurgerClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.DoubleValue SCALE = BUILDER
-            .comment("Size and position of the cat burger relative to the wearer's eyes; offsets follow the orbit direction set by spring motion, rotation drag or view yaw, not the cat burger's facing")
+            .comment("Size and position of the cat burger relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the cat burger's facing")
             .push("Position")
             .comment("Render scale of the cat burger")
             .defineInRange(
@@ -73,20 +73,13 @@ public class CatBurgerClientConfig {
                     400d
             );
 
-    public static final ModConfigSpec.BooleanValue DRAG_ENABLED = BUILDER
+    public static final ModConfigSpec.DoubleValue FOLLOW_SPEED = BUILDER
             .pop()
             .comment("Trailing behind the wearer while moving")
-            .push("PositionDrag")
-            .comment("Let the cat burger trail behind while the wearer moves")
-            .define(
-                    "dragEnabled",
-                    true
-            );
-
-    public static final ModConfigSpec.DoubleValue DRAG_STRENGTH = BUILDER
-            .comment("How quickly the cat burger catches up, higher values give a shorter trail")
+            .push("FollowDelay")
+            .comment("How quickly the cat burger catches up, higher values give a shorter trail, 1.0 follows instantly")
             .defineInRange(
-                    "dragStrength",
+                    "followSpeed",
                     0.2,
                     0.01,
                     1.0
@@ -101,81 +94,67 @@ public class CatBurgerClientConfig {
                     10.0
             );
 
-    public static final ModConfigSpec.BooleanValue ROTATION_DRAG_ENABLED = BUILDER
-            .pop()
-            .comment("How the cat burger orbits and faces when the wearer turns or looks around")
-            .push("Turning")
-            .comment("Let the cat burger orbit after the wearer's head turns with a delay")
-            .define(
-                    "rotationDragEnabled",
-                    true
-            );
-
-    public static final ModConfigSpec.DoubleValue ROTATION_DRAG_SMOOTHNESS = BUILDER
-            .comment("How quickly the orbit catches up with the head, higher is faster")
-            .defineInRange(
-                    "rotationDragSmoothness",
-                    0.2,
-                    0.01,
-                    1.0
-            );
-
-    public static final ModConfigSpec.BooleanValue ROTATION_DRAG_USE_WRAP_DEGREES = BUILDER
-            .comment("Catch up along the shortest arc instead of following every full turn")
-            .define(
-                    "rotationDragUseWrapDegrees",
-                    false
-            );
-
-    public static final ModConfigSpec.BooleanValue ORIENTATION_DRAG_ENABLED = BUILDER
-            .comment("Let the cat burger's facing follow the view or gaze direction with a delay, for every wearer")
-            .define(
-                    "orientationDragEnabled",
-                    true
-            );
-
-    public static final ModConfigSpec.DoubleValue ORIENTATION_DRAG_SMOOTHNESS = BUILDER
-            .comment("How quickly the facing catches up with its target, higher is faster, 1.0 follows instantly")
-            .defineInRange(
-                    "orientationDragSmoothness",
-                    0.4,
-                    0.01,
-                    1.0
-            );
-
-    public static final ModConfigSpec.BooleanValue OWN_VIEW_GAZE_ENABLED = BUILDER
-            .comment("Aim the cat burger worn by the camera entity, usually yourself, at the crosshair hit point; cat burgers worn by others are unaffected")
-            .define(
-                    "ownViewGazeEnabled",
-                    true
-            );
-
-    public static final ModConfigSpec.BooleanValue SPRING_ENABLED = BUILDER
-            .pop()
-            .comment("Spring motion for orbiting, overrides rotation drag when enabled")
-            .push("Spring")
+    public static final ModConfigSpec.BooleanValue SPRING_MOTION_ENABLED = BUILDER
+            .comment("Spring motion for orbiting, overrides rotation when enabled")
+            .push("SpringMotion")
             .comment("Orbit with spring motion that can overshoot and bounce back")
             .define(
-                    "springEnabled",
+                    "springMotionEnabled",
                     false
             );
 
-    public static final ModConfigSpec.DoubleValue SPRING_STIFFNESS = BUILDER
+    public static final ModConfigSpec.DoubleValue STIFFNESS = BUILDER
             .comment("Spring stiffness, higher is snappier")
             .defineInRange(
-                    "springStiffness",
+                    "stiffness",
                     0.9,
                     0.1,
                     2.0
             );
 
-    public static final ModConfigSpec.DoubleValue SPRING_DAMPING = BUILDER
+    public static final ModConfigSpec.DoubleValue DAMPING = BUILDER
             .comment("Fraction of spring speed kept each tick, lower settles faster")
             .defineInRange(
-                    "springDamping",
+                    "damping",
                     0.7,
                     0.1,
                     0.99
+            );
+
+    public static final ModConfigSpec.DoubleValue ROTATION_FOLLOW_SPEED = BUILDER
+            .pop()
+            .pop()
+            .comment("How the cat burger orbits and faces when the wearer turns or looks around")
+            .push("Turning")
+            .comment("How quickly the orbit catches up with the head, higher is faster, 1.0 follows instantly")
+            .defineInRange(
+                    "rotationFollowSpeed",
+                    0.2,
+                    0.01,
+                    1.0
+            );
+
+    public static final ModConfigSpec.BooleanValue USE_SHORTEST_ARC = BUILDER
+            .comment("Catch up along the shortest arc instead of following every full turn")
+            .define(
+                    "useShortestArc",
+                    false
+            );
+
+    public static final ModConfigSpec.DoubleValue ORIENTATION_FOLLOW_SPEED = BUILDER
+            .comment("How quickly the facing catches up with its target, higher is faster, 1.0 follows instantly")
+            .defineInRange(
+                    "orientationFollowSpeed",
+                    0.5,
+                    0.01,
+                    1.0
+            );
+
+    public static final ModConfigSpec.BooleanValue GAZE_AT_VIEW_TARGET = BUILDER
+            .comment("Aim the cat burger worn by the camera entity, usually yourself, at the crosshair hit point; cat burgers worn by others are unaffected")
+            .define(
+                    "gazeAtViewTarget",
+                    true
             );
 
     public static final ModConfigSpec SPEC = BUILDER.pop().build();

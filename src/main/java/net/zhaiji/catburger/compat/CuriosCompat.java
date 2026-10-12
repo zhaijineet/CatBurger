@@ -5,7 +5,7 @@ import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.zhaiji.catburger.equipment.CatBurgerEquipment.WornCatBurger;
-import net.zhaiji.catburger.init.InitItem;
+import net.zhaiji.catburger.init.CatBurgerItems;
 import top.theillusivec4.curios.api.CuriosApi;
 import top.theillusivec4.curios.api.CuriosCapability;
 import top.theillusivec4.curios.api.SlotContext;
@@ -22,7 +22,7 @@ public final class CuriosCompat {
     }
 
     public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-        event.registerItem(CuriosCapability.ITEM, (itemStack, context) -> new CatBurgerCurio(itemStack), InitItem.CAT_BURGER);
+        event.registerItem(CuriosCapability.ITEM, (itemStack, context) -> new CatBurgerCurio(itemStack), CatBurgerItems.CAT_BURGER);
     }
 
     /**
@@ -30,7 +30,7 @@ public final class CuriosCompat {
      */
     public static Optional<WornCatBurger> findInCurios(LivingEntity livingEntity) {
         return CuriosApi.getCuriosInventory(livingEntity)
-                .flatMap(curiosItemHandler -> curiosItemHandler.findFirstCurio(InitItem.CAT_BURGER.get()))
+                .flatMap(curiosItemHandler -> curiosItemHandler.findFirstCurio(CatBurgerItems.CAT_BURGER.get()))
                 .map(slotResult -> new WornCatBurger(slotResult.stack(), slotResult.slotContext().visible()));
     }
 

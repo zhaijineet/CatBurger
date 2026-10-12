@@ -10,7 +10,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
 import net.zhaiji.catburger.CatBurger;
-import net.zhaiji.catburger.init.InitItem;
+import net.zhaiji.catburger.init.CatBurgerItems;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -21,7 +21,7 @@ public class RecipeProvider extends net.minecraft.data.recipes.RecipeProvider im
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        SingleItemRecipeBuilder.stonecutting(Ingredient.of(Items.TOTEM_OF_UNDYING), RecipeCategory.MISC, InitItem.CAT_BURGER.get())
+        SingleItemRecipeBuilder.stonecutting(Ingredient.of(Items.TOTEM_OF_UNDYING), RecipeCategory.MISC, CatBurgerItems.CAT_BURGER.get())
                 .unlockedBy("has_totem", has(Items.TOTEM_OF_UNDYING))
                 .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, "cat_burger"));
     }

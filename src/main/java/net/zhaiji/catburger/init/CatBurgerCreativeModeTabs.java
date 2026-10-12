@@ -9,7 +9,7 @@ import net.zhaiji.catburger.CatBurger;
 
 import java.util.function.Supplier;
 
-public class InitCreativeModeTab {
+public class CatBurgerCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TAB = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, CatBurger.MOD_ID);
 
     public static final String CATBURGER_TAB_TRANSLATABLE = "creativetab.catburger.catburger_tab";
@@ -17,10 +17,10 @@ public class InitCreativeModeTab {
     public static final Supplier<CreativeModeTab> CATBURGER_TAB = CREATIVE_MODE_TAB.register(
             "catburger_tab",
             () -> CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(InitItem.CAT_BURGER.get()))
+                    .icon(() -> new ItemStack(CatBurgerItems.CAT_BURGER.get()))
                     .title(Component.translatable(CATBURGER_TAB_TRANSLATABLE))
                     .displayItems(((itemDisplayParameters, output) -> {
-                        output.accept(InitItem.CAT_BURGER.get());
+                        output.accept(CatBurgerItems.CAT_BURGER.get());
                     }))
                     .build()
     );

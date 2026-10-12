@@ -5,7 +5,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.zhaiji.catburger.init.InitItem;
+import net.zhaiji.catburger.init.CatBurgerItems;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,7 +31,7 @@ public abstract class CustomHeadLayerMixin {
             float headPitch,
             CallbackInfo ci
     ) {
-        if (livingEntity.getItemBySlot(EquipmentSlot.HEAD).is(InitItem.CAT_BURGER.get())) {
+        if (livingEntity.getItemBySlot(EquipmentSlot.HEAD).is(CatBurgerItems.CAT_BURGER.get())) {
             ci.cancel();
         }
     }

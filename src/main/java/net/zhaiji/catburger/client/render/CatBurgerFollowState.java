@@ -106,46 +106,35 @@ public final class CatBurgerFollowState {
 
         targetYaw += Mth.wrapDegrees(headYaw - lastHeadYaw);
 
-        if (CatBurgerClientConfig.DRAG_ENABLED.get()) {
-            double dragStrength = CatBurgerClientConfig.DRAG_STRENGTH.get();
-            double motionX = entityX - lastEntityX;
-            double motionY = entityY - lastEntityY;
-            double motionZ = entityZ - lastEntityZ;
-            double motionLength = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
-            double targetOffsetX = 0;
-            double targetOffsetY = 0;
-            double targetOffsetZ = 0;
-            if (motionLength > MIN_MOTION_LENGTH) {
-                double lagDistance = getLagDistance(dragStrength, motionLength);
-                targetOffsetX = -motionX / motionLength * lagDistance;
-                targetOffsetY = -motionY / motionLength * lagDistance;
-                targetOffsetZ = -motionZ / motionLength * lagDistance;
-            }
-
-            offsetX += (targetOffsetX - offsetX) * dragStrength;
-            offsetY += (targetOffsetY - offsetY) * dragStrength;
-            offsetZ += (targetOffsetZ - offsetZ) * dragStrength;
-            anchorHeight += (targetAnchorHeight - anchorHeight) * dragStrength;
-        } else {
-            offsetX = 0;
-            offsetY = 0;
-            offsetZ = 0;
-            anchorHeight = targetAnchorHeight;
+        double followSpeed = CatBurgerClientConfig.FOLLOW_SPEED.get();
+        double motionX = entityX - lastEntityX;
+        double motionY = entityY - lastEntityY;
+        double motionZ = entityZ - lastEntityZ;
+        double motionLength = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        double targetOffsetX = 0;
+        double targetOffsetY = 0;
+        double targetOffsetZ = 0;
+        if (motionLength > MIN_MOTION_LENGTH) {
+            double lagDistance = getLagDistance(followSpeed, motionLength);
+            targetOffsetX = -motionX / motionLength * lagDistance;
+            targetOffsetY = -motionY / motionLength * lagDistance;
+            targetOffsetZ = -motionZ / motionLength * lagDistance;
         }
 
-        if (CatBurgerClientConfig.ROTATION_DRAG_ENABLED.get()) {
-            float angleDiff = CatBurgerClientConfig.ROTATION_DRAG_USE_WRAP_DEGREES.get()
-                    ? Mth.wrapDegrees(targetYaw - dragYaw)
-                    : targetYaw - dragYaw;
-            dragYaw += angleDiff * CatBurgerClientConfig.ROTATION_DRAG_SMOOTHNESS.get().floatValue();
-        } else {
-            dragYaw = targetYaw;
-        }
+        offsetX += (targetOffsetX - offsetX) * followSpeed;
+        offsetY += (targetOffsetY - offsetY) * followSpeed;
+        offsetZ += (targetOffsetZ - offsetZ) * followSpeed;
+        anchorHeight += (targetAnchorHeight - anchorHeight) * followSpeed;
 
-        if (CatBurgerClientConfig.SPRING_ENABLED.get()) {
+        float angleDiff = CatBurgerClientConfig.USE_SHORTEST_ARC.get()
+                ? Mth.wrapDegrees(targetYaw - dragYaw)
+                : targetYaw - dragYaw;
+        dragYaw += angleDiff * CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get().floatValue();
+
+        if (CatBurgerClientConfig.SPRING_MOTION_ENABLED.get()) {
             float displacement = targetYaw - springYaw;
-            float springForce = CatBurgerClientConfig.SPRING_STIFFNESS.get().floatValue() * displacement;
-            springVelocity = springVelocity * CatBurgerClientConfig.SPRING_DAMPING.get().floatValue() + springForce;
+            float springForce = CatBurgerClientConfig.STIFFNESS.get().floatValue() * displacement;
+            springVelocity = springVelocity * CatBurgerClientConfig.DAMPING.get().floatValue() + springForce;
             springYaw += springVelocity;
         } else {
             springYaw = targetYaw;
@@ -174,12 +163,12 @@ public final class CatBurgerFollowState {
             return;
         }
 
-        float orientationDragSmoothness = !snap && CatBurgerClientConfig.ORIENTATION_DRAG_ENABLED.get()
-                ? CatBurgerClientConfig.ORIENTATION_DRAG_SMOOTHNESS.get().floatValue()
-                : 1.0F;
-        orientationYaw += Mth.wrapDegrees(target.yaw() - orientationYaw) * orientationDragSmoothness;
-        orientationPitch += (target.pitch() - orientationPitch) * orientationDragSmoothness;
-        orientationRoll += Mth.wrapDegrees(target.roll() - orientationRoll) * orientationDragSmoothness;
+        float orientationFollowSpeed = snap
+                ? 1.0F
+                : CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get().floatValue();
+        orientationYaw += Mth.wrapDegrees(target.yaw() - orientationYaw) * orientationFollowSpeed;
+        orientationPitch += (target.pitch() - orientationPitch) * orientationFollowSpeed;
+        orientationRoll += Mth.wrapDegrees(target.roll() - orientationRoll) * orientationFollowSpeed;
         if (snap) {
             // 长时间跳帧后直接落到目标，不从过期朝向插值过来
             prevOrientationYaw = orientationYaw;
@@ -189,23 +178,19 @@ public final class CatBurgerFollowState {
     }
 
     /**
-     * 取环绕偏航：弹簧优先，其次转向延迟，都未启用时直接用视线偏航。
+     * 取环绕偏航：弹簧运动优先，否则用转向延迟。
      */
-    private static float pickUsedYaw(float springYaw, float dragYaw, float viewYaw) {
-        if (CatBurgerClientConfig.SPRING_ENABLED.get()) {
+    private static float pickUsedYaw(float springYaw, float dragYaw) {
+        if (CatBurgerClientConfig.SPRING_MOTION_ENABLED.get()) {
             return springYaw;
         }
-        if (CatBurgerClientConfig.ROTATION_DRAG_ENABLED.get()) {
-            return dragYaw;
-        }
-        return viewYaw;
+        return dragYaw;
     }
 
     public CatBurgerFollowTransform resolve(LivingEntity livingEntity, float partialTicks) {
         float usedYaw = pickUsedYaw(
                 Mth.lerp(partialTicks, prevSpringYaw, springYaw),
-                Mth.lerp(partialTicks, prevDragYaw, dragYaw),
-                livingEntity.getViewYRot(partialTicks)
+                Mth.lerp(partialTicks, prevDragYaw, dragYaw)
         );
 
         return composeTransform(
@@ -237,7 +222,7 @@ public final class CatBurgerFollowState {
         CatBurgerFollowTransform tickTransform = composeTransform(
                 livingEntity,
                 1.0F,
-                pickUsedYaw(springYaw, dragYaw, livingEntity.getViewYRot(1.0F)),
+                pickUsedYaw(springYaw, dragYaw),
                 offsetX,
                 offsetY,
                 offsetZ,
@@ -342,14 +327,14 @@ public final class CatBurgerFollowState {
     }
 
     /**
-     * 有界滞后距离：低速段斜率取位置追随的稳态滞后比 (1 - dragStrength) / dragStrength，高速段平滑饱和到 maxLagDistance。
+     * 有界滞后距离：低速段斜率取位置追随的稳态滞后比 (1 - followSpeed) / followSpeed，高速段平滑饱和到 maxLagDistance。
      */
-    private static double getLagDistance(double dragStrength, double motionLength) {
+    private static double getLagDistance(double followSpeed, double motionLength) {
         double maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
         if (maxLagDistance <= 0) {
             return 0;
         }
-        double lagSpeedRatio = (1 - dragStrength) / dragStrength;
+        double lagSpeedRatio = (1 - followSpeed) / followSpeed;
         return maxLagDistance * Math.tanh(lagSpeedRatio * motionLength / maxLagDistance);
     }
 
@@ -384,7 +369,7 @@ public final class CatBurgerFollowState {
      */
     @Nullable
     private static GazeTarget resolveGazeTarget(LivingEntity livingEntity) {
-        if (!CatBurgerClientConfig.OWN_VIEW_GAZE_ENABLED.get()) {
+        if (!CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get()) {
             return null;
         }
 

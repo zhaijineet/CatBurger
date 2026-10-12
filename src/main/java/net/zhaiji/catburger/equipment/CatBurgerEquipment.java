@@ -5,7 +5,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.zhaiji.catburger.compat.CompatManager;
 import net.zhaiji.catburger.compat.CuriosCompat;
-import net.zhaiji.catburger.init.InitItem;
+import net.zhaiji.catburger.init.CatBurgerItems;
 
 import java.util.Optional;
 
@@ -21,7 +21,7 @@ public final class CatBurgerEquipment {
      */
     public static Optional<WornCatBurger> find(LivingEntity livingEntity) {
         ItemStack headStack = livingEntity.getItemBySlot(EquipmentSlot.HEAD);
-        if (headStack.is(InitItem.CAT_BURGER.get())) {
+        if (headStack.is(CatBurgerItems.CAT_BURGER.get())) {
             return Optional.of(new WornCatBurger(headStack, true));
         }
 

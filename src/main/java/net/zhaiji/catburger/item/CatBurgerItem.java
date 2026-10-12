@@ -57,19 +57,19 @@ public class CatBurgerItem extends Item implements Equipable {
     }
 
     private static void appendEffectLines(List<Component> tooltipComponents) {
-        int foodLevelRestorationInterval = CatBurgerCommonConfig.FOOD_LEVEL_RESTORATION_INTERVAL.get();
-        if (foodLevelRestorationInterval > 0) {
+        int interval = CatBurgerCommonConfig.INTERVAL.get();
+        if (interval > 0) {
             tooltipComponents.add(effectLine(Component.translatable(
                     KEY_PREFIX + "effect.food_level_restoration",
-                    formatNumber(foodLevelRestorationInterval / 20.0),
-                    formatNumber(CatBurgerCommonConfig.FOOD_LEVEL_RESTORATION_AMOUNT.get()),
-                    formatNumber(CatBurgerCommonConfig.FOOD_LEVEL_RESTORATION_LIMIT.get())
+                    formatNumber(interval / 20.0),
+                    formatNumber(CatBurgerCommonConfig.AMOUNT.get()),
+                    formatNumber(CatBurgerCommonConfig.LIMIT.get())
             )));
         } else {
             tooltipComponents.add(effectLine(Component.translatable(
                     KEY_PREFIX + "effect.food_level_restoration.every_tick",
-                    formatNumber(CatBurgerCommonConfig.FOOD_LEVEL_RESTORATION_AMOUNT.get()),
-                    formatNumber(CatBurgerCommonConfig.FOOD_LEVEL_RESTORATION_LIMIT.get())
+                    formatNumber(CatBurgerCommonConfig.AMOUNT.get()),
+                    formatNumber(CatBurgerCommonConfig.LIMIT.get())
             )));
         }
 
@@ -78,28 +78,28 @@ public class CatBurgerItem extends Item implements Equipable {
             return;
         }
 
-        Component healthComponent = CatBurgerCommonConfig.DEATH_PROTECTION_USE_HEALTH_PERCENTAGE.get()
+        Component healthComponent = CatBurgerCommonConfig.USE_HEALTH_PERCENTAGE.get()
                 ? Component.translatable(
                         KEY_PREFIX + "effect.death_protection.restore_health_percentage",
-                        formatNumber(CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_HEALTH_PERCENTAGE.get())
+                        formatNumber(CatBurgerCommonConfig.RESTORE_HEALTH_PERCENTAGE.get())
                 )
                 : Component.translatable(
                         KEY_PREFIX + "effect.death_protection.restore_health",
-                        formatNumber(CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_HEALTH.get())
+                        formatNumber(CatBurgerCommonConfig.RESTORE_HEALTH.get())
                 );
         Component foodLevelComponent = Component.translatable(
                 KEY_PREFIX + "effect.death_protection.restore_food_level",
-                formatNumber(CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_FOOD_LEVEL.get()),
-                formatNumber(CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_SATURATION.get())
+                formatNumber(CatBurgerCommonConfig.RESTORE_FOOD_LEVEL.get()),
+                formatNumber(CatBurgerCommonConfig.RESTORE_SATURATION.get())
         );
         tooltipComponents.add(effectLine(Component.empty().append(healthComponent).append(foodLevelComponent)));
 
         tooltipComponents.add(effectLine(Component.translatable(
                 KEY_PREFIX + "effect.death_protection.cooldown",
-                formatNumber(CatBurgerCommonConfig.DEATH_PROTECTION_COOLDOWN.get() / 20.0)
+                formatNumber(CatBurgerCommonConfig.COOLDOWN.get() / 20.0)
         )));
 
-        if (CatBurgerCommonConfig.WAKE_UP_RESETS_DEATH_PROTECTION_COOLDOWN.get()) {
+        if (CatBurgerCommonConfig.RESET_COOLDOWN_ON_WAKE_UP.get()) {
             tooltipComponents.add(effectLine(Component.translatable(KEY_PREFIX + "effect.death_protection.wake_up")));
         }
     }

@@ -6,7 +6,7 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.item.CatBurgerItem;
 
-public class InitItem {
+public class CatBurgerItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(CatBurger.MOD_ID);
 
     public static final DeferredItem<Item> CAT_BURGER = ITEMS.register(
