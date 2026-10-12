@@ -1,12 +1,32 @@
 package net.zhaiji.catburger.client.event;
 
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.zhaiji.catburger.client.render.CatBurgerRenderer;
-import net.zhaiji.catburger.init.InitItem;
-import top.theillusivec4.curios.api.client.CuriosRendererRegistry;
+import net.zhaiji.catburger.equipment.CatBurgerEquipment;
+import net.zhaiji.catburger.equipment.CatBurgerEquipment.WornCatBurger;
+
+import java.util.Optional;
 
 public class ClientEventHandler {
-    public static void handlerFMLClientSetupEvent(FMLClientSetupEvent event) {
-        CuriosRendererRegistry.register(InitItem.CAT_BURGER.get(), CatBurgerRenderer::new);
+    public static void handlerRenderLivingEvent$Post(RenderLivingEvent.Post event) {
+        LivingEntity livingEntity = event.getEntity();
+        if (livingEntity.isSpectator()) {
+            return;
+        }
+
+        Optional<WornCatBurger> wornCatBurgerOptional = CatBurgerEquipment.find(livingEntity);
+        if (wornCatBurgerOptional.isEmpty() || !wornCatBurgerOptional.get().renderable()) {
+            return;
+        }
+
+        CatBurgerRenderer.render(
+                livingEntity,
+                wornCatBurgerOptional.get().itemStack(),
+                event.getPoseStack(),
+                event.getMultiBufferSource(),
+                event.getPackedLight(),
+                event.getPartialTick()
+        );
     }
 }

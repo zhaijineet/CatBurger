@@ -4,9 +4,12 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeCategory;
 import net.minecraft.data.recipes.RecipeOutput;
-import net.minecraft.data.recipes.ShapedRecipeBuilder;
+import net.minecraft.data.recipes.SingleItemRecipeBuilder;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.neoforged.neoforge.common.conditions.IConditionBuilder;
+import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.init.InitItem;
 
 import java.util.concurrent.CompletableFuture;
@@ -18,14 +21,8 @@ public class RecipeProvider extends net.minecraft.data.recipes.RecipeProvider im
 
     @Override
     protected void buildRecipes(RecipeOutput recipeOutput) {
-        ShapedRecipeBuilder.shaped(RecipeCategory.MISC, InitItem.CAT_BURGER.get())
-                .pattern(" A ")
-                .pattern("BCB")
-                .pattern(" A ")
-                .define('A', Items.BREAD)
-                .define('B', Items.TOTEM_OF_UNDYING)
-                .define('C', Items.COOKED_BEEF)
+        SingleItemRecipeBuilder.stonecutting(Ingredient.of(Items.TOTEM_OF_UNDYING), RecipeCategory.MISC, InitItem.CAT_BURGER.get())
                 .unlockedBy("has_totem", has(Items.TOTEM_OF_UNDYING))
-                .save(recipeOutput);
+                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, "cat_burger"));
     }
 }

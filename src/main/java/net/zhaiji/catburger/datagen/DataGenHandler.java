@@ -13,7 +13,10 @@ public class DataGenHandler {
         PackOutput packOutput = generator.getPackOutput();
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
-        // Recipe
         generator.addProvider(event.includeServer(), new RecipeProvider(packOutput, lookupProvider));
+
+        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.EN_US));
+        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.ZH_CN));
+        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.JA_JP));
     }
 }

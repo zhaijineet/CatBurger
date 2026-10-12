@@ -1,133 +1,107 @@
 package net.zhaiji.catburger.config;
 
-import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class CatBurgerCommonConfig {
-    public static boolean totemEffectActive;
-    public static boolean wakeUpCanResetCooldown;
-    public static int totemCooldown;
-    public static int curiosCooldown;
-    public static int foodRestorationFromCurios;
-    public static int foodMaxRestoration;
-    public static boolean usePercentageHealthRestoration;
-    public static double percentageHealthRestoration;
-    public static int healthRestorationFromTotem;
-    public static int foodRestorationFromTotem;
-    public static int saturationRestorationFromTotem;
+    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder()
-            .comment("config")
-            .push("Config");
-
-    private static final ModConfigSpec.BooleanValue TOTEM_EFFECT_ACTIVE = BUILDER
-            .comment("Enable CatBurger totem effect")
+    public static final ModConfigSpec.BooleanValue DEATH_PROTECTION_ENABLED = BUILDER
+            .comment("Death protection while a cat burger is worn")
+            .push("DeathProtection")
+            .comment("Trigger death protection when the wearer takes fatal damage")
             .define(
-                    "active",
+                    "deathProtectionEnabled",
                     true
             );
 
-    private static final ModConfigSpec.BooleanValue WAKE_UP_CAN_RESET_COOLDOWN = BUILDER
-            .comment("Reset totem cooldown when waking up from bed")
-            .define(
-                    "wakeUpCanResetCooldown",
-                    true
-            );
-
-    private static final ModConfigSpec.IntValue TOTEM_COOLDOWN_VALUE = BUILDER
-            .comment("Totem effect cooldown in ticks")
+    public static final ModConfigSpec.IntValue DEATH_PROTECTION_COOLDOWN = BUILDER
+            .comment("Ticks to wait before death protection can trigger again")
             .defineInRange(
-                    "totemCooldown",
+                    "deathProtectionCooldown",
                     36000,
                     0,
                     Integer.MAX_VALUE
             );
 
-    private static final ModConfigSpec.IntValue CURIOS_COOLDOWN_VALUE = BUILDER
-            .comment("Curios effect cooldown in ticks")
-            .defineInRange(
-                    "curiosCooldown",
-                    1200,
-                    0,
-                    Integer.MAX_VALUE
-            );
-
-    private static final ModConfigSpec.IntValue FOOD_RESTORATION_VALUE = BUILDER
-            .comment("Hunger value restored by Curios effect")
-            .defineInRange(
-                    "foodRestorationFromCurios",
-                    1,
-                    0,
-                    20
-            );
-
-    private static final ModConfigSpec.IntValue FOOD_MAX_RESTORATION = BUILDER
-            .comment("Maximum hunger value that can be restored by Curios")
-            .defineInRange(
-                    "foodMaxRestoration",
-                    18,
-                    1,
-                    20
-            );
-
-    private static final ModConfigSpec.BooleanValue USE_PERCENTAGE_HEALTH_RESTORATION = BUILDER
-            .comment("Use percentage-based health restoration (mutually exclusive with fixed value mode)")
+    public static final ModConfigSpec.BooleanValue DEATH_PROTECTION_USE_HEALTH_PERCENTAGE = BUILDER
+            .comment("When enabled, health is restored as a percentage of max health, otherwise to a fixed value")
             .define(
-                    "usePercentageHealthRestoration",
+                    "deathProtectionUseHealthPercentage",
                     true
             );
 
-    private static final ModConfigSpec.DoubleValue PERCENTAGE_HEALTH_RESTORATION = BUILDER
-            .comment("Health restoration percentage based on max health (only effective when percentage mode is enabled)")
+    public static final ModConfigSpec.DoubleValue DEATH_PROTECTION_RESTORE_HEALTH_PERCENTAGE = BUILDER
+            .comment("In percentage mode, health is restored to this percentage of max health")
             .defineInRange(
-                    "percentageHealthRestoration",
+                    "deathProtectionRestoreHealthPercentage",
                     100.0,
                     0.0,
                     100.0
             );
 
-    private static final ModConfigSpec.IntValue HEALTH_VALUE = BUILDER
-            .comment("Health points restored when totem triggers")
+    public static final ModConfigSpec.IntValue DEATH_PROTECTION_RESTORE_HEALTH = BUILDER
+            .comment("In fixed value mode, health is restored to this value")
             .defineInRange(
-                    "healthRestorationFromTotem",
+                    "deathProtectionRestoreHealth",
                     20,
                     0,
                     Integer.MAX_VALUE
             );
 
-    private static final ModConfigSpec.IntValue FOOD_VALUE = BUILDER
-            .comment("Hunger value restored when totem triggers")
+    public static final ModConfigSpec.IntValue DEATH_PROTECTION_RESTORE_FOOD_LEVEL = BUILDER
+            .comment("Food level is restored to this value when death protection triggers")
             .defineInRange(
-                    "foodRestorationFromTotem",
+                    "deathProtectionRestoreFoodLevel",
                     20,
                     0,
                     20
             );
 
-    private static final ModConfigSpec.IntValue SATURATION_VALUE = BUILDER
-            .comment("Saturation restored when totem triggers")
+    public static final ModConfigSpec.IntValue DEATH_PROTECTION_RESTORE_SATURATION = BUILDER
+            .comment("Saturation is restored to this value when death protection triggers")
             .defineInRange(
-                    "saturationRestorationFromTotem",
+                    "deathProtectionRestoreSaturation",
                     20,
                     0,
                     20
             );
 
-    public static final ModConfigSpec SPEC = BUILDER.build();
+    public static final ModConfigSpec.BooleanValue WAKE_UP_RESETS_DEATH_PROTECTION_COOLDOWN = BUILDER
+            .comment("Waking up from sleep resets the death protection cooldown")
+            .define(
+                    "wakeUpResetsDeathProtectionCooldown",
+                    true
+            );
 
-    public static void handlerModConfigEvent(ModConfigEvent event) {
-        if (event.getConfig().getSpec() == SPEC) {
-            totemEffectActive = TOTEM_EFFECT_ACTIVE.get();
-            wakeUpCanResetCooldown = WAKE_UP_CAN_RESET_COOLDOWN.get();
-            totemCooldown = TOTEM_COOLDOWN_VALUE.get();
-            curiosCooldown = CURIOS_COOLDOWN_VALUE.get();
-            foodRestorationFromCurios = FOOD_RESTORATION_VALUE.get();
-            foodMaxRestoration = FOOD_MAX_RESTORATION.get();
-            usePercentageHealthRestoration = USE_PERCENTAGE_HEALTH_RESTORATION.get();
-            percentageHealthRestoration = PERCENTAGE_HEALTH_RESTORATION.get();
-            healthRestorationFromTotem = HEALTH_VALUE.get();
-            foodRestorationFromTotem = FOOD_VALUE.get();
-            saturationRestorationFromTotem = SATURATION_VALUE.get();
-        }
-    }
+    public static final ModConfigSpec.IntValue FOOD_LEVEL_RESTORATION_INTERVAL = BUILDER
+            .pop()
+            .comment("Food level restoration while a cat burger is worn")
+            .push("FoodLevelRestoration")
+            .comment("Ticks between food level restorations, 0 restores every tick")
+            .defineInRange(
+                    "foodLevelRestorationInterval",
+                    1200,
+                    0,
+                    Integer.MAX_VALUE
+            );
+
+    public static final ModConfigSpec.IntValue FOOD_LEVEL_RESTORATION_AMOUNT = BUILDER
+            .comment("Food level restored each time")
+            .defineInRange(
+                    "foodLevelRestorationAmount",
+                    1,
+                    0,
+                    20
+            );
+
+    public static final ModConfigSpec.IntValue FOOD_LEVEL_RESTORATION_LIMIT = BUILDER
+            .comment("Food level stops being restored once it reaches this value")
+            .defineInRange(
+                    "foodLevelRestorationLimit",
+                    18,
+                    1,
+                    20
+            );
+
+    public static final ModConfigSpec SPEC = BUILDER.pop().build();
 }

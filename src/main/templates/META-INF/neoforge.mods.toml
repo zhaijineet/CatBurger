@@ -79,7 +79,14 @@ side = "BOTH"
 #openGLVersion="[3.2,)"
 [[dependencies."${mod_id}"]]
 modId = "curios"
-type = "required"
+type = "optional"
 versionRange = "[9.4.1+1.21.1,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${mod_id}"]]
+modId = "touhou_little_maid"
+type = "optional"
+versionRange = "[1.5.0,)"
 ordering = "NONE"
 side = "BOTH"

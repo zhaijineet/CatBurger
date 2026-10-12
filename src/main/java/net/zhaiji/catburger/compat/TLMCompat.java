@@ -2,19 +2,14 @@ package net.zhaiji.catburger.compat;
 
 import com.github.tartaricacid.touhoulittlemaid.api.event.MaidDeathEvent;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemCooldowns;
 import net.neoforged.bus.api.IEventBus;
 import net.zhaiji.catburger.config.CatBurgerCommonConfig;
+import net.zhaiji.catburger.equipment.CatBurgerEquipment;
 import net.zhaiji.catburger.init.InitItem;
-import top.theillusivec4.curios.api.CuriosApi;
 
 public class TLMCompat {
-    public static boolean canRender(LivingEntity entity) {
-        return entity instanceof EntityMaid;
-    }
-
     public static void init(IEventBus modBus, IEventBus gameBus) {
         TLMCompat.modBusListener(modBus);
         TLMCompat.gameBusListener(gameBus);
@@ -28,23 +23,23 @@ public class TLMCompat {
     }
 
     public static void handlerMaidDeathEvent(MaidDeathEvent event) {
-        if (!CatBurgerCommonConfig.totemEffectActive) return;
+        if (!CatBurgerCommonConfig.DEATH_PROTECTION_ENABLED.get()) return;
         EntityMaid maid = event.getMaid();
         Item item = InitItem.CAT_BURGER.get();
         ItemCooldowns cooldowns = maid.getCooldowns();
-        CuriosApi.getCuriosInventory(maid).ifPresent(iCuriosItemHandler -> {
-            if (iCuriosItemHandler.findFirstCurio(item).isPresent() && !cooldowns.isOnCooldown(item)) {
-                if (CatBurgerCommonConfig.usePercentageHealthRestoration) {
-                    float maxHealth = maid.getMaxHealth();
-                    float restoreAmount = maxHealth * ((float) CatBurgerCommonConfig.percentageHealthRestoration / 100.0f);
-                    maid.setHealth(restoreAmount);
-                } else {
-                    maid.setHealth(CatBurgerCommonConfig.healthRestorationFromTotem);
-                }
-                cooldowns.addCooldown(item, CatBurgerCommonConfig.totemCooldown);
-                maid.level().broadcastEntityEvent(maid, (byte) 35);
-                event.setCanceled(true);
-            }
-        });
+        if (CatBurgerEquipment.find(maid).isEmpty() || cooldowns.isOnCooldown(item)) {
+            return;
+        }
+
+        if (CatBurgerCommonConfig.DEATH_PROTECTION_USE_HEALTH_PERCENTAGE.get()) {
+            float maxHealth = maid.getMaxHealth();
+            float restoreAmount = maxHealth * (CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_HEALTH_PERCENTAGE.get().floatValue() / 100.0f);
+            maid.setHealth(restoreAmount);
+        } else {
+            maid.setHealth(CatBurgerCommonConfig.DEATH_PROTECTION_RESTORE_HEALTH.get());
+        }
+        cooldowns.addCooldown(item, CatBurgerCommonConfig.DEATH_PROTECTION_COOLDOWN.get());
+        maid.level().broadcastEntityEvent(maid, (byte) 35);
+        event.setCanceled(true);
     }
 }

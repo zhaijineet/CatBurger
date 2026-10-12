@@ -5,7 +5,6 @@ import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
-import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerCommonConfig;
 import net.zhaiji.catburger.event.CommonEventManager;
 import net.zhaiji.catburger.init.InitCreativeModeTab;
@@ -17,7 +16,6 @@ public class CatBurger {
 
     public CatBurger(IEventBus modEventBus, ModContainer modContainer) {
         modContainer.registerConfig(ModConfig.Type.COMMON, CatBurgerCommonConfig.SPEC);
-        modContainer.registerConfig(ModConfig.Type.CLIENT, CatBurgerClientConfig.SPEC);
 
         InitItem.ITEMS.register(modEventBus);
         InitCreativeModeTab.CREATIVE_MODE_TAB.register(modEventBus);
