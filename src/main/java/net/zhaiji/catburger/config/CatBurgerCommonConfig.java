@@ -103,5 +103,15 @@ public class CatBurgerCommonConfig {
                     20
             );
 
+    public static final ModConfigSpec.BooleanValue MOB_PICKUP_ENABLED = BUILDER
+            .pop()
+            .comment("Whether mobs can pick up and wear cat burgers")
+            .push("MobPickup")
+            .comment("Allow mobs to pick up and wear cat burgers")
+            .define(
+                    "mobPickupEnabled",
+                    false
+            );
+
     public static final ModConfigSpec SPEC = BUILDER.pop().build();
 }

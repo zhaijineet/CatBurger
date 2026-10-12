@@ -52,6 +52,9 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationAmount", "Restore Food Level", "Food level restored each time");
         addConfig("foodLevelRestorationLimit", "Limit", "Food level stops being restored once it reaches this value");
 
+        addConfig("MobPickup", "Mob Pickup", "Whether mobs can pick up and wear cat burgers");
+        addConfig("mobPickupEnabled", "Allow Mob Pickup", "Allow mobs to pick up and wear cat burgers");
+
         addConfig("Position", "Position", "Size and position of the cat burger relative to the wearer's eyes; offsets follow the orbit direction set by spring motion, rotation drag or view yaw, not the cat burger's facing");
         addConfig("scale", "Scale", "Render scale of the cat burger");
         addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the orbit direction, negative moves backward");
@@ -115,6 +118,9 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationAmount", "恢复饥饿值", "每次恢复的饥饿值");
         addConfig("foodLevelRestorationLimit", "恢复上限", "饥饿值达到此数值后不再恢复");
 
+        addConfig("MobPickup", "生物拾取", "生物是否能捡起并佩戴猫猫汉堡");
+        addConfig("mobPickupEnabled", "允许生物拾取", "允许生物捡起并佩戴猫猫汉堡");
+
         addConfig("Position", "位置", "猫猫汉堡相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动、转向延迟或视线偏航决定，与汉堡自身朝向无关");
         addConfig("scale", "缩放", "猫猫汉堡的渲染缩放");
         addConfig("frontBackOffset", "前后偏移", "沿环绕方向向前偏移的格数，负值向后");
@@ -177,6 +183,9 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationInterval", "回復間隔", "満腹度を回復する間隔のtick数、0で毎tick回復");
         addConfig("foodLevelRestorationAmount", "回復する満腹度", "1回ごとに回復する満腹度");
         addConfig("foodLevelRestorationLimit", "回復上限", "満腹度がこの値に達すると回復しない");
+
+        addConfig("MobPickup", "Mobの拾得", "Mobが猫バーガーを拾って装備できるかどうか");
+        addConfig("mobPickupEnabled", "Mobの拾得を許可", "Mobが猫バーガーを拾って装備できるようにする");
 
         addConfig("Position", "位置", "装備者の目の位置を基準とした猫バーガーの大きさと位置；オフセットはバネ運動、回転の追従遅延または視線の向きで決まる周回方向に沿い、猫バーガー自身の向きとは無関係");
         addConfig("scale", "拡大率", "猫バーガーの描画倍率");
