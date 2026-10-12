@@ -20,7 +20,7 @@ public abstract class CustomHeadLayerMixin {
     )
     public void catBurger$render(
             PoseStack poseStack,
-            MultiBufferSource renderTypeBuffer,
+            MultiBufferSource buffer,
             int packedLight,
             LivingEntity livingEntity,
             float limbSwing,

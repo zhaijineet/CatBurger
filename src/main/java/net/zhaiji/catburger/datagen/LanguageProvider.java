@@ -52,10 +52,10 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationAmount", "Restore Food Level", "Food level restored each time");
         addConfig("foodLevelRestorationLimit", "Limit", "Food level stops being restored once it reaches this value");
 
-        addConfig("Position", "Position", "Size and position of the cat burger relative to the wearer's eyes");
+        addConfig("Position", "Position", "Size and position of the cat burger relative to the wearer's eyes; offsets follow the orbit direction set by spring motion, rotation drag or view yaw, not the cat burger's facing");
         addConfig("scale", "Scale", "Render scale of the cat burger");
-        addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the facing direction, negative moves backward");
-        addConfig("leftRightOffset", "Left/Right Offset", "Blocks to move to the right, negative moves left");
+        addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the orbit direction, negative moves backward");
+        addConfig("leftRightOffset", "Left/Right Offset", "Blocks to move to the right of the orbit direction, negative moves left");
         addConfig("verticalOffset", "Vertical Offset", "Blocks to move up from eye height, negative moves down");
         addConfig("crouchOffset", "Sneaking Offset", "Extra blocks to move up while sneaking, negative moves down");
 
@@ -68,14 +68,16 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("dragStrength", "Follow Speed", "How quickly the cat burger catches up, higher values give a shorter trail");
         addConfig("maxLagDistance", "Max Trailing Distance", "Maximum distance in blocks the cat burger trails behind, 0 disables trailing");
 
-        addConfig("RotationDrag", "Rotation Drag", "Delayed orbiting when the wearer turns");
+        addConfig("Turning", "Turning", "How the cat burger orbits and faces when the wearer turns or looks around");
         addConfig("rotationDragEnabled", "Enable Rotation Drag", "Let the cat burger orbit after the wearer's head turns with a delay");
-        addConfig("rotationDragSmoothness", "Follow Speed", "How quickly the orbit catches up with the head, higher is faster");
+        addConfig("rotationDragSmoothness", "Rotation Follow Speed", "How quickly the orbit catches up with the head, higher is faster");
         addConfig("rotationDragUseWrapDegrees", "Shortest Arc", "Catch up along the shortest arc instead of following every full turn");
-        addConfig("rotationDragAffectOrientation", "Face Delayed Direction", "Make the cat burger face the delayed direction instead of the view direction");
+        addConfig("orientationDragEnabled", "Enable Orientation Drag", "Let the cat burger's facing follow the view or gaze direction with a delay, for every wearer");
+        addConfig("orientationDragSmoothness", "Orientation Follow Speed", "How quickly the facing catches up with its target, higher is faster, 1.0 follows instantly");
+        addConfig("ownViewGazeEnabled", "Gaze at Own Crosshair", "Aim the cat burger worn by the camera entity, usually yourself, at the crosshair hit point; cat burgers worn by others are unaffected");
 
-        addConfig("Spring", "Spring", "Spring motion for orbiting, overrides rotation drag when enabled");
-        addConfig("springEnabled", "Enable Spring", "Orbit with spring motion that can overshoot and bounce back");
+        addConfig("Spring", "Spring Motion", "Spring motion for orbiting, overrides rotation drag when enabled");
+        addConfig("springEnabled", "Enable Spring Motion", "Orbit with spring motion that can overshoot and bounce back");
         addConfig("springStiffness", "Stiffness", "Spring stiffness, higher is snappier");
         addConfig("springDamping", "Damping", "Fraction of spring speed kept each tick, lower settles faster");
     }
@@ -113,10 +115,10 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationAmount", "恢复饥饿值", "每次恢复的饥饿值");
         addConfig("foodLevelRestorationLimit", "恢复上限", "饥饿值达到此数值后不再恢复");
 
-        addConfig("Position", "位置", "猫猫汉堡相对佩戴者眼部的大小与位置");
+        addConfig("Position", "位置", "猫猫汉堡相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动、转向延迟或视线偏航决定，与汉堡自身朝向无关");
         addConfig("scale", "缩放", "猫猫汉堡的渲染缩放");
-        addConfig("frontBackOffset", "前后偏移", "沿朝向向前偏移的格数，负值向后");
-        addConfig("leftRightOffset", "左右偏移", "向右偏移的格数，负值向左");
+        addConfig("frontBackOffset", "前后偏移", "沿环绕方向向前偏移的格数，负值向后");
+        addConfig("leftRightOffset", "左右偏移", "沿环绕方向向右偏移的格数，负值向左");
         addConfig("verticalOffset", "垂直偏移", "相对眼部高度向上偏移的格数，负值向下");
         addConfig("crouchOffset", "潜行偏移", "潜行时额外向上偏移的格数，负值向下");
 
@@ -129,14 +131,16 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("dragStrength", "跟随速度", "猫猫汉堡追上佩戴者的速度，越大拖尾越短");
         addConfig("maxLagDistance", "最大拖尾距离", "猫猫汉堡最多落后的格数，0为不拖尾");
 
-        addConfig("RotationDrag", "转向延迟", "佩戴者转头时猫猫汉堡延迟环绕跟随");
+        addConfig("Turning", "转向与朝向", "佩戴者转头或环顾时猫猫汉堡如何环绕和朝向");
         addConfig("rotationDragEnabled", "启用转向延迟", "佩戴者转头时猫猫汉堡延迟环绕跟随");
-        addConfig("rotationDragSmoothness", "跟随速度", "环绕追上头部朝向的速度，越大越快");
+        addConfig("rotationDragSmoothness", "转向跟随速度", "环绕追上头部朝向的速度，越大越快");
         addConfig("rotationDragUseWrapDegrees", "最短路径", "沿最短弧线追上朝向，不再跟随每一圈完整转身");
-        addConfig("rotationDragAffectOrientation", "朝向跟随延迟", "猫猫汉堡朝向延迟后的方向，而非视线方向");
+        addConfig("orientationDragEnabled", "启用朝向延迟", "让猫猫汉堡的朝向延迟跟随视线或注视方向，对所有佩戴者生效");
+        addConfig("orientationDragSmoothness", "朝向跟随速度", "朝向追上目标的速度，越大越快，1.0 为瞬时跟随");
+        addConfig("ownViewGazeEnabled", "自身视角注视准心", "让当前视角所属实体佩戴的猫猫汉堡注视准心命中点，通常就是你自己，其他人佩戴的不受影响");
 
-        addConfig("Spring", "弹簧", "以弹簧运动环绕跟随，启用时覆盖转向延迟");
-        addConfig("springEnabled", "启用弹簧", "以可能越过并回弹的弹簧运动环绕跟随");
+        addConfig("Spring", "弹簧运动", "以弹簧运动环绕跟随，启用时覆盖转向延迟");
+        addConfig("springEnabled", "启用弹簧运动", "以可能越过并回弹的弹簧运动环绕跟随");
         addConfig("springStiffness", "刚度", "弹簧刚度，越大回弹越快");
         addConfig("springDamping", "阻尼", "每刻保留的弹簧速度比例，越小越快静止");
     }
@@ -174,10 +178,10 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("foodLevelRestorationAmount", "回復する満腹度", "1回ごとに回復する満腹度");
         addConfig("foodLevelRestorationLimit", "回復上限", "満腹度がこの値に達すると回復しない");
 
-        addConfig("Position", "位置", "装備者の目の位置を基準とした猫バーガーの大きさと位置");
+        addConfig("Position", "位置", "装備者の目の位置を基準とした猫バーガーの大きさと位置；オフセットはバネ運動、回転の追従遅延または視線の向きで決まる周回方向に沿い、猫バーガー自身の向きとは無関係");
         addConfig("scale", "拡大率", "猫バーガーの描画倍率");
-        addConfig("frontBackOffset", "前後オフセット", "向いている方向へ前に動かすブロック数、負の値で後ろ");
-        addConfig("leftRightOffset", "左右オフセット", "右に動かすブロック数、負の値で左");
+        addConfig("frontBackOffset", "前後オフセット", "周回方向へ前に動かすブロック数、負の値で後ろ");
+        addConfig("leftRightOffset", "左右オフセット", "周回方向の右に動かすブロック数、負の値で左");
         addConfig("verticalOffset", "上下オフセット", "目の高さから上に動かすブロック数、負の値で下");
         addConfig("crouchOffset", "スニーク時オフセット", "スニーク中に追加で上に動かすブロック数、負の値で下");
 
@@ -190,14 +194,16 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         addConfig("dragStrength", "追従速度", "猫バーガーが追いつく速さ、大きいほど遅れが短い");
         addConfig("maxLagDistance", "最大遅延距離", "猫バーガーが遅れる最大のブロック数、0で遅延なし");
 
-        addConfig("RotationDrag", "回転の追従遅延", "装備者が振り向くと猫バーガーが遅れて周回する");
+        addConfig("Turning", "回転と向き", "装備者が振り向いたり見回したりした時の猫バーガーの周回と向き");
         addConfig("rotationDragEnabled", "回転の追従遅延を有効化", "装備者が振り向くと猫バーガーが遅れて周回する");
-        addConfig("rotationDragSmoothness", "追従速度", "頭の向きに追いつく速さ、大きいほど速い");
+        addConfig("rotationDragSmoothness", "回転の追従速度", "周回が頭の向きに追いつく速さ、大きいほど速い");
         addConfig("rotationDragUseWrapDegrees", "最短経路", "1周ごとに追従せず、最短の弧で向きに追いつく");
-        addConfig("rotationDragAffectOrientation", "向きも遅延", "猫バーガーの向きを視線方向ではなく遅延後の方向にする");
+        addConfig("orientationDragEnabled", "向きの追従遅延を有効化", "猫バーガーの向きを視線または注視方向へ遅れて追従させる、全装備者に適用");
+        addConfig("orientationDragSmoothness", "向きの追従速度", "向きが目標に追いつく速さ、大きいほど速い、1.0で即座に追従");
+        addConfig("ownViewGazeEnabled", "自視点で照準を注視", "カメラの視点となるエンティティの猫バーガーを照準点に向けさせる、通常は自分の猫バーガーで、他者の猫バーガーには影響しない");
 
-        addConfig("Spring", "バネ", "バネの動きで周回する、有効時は回転の追従遅延より優先");
-        addConfig("springEnabled", "バネを有効化", "行き過ぎて跳ね返るバネの動きで周回する");
+        addConfig("Spring", "バネ運動", "バネ運動で周回する、有効時は回転の追従遅延より優先");
+        addConfig("springEnabled", "バネ運動を有効化", "行き過ぎて跳ね返るバネ運動で周回する");
         addConfig("springStiffness", "硬さ", "バネの硬さ、大きいほど素早く戻る");
         addConfig("springDamping", "減衰", "毎tick保持されるバネの速度の割合、小さいほど早く静止");
     }

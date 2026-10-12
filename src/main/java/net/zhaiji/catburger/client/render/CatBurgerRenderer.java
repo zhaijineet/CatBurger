@@ -15,10 +15,10 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.client.render.CatBurgerFollowState.CatBurgerFollowTransform;
-import org.joml.Quaternionf;
 
 @OnlyIn(Dist.CLIENT)
 public final class CatBurgerRenderer {
+    // 背包等界面预览期间为 true，由 InventoryScreenMixin 在 renderEntityInInventory 前后置位与复位
     private static boolean renderingInventoryPreview;
 
     private CatBurgerRenderer() {
@@ -36,7 +36,7 @@ public final class CatBurgerRenderer {
             LivingEntity livingEntity,
             ItemStack itemStack,
             PoseStack poseStack,
-            MultiBufferSource renderTypeBuffer,
+            MultiBufferSource buffer,
             int packedLight,
             float partialTicks
     ) {
@@ -53,15 +53,16 @@ public final class CatBurgerRenderer {
         poseStack.translate(transform.xOffset(), transform.yOffset(), transform.zOffset());
         float scale = transform.scale();
         poseStack.scale(scale, scale, scale);
-        poseStack.mulPose(new Quaternionf().rotateY((float) Math.toRadians(180)));
+        poseStack.mulPose(Axis.YP.rotationDegrees(180));
         poseStack.mulPose(Axis.YP.rotationDegrees(-transform.renderYaw()));
         poseStack.mulPose(Axis.XP.rotationDegrees(-transform.headPitch()));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(transform.roll()));
         Minecraft.getInstance().getItemRenderer().render(
                 itemStack,
                 ItemDisplayContext.HEAD,
                 false,
                 poseStack,
-                renderTypeBuffer,
+                buffer,
                 packedLight,
                 OverlayTexture.NO_OVERLAY,
                 getModel()
