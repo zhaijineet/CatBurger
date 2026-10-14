@@ -1,0 +1,37 @@
+package net.zhaiji.catburger.datagen;
+
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.tags.IntrinsicHolderTagsProvider;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.common.data.ExistingFileHelper;
+import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.init.CatBurgerItems;
+import net.zhaiji.catburger.item.FollowerItem;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
+
+public class ItemTagProvider extends IntrinsicHolderTagsProvider<Item> {
+    // Curios 的 head 槽靠该标签判定物品能否放入
+    private static final TagKey<Item> CURIOS_HEAD = ItemTags.create(ResourceLocation.fromNamespaceAndPath("curios", "head"));
+
+    public ItemTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
+        super(output, Registries.ITEM, lookupProvider, item -> item.builtInRegistryHolder().key(), CatBurger.MOD_ID, existingFileHelper);
+    }
+
+    @Override
+    protected void addTags(HolderLookup.Provider lookupProvider) {
+        IntrinsicTagAppender<Item> curiosHead = tag(CURIOS_HEAD);
+        CatBurgerItems.ITEMS.getEntries()
+                            .stream()
+                            .map(Supplier::get)
+                            .filter(item -> item instanceof FollowerItem)
+                            .forEach(curiosHead::add);
+    }
+}

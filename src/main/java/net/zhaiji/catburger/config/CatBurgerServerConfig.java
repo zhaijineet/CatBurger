@@ -2,7 +2,7 @@ package net.zhaiji.catburger.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-public class CatBurgerCommonConfig {
+public class CatBurgerServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.BooleanValue DEATH_PROTECTION_ENABLED = BUILDER

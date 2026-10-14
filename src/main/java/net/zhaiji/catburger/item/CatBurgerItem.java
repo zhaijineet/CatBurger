@@ -2,115 +2,119 @@ package net.zhaiji.catburger.item;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Equipable;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.food.FoodData;
+import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.level.Level;
-import net.zhaiji.catburger.CatBurger;
-import net.zhaiji.catburger.config.CatBurgerCommonConfig;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
+import net.zhaiji.catburger.network.client.packet.PlayerDeathPacket;
+import net.zhaiji.catburger.util.TooltipUtil;
 
-import java.math.RoundingMode;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
-public class CatBurgerItem extends Item implements Equipable {
-    public static final String KEY_PREFIX = "item." + CatBurger.MOD_ID + ".cat_burger.";
-    public static final String TOOLTIP_PREFIX = "item." + CatBurger.MOD_ID + ".tooltip.";
+public class CatBurgerItem extends FollowerItem {
+    /**
+     * 佩戴时按配置的间隔恢复饥饿值，仅玩家有饥饿值，间隔为 0 时每刻恢复。
+     */
+    @Override
+    public void tick(LivingEntity wearer, ItemStack wornStack) {
+        if (!(wearer instanceof Player player)) return;
 
-    private static final String NON_BREAKING_SPACE = "\u00A0";
-    private static final String LINE_PREFIX = NON_BREAKING_SPACE + "•" + NON_BREAKING_SPACE;
+        int interval = CatBurgerServerConfig.INTERVAL.get();
+        if (interval > 0 && wearer.tickCount % interval != 0) return;
 
-    public CatBurgerItem() {
-        super(new Properties().stacksTo(1));
+        FoodData foodData = player.getFoodData();
+        int foodLevel = foodData.getFoodLevel();
+        int limit = CatBurgerServerConfig.LIMIT.get();
+        if (foodLevel < limit) foodData.setFoodLevel(Math.min(foodLevel + CatBurgerServerConfig.AMOUNT.get(), limit));
     }
 
+    /**
+     * 按配置提供死亡保护：恢复生命值、饥饿值与饱和度，写入本物品的冷却并通知佩戴者，返回 true 表示已接管本次死亡。
+     */
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        return swapWithEquipmentSlot(this, level, player, hand);
-    }
+    public boolean onDeathProtection(LivingEntity wearer, ItemStack wornStack, ItemCooldowns cooldowns) {
+        if (!CatBurgerServerConfig.DEATH_PROTECTION_ENABLED.get()) return false;
+        if (cooldowns.isOnCooldown(this)) return false;
 
-    @Override
-    public EquipmentSlot getEquipmentSlot() {
-        return EquipmentSlot.HEAD;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack itemStack, TooltipContext tooltipContext, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
-        tooltipComponents.add(Component.translatable(KEY_PREFIX + "description.0"));
-        boolean shiftDown = tooltipFlag.hasShiftDown();
-        tooltipComponents.add(Component.translatable(
-                TOOLTIP_PREFIX + "shift_hint",
-                Component.translatable(TOOLTIP_PREFIX + "hint.shift")
-                        .withStyle(shiftDown ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY)
-        ).withStyle(ChatFormatting.GRAY));
-        if (shiftDown) {
-            appendEffectLines(tooltipComponents);
+        if (CatBurgerServerConfig.USE_HEALTH_PERCENTAGE.get()) {
+            float maxHealth = wearer.getMaxHealth();
+            float restoreAmount = maxHealth * (CatBurgerServerConfig.RESTORE_HEALTH_PERCENTAGE.get().floatValue() / 100.0f);
+            wearer.setHealth(restoreAmount);
+        } else {
+            wearer.setHealth(CatBurgerServerConfig.RESTORE_HEALTH.get());
         }
+
+        Player player = wearer instanceof Player entity ? entity : null;
+
+        if (player != null) {
+            FoodData foodData = player.getFoodData();
+            foodData.setFoodLevel(CatBurgerServerConfig.RESTORE_FOOD_LEVEL.get());
+            foodData.setSaturation(CatBurgerServerConfig.RESTORE_SATURATION.get());
+        }
+
+        cooldowns.addCooldown(this, CatBurgerServerConfig.COOLDOWN.get());
+        wearer.level().broadcastEntityEvent(wearer, (byte) 35);
+
+        if (player != null) PacketDistributor.sendToPlayer((ServerPlayer) player, new PlayerDeathPacket(wornStack));
+
+        return true;
     }
 
-    private static void appendEffectLines(List<Component> tooltipComponents) {
-        int interval = CatBurgerCommonConfig.INTERVAL.get();
+    @Override
+    protected List<Component> buildEffectLines() {
+        String keyPrefix = TooltipUtil.itemKeyPrefix(this);
+        List<Component> effectLines = new ArrayList<>();
+
+        int interval = CatBurgerServerConfig.INTERVAL.get();
         if (interval > 0) {
-            tooltipComponents.add(effectLine(Component.translatable(
-                    KEY_PREFIX + "effect.food_level_restoration",
-                    formatNumber(interval / 20.0),
-                    formatNumber(CatBurgerCommonConfig.AMOUNT.get()),
-                    formatNumber(CatBurgerCommonConfig.LIMIT.get())
+            effectLines.add(TooltipUtil.effectLine(Component.translatable(
+                    keyPrefix + "effect.food_level_restoration",
+                    TooltipUtil.formatNumber(interval / 20.0),
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.AMOUNT.get()),
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.LIMIT.get())
             )));
         } else {
-            tooltipComponents.add(effectLine(Component.translatable(
-                    KEY_PREFIX + "effect.food_level_restoration.every_tick",
-                    formatNumber(CatBurgerCommonConfig.AMOUNT.get()),
-                    formatNumber(CatBurgerCommonConfig.LIMIT.get())
+            effectLines.add(TooltipUtil.effectLine(Component.translatable(
+                    keyPrefix + "effect.food_level_restoration.every_tick",
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.AMOUNT.get()),
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.LIMIT.get())
             )));
         }
 
-        if (!CatBurgerCommonConfig.DEATH_PROTECTION_ENABLED.get()) {
-            tooltipComponents.add(effectLine(Component.translatable(KEY_PREFIX + "effect.death_protection.disabled")).withStyle(ChatFormatting.DARK_GRAY));
-            return;
+        if (!CatBurgerServerConfig.DEATH_PROTECTION_ENABLED.get()) {
+            effectLines.add(TooltipUtil.effectLine(Component.translatable(keyPrefix + "effect.death_protection.disabled")).withStyle(ChatFormatting.DARK_GRAY));
+            return effectLines;
         }
 
-        Component healthComponent = CatBurgerCommonConfig.USE_HEALTH_PERCENTAGE.get()
+        Component healthComponent = CatBurgerServerConfig.USE_HEALTH_PERCENTAGE.get()
                 ? Component.translatable(
-                        KEY_PREFIX + "effect.death_protection.restore_health_percentage",
-                        formatNumber(CatBurgerCommonConfig.RESTORE_HEALTH_PERCENTAGE.get())
-                )
+                keyPrefix + "effect.death_protection.restore_health_percentage",
+                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_HEALTH_PERCENTAGE.get())
+        )
                 : Component.translatable(
-                        KEY_PREFIX + "effect.death_protection.restore_health",
-                        formatNumber(CatBurgerCommonConfig.RESTORE_HEALTH.get())
-                );
-        Component foodLevelComponent = Component.translatable(
-                KEY_PREFIX + "effect.death_protection.restore_food_level",
-                formatNumber(CatBurgerCommonConfig.RESTORE_FOOD_LEVEL.get()),
-                formatNumber(CatBurgerCommonConfig.RESTORE_SATURATION.get())
+                keyPrefix + "effect.death_protection.restore_health",
+                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_HEALTH.get())
         );
-        tooltipComponents.add(effectLine(Component.empty().append(healthComponent).append(foodLevelComponent)));
+        Component foodLevelComponent = Component.translatable(
+                keyPrefix + "effect.death_protection.restore_food_level",
+                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_FOOD_LEVEL.get()),
+                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_SATURATION.get())
+        );
+        effectLines.add(TooltipUtil.effectLine(Component.empty().append(healthComponent).append(foodLevelComponent)));
 
-        tooltipComponents.add(effectLine(Component.translatable(
-                KEY_PREFIX + "effect.death_protection.cooldown",
-                formatNumber(CatBurgerCommonConfig.COOLDOWN.get() / 20.0)
+        effectLines.add(TooltipUtil.effectLine(Component.translatable(
+                keyPrefix + "effect.death_protection.cooldown",
+                TooltipUtil.formatNumber(CatBurgerServerConfig.COOLDOWN.get() / 20.0)
         )));
 
-        if (CatBurgerCommonConfig.RESET_COOLDOWN_ON_WAKE_UP.get()) {
-            tooltipComponents.add(effectLine(Component.translatable(KEY_PREFIX + "effect.death_protection.wake_up")));
-        }
-    }
+        if (CatBurgerServerConfig.RESET_COOLDOWN_ON_WAKE_UP.get())
+            effectLines.add(TooltipUtil.effectLine(Component.translatable(keyPrefix + "effect.death_protection.wake_up")));
 
-    private static MutableComponent effectLine(Component content) {
-        return Component.literal(LINE_PREFIX).append(content).withStyle(ChatFormatting.GRAY);
-    }
-
-    private static String formatNumber(double value) {
-        DecimalFormat decimalFormat = new DecimalFormat("0.###", DecimalFormatSymbols.getInstance(Locale.US));
-        decimalFormat.setRoundingMode(RoundingMode.HALF_UP);
-        return decimalFormat.format(value);
+        return effectLines;
     }
 }

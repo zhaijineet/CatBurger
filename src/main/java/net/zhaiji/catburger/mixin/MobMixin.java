@@ -2,8 +2,8 @@ package net.zhaiji.catburger.mixin;
 
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
-import net.zhaiji.catburger.config.CatBurgerCommonConfig;
-import net.zhaiji.catburger.init.CatBurgerItems;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
+import net.zhaiji.catburger.util.FollowerUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,9 +16,7 @@ public abstract class MobMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    public void catBurger$canHoldItem(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (!CatBurgerCommonConfig.MOB_PICKUP_ENABLED.get() && stack.is(CatBurgerItems.CAT_BURGER.get())) {
-            cir.setReturnValue(false);
-        }
+    public void catburger$canHoldItem(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+        if (!CatBurgerServerConfig.MOB_PICKUP_ENABLED.get() && FollowerUtil.isFollower(stack)) cir.setReturnValue(false);
     }
 }

@@ -4,7 +4,7 @@ import net.minecraft.data.PackOutput;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
 import net.zhaiji.catburger.init.CatBurgerItems;
-import net.zhaiji.catburger.item.CatBurgerItem;
+import net.zhaiji.catburger.util.TooltipUtil;
 import org.jetbrains.annotations.Nullable;
 
 public class LanguageProvider extends net.neoforged.neoforge.common.data.LanguageProvider {
@@ -23,17 +23,19 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "Cat Burger");
         addItem(CatBurgerItems.CAT_BURGER, "Cat Burger");
 
-        add(CatBurgerItem.KEY_PREFIX + "description.0", "Meow!");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "shift_hint", "Hold [%s] for details");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "hint.shift", "Shift");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration", "While worn, restores %2$s food level every %1$s seconds, up to %3$s");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration.every_tick", "While worn, restores %s food level every tick, up to %s");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health_percentage", "On fatal damage, triggers death protection and restores health to %s%% of max health");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health", "On fatal damage, triggers death protection and restores health to %s");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_food_level", ", food level to %s and saturation to %s");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.cooldown", "Death protection cooldown: %s seconds");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.wake_up", "Waking up from sleep resets the death protection cooldown");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.disabled", "Death protection is disabled in the config");
+        add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "Hold [%s] for details");
+        add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
+
+        String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
+        add(itemKeyPrefix + "description.0", "Meow!");
+        add(itemKeyPrefix + "effect.food_level_restoration", "While worn, restores %2$s food level every %1$s seconds, up to %3$s");
+        add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "While worn, restores %s food level every tick, up to %s");
+        add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "On fatal damage, triggers death protection and restores health to %s%% of max health");
+        add(itemKeyPrefix + "effect.death_protection.restore_health", "On fatal damage, triggers death protection and restores health to %s");
+        add(itemKeyPrefix + "effect.death_protection.restore_food_level", ", food level to %s and saturation to %s");
+        add(itemKeyPrefix + "effect.death_protection.cooldown", "Death protection cooldown: %s seconds");
+        add(itemKeyPrefix + "effect.death_protection.wake_up", "Waking up from sleep resets the death protection cooldown");
+        add(itemKeyPrefix + "effect.death_protection.disabled", "Death protection is disabled in the config");
 
         addConfig("title", "Cat Burger Configuration");
 
@@ -86,17 +88,19 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "猫猫汉堡");
         addItem(CatBurgerItems.CAT_BURGER, "猫猫汉堡");
 
-        add(CatBurgerItem.KEY_PREFIX + "description.0", "喵!");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "shift_hint", "按住[%s]查看详细说明");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "hint.shift", "Shift");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration", "佩戴时每%s秒恢复%s点饥饿值，最多恢复至%s点");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration.every_tick", "佩戴时每刻恢复%s点饥饿值，最多恢复至%s点");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health_percentage", "受到致命伤害时触发死亡保护，生命值恢复至最大生命值的%s%%");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health", "受到致命伤害时触发死亡保护，生命值恢复至%s点");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_food_level", "，饥饿值恢复至%s点，饱和度恢复至%s点");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.cooldown", "死亡保护冷却时间：%s秒");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.wake_up", "睡醒后重置死亡保护的冷却时间");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.disabled", "死亡保护已在配置中禁用");
+        add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "按住[%s]查看详细说明");
+        add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
+
+        String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
+        add(itemKeyPrefix + "description.0", "喵!");
+        add(itemKeyPrefix + "effect.food_level_restoration", "佩戴时每%s秒恢复%s点饥饿值，最多恢复至%s点");
+        add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "佩戴时每刻恢复%s点饥饿值，最多恢复至%s点");
+        add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "受到致命伤害时触发死亡保护，生命值恢复至最大生命值的%s%%");
+        add(itemKeyPrefix + "effect.death_protection.restore_health", "受到致命伤害时触发死亡保护，生命值恢复至%s点");
+        add(itemKeyPrefix + "effect.death_protection.restore_food_level", "，饥饿值恢复至%s点，饱和度恢复至%s点");
+        add(itemKeyPrefix + "effect.death_protection.cooldown", "死亡保护冷却时间：%s秒");
+        add(itemKeyPrefix + "effect.death_protection.wake_up", "睡醒后重置死亡保护的冷却时间");
+        add(itemKeyPrefix + "effect.death_protection.disabled", "死亡保护已在配置中禁用");
 
         addConfig("title", "猫猫汉堡配置");
 
@@ -149,17 +153,19 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "猫バーガー");
         addItem(CatBurgerItems.CAT_BURGER, "猫バーガー");
 
-        add(CatBurgerItem.KEY_PREFIX + "description.0", "にゃー!");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "shift_hint", "[%s]を押して詳細を表示");
-        add(CatBurgerItem.TOOLTIP_PREFIX + "hint.shift", "Shift");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration", "装備中、%s秒ごとに満腹度を%s回復し、最大%sまで回復する");
-        add(CatBurgerItem.KEY_PREFIX + "effect.food_level_restoration.every_tick", "装備中、毎tick満腹度を%s回復し、最大%sまで回復する");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health_percentage", "致死ダメージを受けると死亡保護が発動し、体力が最大体力の%s%%まで回復");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_health", "致死ダメージを受けると死亡保護が発動し、体力が%sまで回復");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.restore_food_level", "、満腹度が%s、隠し満腹度が%sまで回復");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.cooldown", "死亡保護のクールダウン：%s秒");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.wake_up", "起床すると死亡保護のクールダウンがリセットされる");
-        add(CatBurgerItem.KEY_PREFIX + "effect.death_protection.disabled", "死亡保護は設定で無効になっている");
+        add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "[%s]を押して詳細を表示");
+        add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
+
+        String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
+        add(itemKeyPrefix + "description.0", "にゃー!");
+        add(itemKeyPrefix + "effect.food_level_restoration", "装備中、%s秒ごとに満腹度を%s回復し、最大%sまで回復する");
+        add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "装備中、毎tick満腹度を%s回復し、最大%sまで回復する");
+        add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "致死ダメージを受けると死亡保護が発動し、体力が最大体力の%s%%まで回復");
+        add(itemKeyPrefix + "effect.death_protection.restore_health", "致死ダメージを受けると死亡保護が発動し、体力が%sまで回復");
+        add(itemKeyPrefix + "effect.death_protection.restore_food_level", "、満腹度が%s、隠し満腹度が%sまで回復");
+        add(itemKeyPrefix + "effect.death_protection.cooldown", "死亡保護のクールダウン：%s秒");
+        add(itemKeyPrefix + "effect.death_protection.wake_up", "起床すると死亡保護のクールダウンがリセットされる");
+        add(itemKeyPrefix + "effect.death_protection.disabled", "死亡保護は設定で無効になっている");
 
         addConfig("title", "猫バーガーの設定");
 
@@ -213,9 +219,7 @@ public class LanguageProvider extends net.neoforged.neoforge.common.data.Languag
      */
     private void addConfig(String key, String name, @Nullable String tooltip) {
         add(CatBurger.MOD_ID + ".configuration." + key, name);
-        if (tooltip != null) {
-            add(CatBurger.MOD_ID + ".configuration." + key + ".tooltip", tooltip);
-        }
+        if (tooltip != null) add(CatBurger.MOD_ID + ".configuration." + key + ".tooltip", tooltip);
     }
 
     private void addConfig(String key, String name) {

@@ -20,7 +20,10 @@ public class CatBurgerCreativeModeTabs {
                     .icon(() -> new ItemStack(CatBurgerItems.CAT_BURGER.get()))
                     .title(Component.translatable(CATBURGER_TAB_TRANSLATABLE))
                     .displayItems(((itemDisplayParameters, output) -> {
-                        output.accept(CatBurgerItems.CAT_BURGER.get());
+                        CatBurgerItems.ITEMS.getEntries()
+                                            .stream()
+                                            .map(Supplier::get)
+                                            .forEach(output::accept);
                     }))
                     .build()
     );

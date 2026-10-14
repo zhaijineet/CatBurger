@@ -9,6 +9,7 @@ public class ClientEventManager {
     }
 
     public static void modBusListener(IEventBus modBus) {
+        modBus.addListener(ClientEventHandler::handlerModConfigEvent);
     }
 
     public static void gameBusListener(IEventBus gameBus) {

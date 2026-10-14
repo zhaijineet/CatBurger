@@ -3,9 +3,7 @@ package net.zhaiji.catburger.mixin;
 import com.github.tartaricacid.touhoulittlemaid.entity.ai.brain.task.MaidClearSleepTask;
 import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
 import net.minecraft.server.level.ServerLevel;
-import net.zhaiji.catburger.config.CatBurgerCommonConfig;
-import net.zhaiji.catburger.equipment.CatBurgerEquipment;
-import net.zhaiji.catburger.init.CatBurgerItems;
+import net.zhaiji.catburger.util.FollowerUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -25,10 +23,7 @@ public abstract class MaidClearSleepTaskMixin {
                     target = "Lcom/github/tartaricacid/touhoulittlemaid/entity/passive/EntityMaid;stopSleeping()V"
             )
     )
-    public void catBurger$start(ServerLevel worldIn, EntityMaid entityIn, long gameTimeIn, CallbackInfo ci) {
-        if (!CatBurgerCommonConfig.RESET_COOLDOWN_ON_WAKE_UP.get()) return;
-        if (CatBurgerEquipment.find(entityIn).isPresent()) {
-            entityIn.getCooldowns().removeCooldown(CatBurgerItems.CAT_BURGER.get());
-        }
+    public void catburger$start(ServerLevel worldIn, EntityMaid entityIn, long gameTimeIn, CallbackInfo ci) {
+        FollowerUtil.onWakeUp(entityIn, entityIn.getCooldowns());
     }
 }

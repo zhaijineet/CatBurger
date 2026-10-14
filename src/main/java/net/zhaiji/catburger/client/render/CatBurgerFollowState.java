@@ -15,7 +15,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 @OnlyIn(Dist.CLIENT)
-public final class CatBurgerFollowState {
+public class CatBurgerFollowState {
+    // TODO(阶段 6.2): 过渡实现，每个实体只有一份状态；改为以实体为外层弱键、槽位键为内层的两层结构（D1），并按槽位键播种相位（D3）
     private static final Map<LivingEntity, CatBurgerFollowState> STATES = new WeakHashMap<>();
 
     private static final Vec3 WORLD_UP = new Vec3(0.0, 1.0, 0.0);
@@ -71,9 +72,7 @@ public final class CatBurgerFollowState {
 
     public void update(LivingEntity livingEntity) {
         int currentTick = livingEntity.tickCount;
-        if (currentTick == lastTick) {
-            return;
-        }
+        if (currentTick == lastTick) return;
 
         double entityX = livingEntity.getX();
         double entityY = livingEntity.getY();
@@ -159,9 +158,7 @@ public final class CatBurgerFollowState {
         prevOrientationRoll = orientationRoll;
 
         Orientation target = resolveOrientationTarget(livingEntity);
-        if (target == null) {
-            return;
-        }
+        if (target == null) return;
 
         float orientationFollowSpeed = snap
                 ? 1.0F
@@ -181,9 +178,7 @@ public final class CatBurgerFollowState {
      * 取环绕偏航：弹簧运动优先，否则用转向延迟。
      */
     private static float pickUsedYaw(float springYaw, float dragYaw) {
-        if (CatBurgerClientConfig.SPRING_MOTION_ENABLED.get()) {
-            return springYaw;
-        }
+        if (CatBurgerClientConfig.SPRING_MOTION_ENABLED.get()) return springYaw;
         return dragYaw;
     }
 
@@ -215,9 +210,7 @@ public final class CatBurgerFollowState {
     @Nullable
     private Orientation resolveOrientationTarget(LivingEntity livingEntity) {
         GazeTarget gazeTarget = resolveGazeTarget(livingEntity);
-        if (gazeTarget == null) {
-            return new Orientation(livingEntity.getViewYRot(1.0F), livingEntity.getViewXRot(1.0F), 0.0F);
-        }
+        if (gazeTarget == null) return new Orientation(livingEntity.getViewYRot(1.0F), livingEntity.getViewXRot(1.0F), 0.0F);
 
         CatBurgerFollowTransform tickTransform = composeTransform(
                 livingEntity,
@@ -233,9 +226,7 @@ public final class CatBurgerFollowState {
                 livingEntity.getY() + tickTransform.yOffset(),
                 livingEntity.getZ() + tickTransform.zOffset()
         );
-        if (toTarget.lengthSqr() <= MIN_GAZE_OVERLAP_DISTANCE * MIN_GAZE_OVERLAP_DISTANCE) {
-            return null;
-        }
+        if (toTarget.lengthSqr() <= MIN_GAZE_OVERLAP_DISTANCE * MIN_GAZE_OVERLAP_DISTANCE) return null;
 
         double horizontalDistance = toTarget.horizontalDistance();
         float yaw = horizontalDistance <= MIN_GAZE_DISTANCE
@@ -252,9 +243,7 @@ public final class CatBurgerFollowState {
      */
     private static float computeGazeRoll(Vec3 forward, Vec3 cameraUp, Vec3 cameraForward) {
         double alignment = cameraForward.dot(forward);
-        if (Math.abs(alignment) < MIN_GAZE_ALIGNMENT) {
-            return 0.0F;
-        }
+        if (Math.abs(alignment) < MIN_GAZE_ALIGNMENT) return 0.0F;
 
         Vec3 noRollUp = WORLD_UP.subtract(forward.scale(WORLD_UP.dot(forward))).normalize();
         Vec3 screenUp = cameraUp.subtract(cameraForward.scale(cameraUp.dot(forward) / alignment)).normalize();
@@ -320,9 +309,7 @@ public final class CatBurgerFollowState {
      */
     private static double getTargetAnchorHeight(LivingEntity livingEntity) {
         double eyeHeight = livingEntity.getEyeHeight();
-        if (!livingEntity.isCrouching()) {
-            return eyeHeight;
-        }
+        if (!livingEntity.isCrouching()) return eyeHeight;
         return eyeHeight + CatBurgerClientConfig.CROUCH_OFFSET.get() * livingEntity.getScale();
     }
 
@@ -331,9 +318,7 @@ public final class CatBurgerFollowState {
      */
     private static double getLagDistance(double followSpeed, double motionLength) {
         double maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
-        if (maxLagDistance <= 0) {
-            return 0;
-        }
+        if (maxLagDistance <= 0) return 0;
         double lagSpeedRatio = (1 - followSpeed) / followSpeed;
         return maxLagDistance * Math.tanh(lagSpeedRatio * motionLength / maxLagDistance);
     }
@@ -369,19 +354,13 @@ public final class CatBurgerFollowState {
      */
     @Nullable
     private static GazeTarget resolveGazeTarget(LivingEntity livingEntity) {
-        if (!CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get()) {
-            return null;
-        }
+        if (!CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get()) return null;
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (livingEntity != minecraft.getCameraEntity()) {
-            return null;
-        }
+        if (livingEntity != minecraft.getCameraEntity()) return null;
 
         HitResult hitResult = minecraft.hitResult;
-        if (hitResult == null) {
-            return null;
-        }
+        if (hitResult == null) return null;
 
         Camera camera = minecraft.gameRenderer.getMainCamera();
         return new GazeTarget(
