@@ -12,12 +12,12 @@ import net.zhaiji.catburger.network.client.ClientPacketHandler;
 /**
  * 把接管了本次死亡的跟随者物品发给客户端，用于显示物品激活浮层。
  */
-public record PlayerDeathPacket(ItemStack itemStack) implements CustomPacketPayload {
+public record PlayerDeathPacket(ItemStack stack) implements CustomPacketPayload {
     public static final Type<PlayerDeathPacket> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, "player_death_packet"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerDeathPacket> STREAM_CODEC = StreamCodec.composite(
             ItemStack.STREAM_CODEC,
-            PlayerDeathPacket::itemStack,
+            PlayerDeathPacket::stack,
             PlayerDeathPacket::new
     );
 
@@ -27,6 +27,6 @@ public record PlayerDeathPacket(ItemStack itemStack) implements CustomPacketPayl
     }
 
     public static void handler(PlayerDeathPacket packet, IPayloadContext context) {
-        context.enqueueWork(() -> ClientPacketHandler.handlerPlayerDeathPacket(packet.itemStack()));
+        context.enqueueWork(() -> ClientPacketHandler.handlerPlayerDeathPacket(packet.stack()));
     }
 }

@@ -47,6 +47,8 @@
   "catburger.configuration.floatDistance.tooltip": "浮动最高点与最低点之间相差的格数",
   "catburger.configuration.followSpeed": "跟随速度",
   "catburger.configuration.followSpeed.tooltip": "追随者追上佩戴者的速度，越大拖尾越短，1.0为瞬时跟随",
+  "catburger.configuration.followerRenderMode.formation": "编队",
+  "catburger.configuration.followerRenderMode.independent": "独立",
   "catburger.configuration.foodLevelRestorationAmount": "饥饿值恢复量",
   "catburger.configuration.foodLevelRestorationAmount.tooltip": "每次恢复的数值",
   "catburger.configuration.foodLevelRestorationInterval": "饥饿值恢复间隔",

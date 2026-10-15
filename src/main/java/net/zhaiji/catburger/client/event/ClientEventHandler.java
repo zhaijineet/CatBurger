@@ -2,9 +2,12 @@ package net.zhaiji.catburger.client.event;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.fml.event.config.ModConfigEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.zhaiji.catburger.client.render.CatBurgerRenderer;
+import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
+import net.zhaiji.catburger.network.client.ClientPacketHandler;
 import net.zhaiji.catburger.util.FollowerUtil;
 import net.zhaiji.catburger.util.TooltipUtil;
 import net.zhaiji.catburger.util.WornFollower;
@@ -31,10 +34,18 @@ public class ClientEventHandler {
     }
 
     /**
-     * 服务端配置加载、被修改、从服务器同步或卸载时清空 tooltip 缓存，使效果说明行按新配置重建。
+     * 登录完成后把本机渲染参数上传给服务端，使其他玩家按本机设置看到自己的跟随者。
+     */
+    public static void handlerClientPlayerNetworkEvent$LoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        ClientPacketHandler.sendFollowerRenderData();
+    }
+
+    /**
+     * 服务端配置加载、被修改、从服务器同步或卸载时清空 tooltip 缓存，使效果说明行按新配置重建；
+     * 客户端配置被修改时把新的渲染参数上传给服务端。
      */
     public static void handlerModConfigEvent(ModConfigEvent event) {
-        if (event.getConfig().getSpec() != CatBurgerServerConfig.SPEC) return;
-        TooltipUtil.invalidateEffectLineCache();
+        if (event.getConfig().getSpec() == CatBurgerServerConfig.SPEC) TooltipUtil.invalidateEffectLineCache();
+        if (event.getConfig().getSpec() == CatBurgerClientConfig.SPEC) ClientPacketHandler.sendFollowerRenderData();
     }
 }

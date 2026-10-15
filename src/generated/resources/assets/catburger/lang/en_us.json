@@ -47,6 +47,8 @@
   "catburger.configuration.floatDistance.tooltip": "Height in blocks between the highest and lowest point of the float",
   "catburger.configuration.followSpeed": "Follow Speed",
   "catburger.configuration.followSpeed.tooltip": "How quickly the follower catches up, higher values give a shorter trail, 1.0 follows instantly",
+  "catburger.configuration.followerRenderMode.formation": "Formation",
+  "catburger.configuration.followerRenderMode.independent": "Independent",
   "catburger.configuration.foodLevelRestorationAmount": "Food Level Restoration Amount",
   "catburger.configuration.foodLevelRestorationAmount.tooltip": "Amount restored each time",
   "catburger.configuration.foodLevelRestorationInterval": "Food Level Restoration Interval",

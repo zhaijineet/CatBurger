@@ -5,15 +5,22 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class CatBurgerClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
+    public static final ModConfigSpec.EnumValue<FollowerRenderMode> FOLLOWER_RENDER_MODE = BUILDER
             .comment("Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing")
             .push("ScaleAndOffset")
+            .comment("How multiple followers worn by the same wearer are arranged; independent lets each follower drift on its own, formation spreads them evenly around the wearer")
+            .defineEnum(
+                    "followerRenderMode",
+                    FollowerRenderMode.INDEPENDENT
+            );
+
+    public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
             .comment("Multiplied by the wearer's own scale")
             .defineInRange(
                     "renderScale",
                     0.5,
                     0.1,
-                    10d
+                    2.0
             );
 
     public static final ModConfigSpec.DoubleValue FRONT_BACK_OFFSET = BUILDER
@@ -21,8 +28,8 @@ public class CatBurgerClientConfig {
             .defineInRange(
                     "frontBackOffset",
                     -0.4,
-                    -100d,
-                    100d
+                    -5d,
+                    5d
             );
 
     public static final ModConfigSpec.DoubleValue LEFT_RIGHT_OFFSET = BUILDER
@@ -30,8 +37,8 @@ public class CatBurgerClientConfig {
             .defineInRange(
                     "leftRightOffset",
                     0.8,
-                    -100d,
-                    100d
+                    -5d,
+                    5d
             );
 
     public static final ModConfigSpec.DoubleValue VERTICAL_OFFSET = BUILDER
@@ -39,8 +46,8 @@ public class CatBurgerClientConfig {
             .defineInRange(
                     "verticalOffset",
                     0.5,
-                    -100d,
-                    100d
+                    -5d,
+                    5d
             );
 
     public static final ModConfigSpec.DoubleValue CROUCH_OFFSET = BUILDER
@@ -48,8 +55,8 @@ public class CatBurgerClientConfig {
             .defineInRange(
                     "crouchOffset",
                     -0.5,
-                    -10d,
-                    10d
+                    -2d,
+                    2d
             );
 
     public static final ModConfigSpec.DoubleValue FLOAT_DISTANCE = BUILDER
@@ -61,7 +68,7 @@ public class CatBurgerClientConfig {
                     "floatDistance",
                     0.1,
                     0,
-                    100d
+                    5d
             );
 
     public static final ModConfigSpec.DoubleValue FLOAT_CYCLE_DURATION = BUILDER
@@ -91,7 +98,7 @@ public class CatBurgerClientConfig {
                     "maxLagDistance",
                     3.0,
                     0.0,
-                    10.0
+                    5.0
             );
 
     public static final ModConfigSpec.BooleanValue SPRING_MOTION_ENABLED = BUILDER

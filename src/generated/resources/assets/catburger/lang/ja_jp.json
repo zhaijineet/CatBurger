@@ -47,6 +47,8 @@
   "catburger.configuration.floatDistance.tooltip": "浮遊の最高点と最低点の差のブロック数",
   "catburger.configuration.followSpeed": "追従速度",
   "catburger.configuration.followSpeed.tooltip": "フォロワーが追いつく速さ、大きいほど遅れが短い、1.0で即座に追従",
+  "catburger.configuration.followerRenderMode.formation": "編隊",
+  "catburger.configuration.followerRenderMode.independent": "独立",
   "catburger.configuration.foodLevelRestorationAmount": "満腹度回復量",
   "catburger.configuration.foodLevelRestorationAmount.tooltip": "1回ごとに回復する量",
   "catburger.configuration.foodLevelRestorationInterval": "満腹度回復の間隔",

@@ -3,6 +3,7 @@ package net.zhaiji.catburger.datagen;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
 import net.zhaiji.catburger.init.CatBurgerItems;
 import net.zhaiji.catburger.util.TooltipUtil;
@@ -90,6 +91,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("mobPickupEnabled", "Enable Mob Pickup", "Allow mobs to pick up and wear followers");
 
         addConfig("ScaleAndOffset", "Scale and Offset", "Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing");
+        addFollowerRenderModes("Independent", "Formation");
         addConfig("renderScale", "Render Scale", "Multiplied by the wearer's own scale");
         addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the orbit direction, negative moves backward");
         addConfig("leftRightOffset", "Left/Right Offset", "Blocks to move to the right of the orbit direction, negative moves left");
@@ -186,6 +188,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("mobPickupEnabled", "启用生物拾取", "允许生物捡起并佩戴追随者");
 
         addConfig("ScaleAndOffset", "缩放与偏移", "追随者相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动或转向决定，与追随者自身朝向无关");
+        addFollowerRenderModes("独立", "编队");
         addConfig("renderScale", "渲染缩放", "与佩戴者自身缩放相乘");
         addConfig("frontBackOffset", "前后偏移", "沿环绕方向向前偏移的格数，负值向后");
         addConfig("leftRightOffset", "左右偏移", "沿环绕方向向右偏移的格数，负值向左");
@@ -282,6 +285,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("mobPickupEnabled", "Mobの拾得を有効化", "Mobがフォロワーを拾って装備できるようにする");
 
         addConfig("ScaleAndOffset", "スケールとオフセット", "装備者の目の位置を基準としたフォロワーの大きさと位置；オフセットはバネ運動または回転で決まる周回方向に沿い、フォロワー自身の向きとは無関係");
+        addFollowerRenderModes("独立", "編隊");
         addConfig("renderScale", "描画倍率", "装備者自身のスケールに乗算される");
         addConfig("frontBackOffset", "前後オフセット", "周回方向へ前に動かすブロック数、負の値で後ろ");
         addConfig("leftRightOffset", "左右オフセット", "周回方向の右に動かすブロック数、負の値で左");
@@ -306,6 +310,18 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("useShortestArc", "最短経路を使用", "1周ごとに追従せず、最短の弧で頭の向きに追いつく");
         addConfig("orientationFollowSpeed", "向きの追従速度", "向きが目標に追いつく速さ、大きいほど速い、1.0で即座に追従");
         addConfig("gazeAtViewTarget", "視線の終点を注視", "カメラの視点となるエンティティのフォロワーを照準点に向けさせ、通常は自分のフォロワーで、他者のフォロワーには影響しない");
+    }
+
+    /**
+     * 为排布方式枚举的每个常量写入显示名，穷尽 switch 使新增常量时编译失败以强制补译名。
+     */
+    private void addFollowerRenderModes(String independent, String formation) {
+        for (FollowerRenderMode renderMode : FollowerRenderMode.values()) {
+            addConfig("followerRenderMode." + renderMode.getSerializedName(), switch (renderMode) {
+                case INDEPENDENT -> independent;
+                case FORMATION -> formation;
+            });
+        }
     }
 
     /**
