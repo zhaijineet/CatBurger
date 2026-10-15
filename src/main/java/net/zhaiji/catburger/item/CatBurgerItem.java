@@ -24,13 +24,13 @@ public class CatBurgerItem extends FollowerItem {
     public void tick(LivingEntity wearer, ItemStack wornStack) {
         if (!(wearer instanceof Player player)) return;
 
-        int interval = CatBurgerServerConfig.INTERVAL.get();
+        int interval = CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_INTERVAL.get();
         if (interval > 0 && wearer.tickCount % interval != 0) return;
 
         FoodData foodData = player.getFoodData();
         int foodLevel = foodData.getFoodLevel();
-        int limit = CatBurgerServerConfig.LIMIT.get();
-        if (foodLevel < limit) foodData.setFoodLevel(Math.min(foodLevel + CatBurgerServerConfig.AMOUNT.get(), limit));
+        int limit = CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_LIMIT.get();
+        if (foodLevel < limit) foodData.setFoodLevel(Math.min(foodLevel + CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_AMOUNT.get(), limit));
     }
 
     /**
@@ -57,7 +57,7 @@ public class CatBurgerItem extends FollowerItem {
             foodData.setSaturation(CatBurgerServerConfig.RESTORE_SATURATION.get());
         }
 
-        cooldowns.addCooldown(this, CatBurgerServerConfig.COOLDOWN.get());
+        cooldowns.addCooldown(this, CatBurgerServerConfig.COOLDOWN_DURATION.get());
         wearer.level().broadcastEntityEvent(wearer, (byte) 35);
 
         if (player != null) PacketDistributor.sendToPlayer((ServerPlayer) player, new PlayerDeathPacket(wornStack));
@@ -70,19 +70,19 @@ public class CatBurgerItem extends FollowerItem {
         String keyPrefix = TooltipUtil.itemKeyPrefix(this);
         List<Component> effectLines = new ArrayList<>();
 
-        int interval = CatBurgerServerConfig.INTERVAL.get();
+        int interval = CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_INTERVAL.get();
         if (interval > 0) {
             effectLines.add(TooltipUtil.effectLine(Component.translatable(
                     keyPrefix + "effect.food_level_restoration",
                     TooltipUtil.formatNumber(interval / 20.0),
-                    TooltipUtil.formatNumber(CatBurgerServerConfig.AMOUNT.get()),
-                    TooltipUtil.formatNumber(CatBurgerServerConfig.LIMIT.get())
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_AMOUNT.get()),
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_LIMIT.get())
             )));
         } else {
             effectLines.add(TooltipUtil.effectLine(Component.translatable(
                     keyPrefix + "effect.food_level_restoration.every_tick",
-                    TooltipUtil.formatNumber(CatBurgerServerConfig.AMOUNT.get()),
-                    TooltipUtil.formatNumber(CatBurgerServerConfig.LIMIT.get())
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_AMOUNT.get()),
+                    TooltipUtil.formatNumber(CatBurgerServerConfig.FOOD_LEVEL_RESTORATION_LIMIT.get())
             )));
         }
 
@@ -109,7 +109,7 @@ public class CatBurgerItem extends FollowerItem {
 
         effectLines.add(TooltipUtil.effectLine(Component.translatable(
                 keyPrefix + "effect.death_protection.cooldown",
-                TooltipUtil.formatNumber(CatBurgerServerConfig.COOLDOWN.get() / 20.0)
+                TooltipUtil.formatNumber(CatBurgerServerConfig.COOLDOWN_DURATION.get() / 20.0)
         )));
 
         if (CatBurgerServerConfig.RESET_COOLDOWN_ON_WAKE_UP.get())

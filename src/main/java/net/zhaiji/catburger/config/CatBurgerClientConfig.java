@@ -5,12 +5,12 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class CatBurgerClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
-    public static final ModConfigSpec.DoubleValue SCALE = BUILDER
-            .comment("Size and position of the cat burger relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the cat burger's facing")
-            .push("Position")
-            .comment("Render scale of the cat burger")
+    public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
+            .comment("Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing")
+            .push("ScaleAndOffset")
+            .comment("Multiplied by the wearer's own scale")
             .defineInRange(
-                    "scale",
+                    "renderScale",
                     0.5,
                     0.1,
                     10d
@@ -55,7 +55,7 @@ public class CatBurgerClientConfig {
     public static final ModConfigSpec.DoubleValue FLOAT_DISTANCE = BUILDER
             .pop()
             .comment("Up and down floating motion")
-            .push("Float")
+            .push("FloatMotion")
             .comment("Height in blocks between the highest and lowest point of the float")
             .defineInRange(
                     "floatDistance",
@@ -77,7 +77,7 @@ public class CatBurgerClientConfig {
             .pop()
             .comment("Trailing behind the wearer while moving")
             .push("FollowDelay")
-            .comment("How quickly the cat burger catches up, higher values give a shorter trail, 1.0 follows instantly")
+            .comment("How quickly the follower catches up, higher values give a shorter trail, 1.0 follows instantly")
             .defineInRange(
                     "followSpeed",
                     0.2,
@@ -86,7 +86,7 @@ public class CatBurgerClientConfig {
             );
 
     public static final ModConfigSpec.DoubleValue MAX_LAG_DISTANCE = BUILDER
-            .comment("Maximum distance in blocks the cat burger trails behind, 0 disables trailing")
+            .comment("Maximum distance in blocks the follower trails behind, 0 disables trailing")
             .defineInRange(
                     "maxLagDistance",
                     3.0,
@@ -103,19 +103,19 @@ public class CatBurgerClientConfig {
                     false
             );
 
-    public static final ModConfigSpec.DoubleValue STIFFNESS = BUILDER
+    public static final ModConfigSpec.DoubleValue SPRING_STIFFNESS = BUILDER
             .comment("Spring stiffness, higher is snappier")
             .defineInRange(
-                    "stiffness",
+                    "springStiffness",
                     0.9,
                     0.1,
                     2.0
             );
 
-    public static final ModConfigSpec.DoubleValue DAMPING = BUILDER
+    public static final ModConfigSpec.DoubleValue SPRING_DAMPING = BUILDER
             .comment("Fraction of spring speed kept each tick, lower settles faster")
             .defineInRange(
-                    "damping",
+                    "springDamping",
                     0.7,
                     0.1,
                     0.99
@@ -124,8 +124,8 @@ public class CatBurgerClientConfig {
     public static final ModConfigSpec.DoubleValue ROTATION_FOLLOW_SPEED = BUILDER
             .pop()
             .pop()
-            .comment("How the cat burger orbits and faces when the wearer turns or looks around")
-            .push("Turning")
+            .comment("How the follower orbits and faces when the wearer turns or looks around")
+            .push("TurningAndFacing")
             .comment("How quickly the orbit catches up with the head, higher is faster, 1.0 follows instantly")
             .defineInRange(
                     "rotationFollowSpeed",
@@ -151,7 +151,7 @@ public class CatBurgerClientConfig {
             );
 
     public static final ModConfigSpec.BooleanValue GAZE_AT_VIEW_TARGET = BUILDER
-            .comment("Aim the cat burger worn by the camera entity, usually yourself, at the crosshair hit point; cat burgers worn by others are unaffected")
+            .comment("Aim the follower worn by the camera entity, usually yourself, at the crosshair hit point; followers worn by others are unaffected")
             .define(
                     "gazeAtViewTarget",
                     true

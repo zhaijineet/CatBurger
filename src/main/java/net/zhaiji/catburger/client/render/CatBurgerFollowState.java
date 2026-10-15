@@ -132,8 +132,8 @@ public class CatBurgerFollowState {
 
         if (CatBurgerClientConfig.SPRING_MOTION_ENABLED.get()) {
             float displacement = targetYaw - springYaw;
-            float springForce = CatBurgerClientConfig.STIFFNESS.get().floatValue() * displacement;
-            springVelocity = springVelocity * CatBurgerClientConfig.DAMPING.get().floatValue() + springForce;
+            float springForce = CatBurgerClientConfig.SPRING_STIFFNESS.get().floatValue() * displacement;
+            springVelocity = springVelocity * CatBurgerClientConfig.SPRING_DAMPING.get().floatValue() + springForce;
             springYaw += springVelocity;
         } else {
             springYaw = targetYaw;
@@ -300,7 +300,7 @@ public class CatBurgerFollowState {
                 livingEntity.getViewYRot(partialTicks),
                 livingEntity.getViewXRot(partialTicks),
                 0.0F,
-                CatBurgerClientConfig.SCALE.get().floatValue() * entityScale
+                CatBurgerClientConfig.RENDER_SCALE.get().floatValue() * entityScale
         );
     }
 
