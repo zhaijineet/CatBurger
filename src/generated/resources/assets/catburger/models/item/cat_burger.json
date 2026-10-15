@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:block/block",
+  "children": {
+    "geometry": {
+      "parent": "catburger:item/follower/cat_burger"
+    }
+  },
+  "display": {
+    "firstperson_righthand": {
+      "rotation": [
+        0,
+        142,
+        0
+      ],
+      "scale": [
+        0.4,
+        0.4,
+        0.4
+      ],
+      "translation": [
+        2,
+        3.5,
+        0
+      ]
+    }
+  },
+  "item_render_order": [
+    "geometry"
+  ],
+  "loader": "neoforge:composite"
+}

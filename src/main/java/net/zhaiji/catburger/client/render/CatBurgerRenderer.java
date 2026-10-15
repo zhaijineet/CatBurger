@@ -46,8 +46,8 @@ public class CatBurgerRenderer {
         poseStack.translate(transform.xOffset(), transform.yOffset(), transform.zOffset());
         float scale = transform.scale();
         poseStack.scale(scale, scale, scale);
-        poseStack.mulPose(Axis.YP.rotationDegrees(180));
-        poseStack.mulPose(Axis.YP.rotationDegrees(-transform.renderYaw()));
+        // 模型正面朝北（-Z）建模，偏航按 (180 - 偏航) 换算，模型自身不再做任何翻转
+        poseStack.mulPose(Axis.YP.rotationDegrees(180 - transform.renderYaw()));
         poseStack.mulPose(Axis.XP.rotationDegrees(-transform.headPitch()));
         poseStack.mulPose(Axis.ZP.rotationDegrees(transform.roll()));
         Minecraft.getInstance().getItemRenderer().renderStatic(

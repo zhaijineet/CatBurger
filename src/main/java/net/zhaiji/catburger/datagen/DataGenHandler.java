@@ -15,12 +15,13 @@ public class DataGenHandler {
         CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
         ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
 
-        generator.addProvider(event.includeServer(), new RecipeProvider(packOutput, lookupProvider));
-        generator.addProvider(event.includeServer(), new ItemTagProvider(packOutput, lookupProvider, existingFileHelper));
-        generator.addProvider(event.includeServer(), new CuriosEntitiesProvider(packOutput, existingFileHelper, lookupProvider));
+        generator.addProvider(event.includeServer(), new CatBurgerRecipeProvider(packOutput, lookupProvider));
+        generator.addProvider(event.includeServer(), new CatBurgerItemTagsProvider(packOutput, lookupProvider, existingFileHelper));
+        generator.addProvider(event.includeServer(), new CatBurgerCuriosDataProvider(packOutput, existingFileHelper, lookupProvider));
 
-        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.EN_US));
-        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.ZH_CN));
-        generator.addProvider(event.includeClient(), new LanguageProvider(packOutput, LanguageProvider.JA_JP));
+        generator.addProvider(event.includeClient(), new CatBurgerItemModelProvider(packOutput, existingFileHelper));
+        generator.addProvider(event.includeClient(), new CatBurgerLanguageProvider(packOutput, CatBurgerLanguageProvider.EN_US));
+        generator.addProvider(event.includeClient(), new CatBurgerLanguageProvider(packOutput, CatBurgerLanguageProvider.ZH_CN));
+        generator.addProvider(event.includeClient(), new CatBurgerLanguageProvider(packOutput, CatBurgerLanguageProvider.JA_JP));
     }
 }

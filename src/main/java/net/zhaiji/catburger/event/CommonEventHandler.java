@@ -10,11 +10,13 @@ import net.zhaiji.catburger.util.FollowerUtil;
 public class CommonEventHandler {
     public static void handlerLivingDeathEvent(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof Player player)) return;
+        if (player.level().isClientSide()) return;
         if (FollowerUtil.onDeathProtection(player, player.getCooldowns())) event.setCanceled(true);
     }
 
     public static void handlerPlayerWakeUpEvent(PlayerWakeUpEvent event) {
         Player player = event.getEntity();
+        if (player.level().isClientSide()) return;
         FollowerUtil.onWakeUp(player, player.getCooldowns());
     }
 

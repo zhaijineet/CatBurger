@@ -11,8 +11,8 @@ import java.util.concurrent.CompletableFuture;
 /**
  * 为玩家提供 Curios 的 head 槽，其他生物的饰品槽由给它们加槽的模组负责。
  */
-public class CuriosEntitiesProvider extends CuriosDataProvider {
-    public CuriosEntitiesProvider(PackOutput output, ExistingFileHelper existingFileHelper, CompletableFuture<HolderLookup.Provider> lookupProvider) {
+public class CatBurgerCuriosDataProvider extends CuriosDataProvider {
+    public CatBurgerCuriosDataProvider(PackOutput output, ExistingFileHelper existingFileHelper, CompletableFuture<HolderLookup.Provider> lookupProvider) {
         super(CatBurger.MOD_ID, output, existingFileHelper, lookupProvider);
     }
 

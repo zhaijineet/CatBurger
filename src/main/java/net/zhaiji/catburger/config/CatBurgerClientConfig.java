@@ -11,7 +11,7 @@ public class CatBurgerClientConfig {
             .comment("Render scale of the cat burger")
             .defineInRange(
                     "scale",
-                    0.7,
+                    0.5,
                     0.1,
                     10d
             );
@@ -38,7 +38,7 @@ public class CatBurgerClientConfig {
             .comment("Blocks to move up from eye height, negative moves down")
             .defineInRange(
                     "verticalOffset",
-                    0,
+                    0.5,
                     -100d,
                     100d
             );

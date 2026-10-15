@@ -1,20 +1,21 @@
 package net.zhaiji.catburger.datagen;
 
 import net.minecraft.data.PackOutput;
+import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
 import net.zhaiji.catburger.init.CatBurgerItems;
 import net.zhaiji.catburger.util.TooltipUtil;
 import org.jetbrains.annotations.Nullable;
 
-public class LanguageProvider extends net.neoforged.neoforge.common.data.LanguageProvider {
+public class CatBurgerLanguageProvider extends LanguageProvider {
     public static final String EN_US = "en_us";
     public static final String ZH_CN = "zh_cn";
     public static final String JA_JP = "ja_jp";
 
     public final String locale;
 
-    public LanguageProvider(PackOutput output, String locale) {
+    public CatBurgerLanguageProvider(PackOutput output, String locale) {
         super(output, CatBurger.MOD_ID, locale);
         this.locale = locale;
     }

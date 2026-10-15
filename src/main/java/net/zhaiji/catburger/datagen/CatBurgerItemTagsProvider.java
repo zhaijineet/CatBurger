@@ -1,6 +1,7 @@
 package net.zhaiji.catburger.datagen;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.IntrinsicHolderTagsProvider;
@@ -17,12 +18,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public class ItemTagProvider extends IntrinsicHolderTagsProvider<Item> {
+public class CatBurgerItemTagsProvider extends IntrinsicHolderTagsProvider<Item> {
     // Curios 的 head 槽靠该标签判定物品能否放入
     private static final TagKey<Item> CURIOS_HEAD = ItemTags.create(ResourceLocation.fromNamespaceAndPath("curios", "head"));
 
-    public ItemTagProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
-        super(output, Registries.ITEM, lookupProvider, item -> item.builtInRegistryHolder().key(), CatBurger.MOD_ID, existingFileHelper);
+    public CatBurgerItemTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
+        super(output, Registries.ITEM, lookupProvider, item -> BuiltInRegistries.ITEM.getResourceKey(item).orElseThrow(), CatBurger.MOD_ID, existingFileHelper);
     }
 
     @Override
