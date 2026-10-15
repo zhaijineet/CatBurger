@@ -7,6 +7,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.item.FollowerItem;
 
 import java.math.RoundingMode;
@@ -68,6 +69,39 @@ public class TooltipUtil {
      */
     public static MutableComponent effectLine(Component content) {
         return Component.literal(LINE_PREFIX).append(content).withStyle(ChatFormatting.GRAY);
+    }
+
+    /**
+     * 给出死亡保护的回血子句，按百分比模式或固定值模式二选一。
+     */
+    public static Component deathProtectionHealthComponent(String keyPrefix, boolean useHealthPercentage, double healthPercentage, double fixedHealth) {
+        return useHealthPercentage
+                ? Component.translatable(
+                keyPrefix + "effect.death_protection.restore_health_percentage",
+                formatNumber(healthPercentage)
+        )
+                : Component.translatable(
+                keyPrefix + "effect.death_protection.restore_health",
+                formatNumber(fixedHealth)
+        );
+    }
+
+    /**
+     * 给出死亡保护的冷却说明内容，冷却时长由所有追随者共用。
+     */
+    public static Component deathProtectionCooldownComponent(String keyPrefix) {
+        return Component.translatable(
+                keyPrefix + "effect.death_protection.cooldown",
+                formatNumber(CatBurgerServerConfig.COOLDOWN_DURATION.get() / 20.0)
+        );
+    }
+
+    /**
+     * 按全局配置追加睡醒重置冷却的说明行，未启用时不追加。
+     */
+    public static void appendDeathProtectionWakeUpLine(List<Component> effectLines, String keyPrefix) {
+        if (!CatBurgerServerConfig.RESET_COOLDOWN_ON_WAKE_UP.get()) return;
+        effectLines.add(effectLine(Component.translatable(keyPrefix + "effect.death_protection.wake_up")));
     }
 
     /**

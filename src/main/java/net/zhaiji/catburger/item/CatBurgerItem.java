@@ -1,6 +1,5 @@
 package net.zhaiji.catburger.item;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,7 +33,7 @@ public class CatBurgerItem extends FollowerItem {
     }
 
     /**
-     * 按配置提供死亡保护：恢复生命值、饥饿值与饱和度，写入本物品的冷却并通知佩戴者，返回 true 表示已接管本次死亡。
+     * 按配置提供死亡保护：恢复生命值、饥饿值与饱和度，写入本物品的冷却并通知佩戴者。
      */
     @Override
     public boolean onDeathProtection(LivingEntity wearer, ItemStack wornStack, ItemCooldowns cooldowns) {
@@ -86,19 +85,13 @@ public class CatBurgerItem extends FollowerItem {
             )));
         }
 
-        if (!CatBurgerServerConfig.DEATH_PROTECTION_ENABLED.get()) {
-            effectLines.add(TooltipUtil.effectLine(Component.translatable(keyPrefix + "effect.death_protection.disabled")).withStyle(ChatFormatting.DARK_GRAY));
-            return effectLines;
-        }
+        if (!CatBurgerServerConfig.DEATH_PROTECTION_ENABLED.get()) return effectLines;
 
-        Component healthComponent = CatBurgerServerConfig.USE_HEALTH_PERCENTAGE.get()
-                ? Component.translatable(
-                keyPrefix + "effect.death_protection.restore_health_percentage",
-                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_HEALTH_PERCENTAGE.get())
-        )
-                : Component.translatable(
-                keyPrefix + "effect.death_protection.restore_health",
-                TooltipUtil.formatNumber(CatBurgerServerConfig.RESTORE_HEALTH.get())
+        Component healthComponent = TooltipUtil.deathProtectionHealthComponent(
+                keyPrefix,
+                CatBurgerServerConfig.USE_HEALTH_PERCENTAGE.get(),
+                CatBurgerServerConfig.RESTORE_HEALTH_PERCENTAGE.get(),
+                CatBurgerServerConfig.RESTORE_HEALTH.get()
         );
         Component foodLevelComponent = Component.translatable(
                 keyPrefix + "effect.death_protection.restore_food_level",
@@ -107,13 +100,8 @@ public class CatBurgerItem extends FollowerItem {
         );
         effectLines.add(TooltipUtil.effectLine(Component.empty().append(healthComponent).append(foodLevelComponent)));
 
-        effectLines.add(TooltipUtil.effectLine(Component.translatable(
-                keyPrefix + "effect.death_protection.cooldown",
-                TooltipUtil.formatNumber(CatBurgerServerConfig.COOLDOWN_DURATION.get() / 20.0)
-        )));
-
-        if (CatBurgerServerConfig.RESET_COOLDOWN_ON_WAKE_UP.get())
-            effectLines.add(TooltipUtil.effectLine(Component.translatable(keyPrefix + "effect.death_protection.wake_up")));
+        effectLines.add(TooltipUtil.effectLine(TooltipUtil.deathProtectionCooldownComponent(keyPrefix)));
+        TooltipUtil.appendDeathProtectionWakeUpLine(effectLines, keyPrefix);
 
         return effectLines;
     }

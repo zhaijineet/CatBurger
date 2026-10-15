@@ -4,6 +4,7 @@ import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.item.BlubItem;
 import net.zhaiji.catburger.item.CatBurgerItem;
 
 public class CatBurgerItems {
@@ -12,5 +13,10 @@ public class CatBurgerItems {
     public static final DeferredItem<Item> CAT_BURGER = ITEMS.register(
             "cat_burger",
             CatBurgerItem::new
+    );
+
+    public static final DeferredItem<Item> BLUB = ITEMS.register(
+            "blub",
+            BlubItem::new
     );
 }

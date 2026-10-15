@@ -36,7 +36,25 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(itemKeyPrefix + "effect.death_protection.restore_food_level", ", food level to %s and saturation to %s");
         add(itemKeyPrefix + "effect.death_protection.cooldown", "Death protection cooldown: %s seconds");
         add(itemKeyPrefix + "effect.death_protection.wake_up", "Waking up from sleep resets the death protection cooldown");
-        add(itemKeyPrefix + "effect.death_protection.disabled", "Death protection is disabled in the config");
+
+        addItem(CatBurgerItems.BLUB, "Jelly Bunny");
+
+        String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
+        add(blubKeyPrefix + "description.0", "Blub!");
+        add(blubKeyPrefix + "effect.tick_effects.entry", "While worn, grants %2$s (%3$s seconds) every %1$s seconds");
+        add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "While worn, grants %1$s (%2$s seconds) every tick");
+        add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "On fatal damage, triggers death protection and restores health to %s%% of max health");
+        add(blubKeyPrefix + "effect.death_protection.restore_health", "On fatal damage, triggers death protection and restores health to %s");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_all", ", applies %2$s to mobs within %1$s blocks");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_excluded", ", applies %3$s to mobs within %1$s blocks except %2$s");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope", ", applies %3$s to %2$s within %1$s blocks");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.item", "%1$s (%2$s seconds)");
+        add(blubKeyPrefix + "effect.list_separator", ", ");
+        add(blubKeyPrefix + "effect.target.self", "yourself");
+        add(blubKeyPrefix + "effect.target.players", "players");
+        add(blubKeyPrefix + "effect.target.pets", "tamed pets");
+        add(blubKeyPrefix + "effect.death_protection.cooldown", "Death protection cooldown: %s seconds");
+        add(blubKeyPrefix + "effect.death_protection.wake_up", "Waking up from sleep resets the death protection cooldown");
 
         addConfig("title", "Cat Burger Configuration");
 
@@ -57,6 +75,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreHealth", "Restore Health", "In fixed value mode, restored to this value");
         addConfig("restoreFoodLevel", "Restore Food Level", "Restored to this value");
         addConfig("restoreSaturation", "Restore Saturation", "Restored to this value");
+
+        addConfig("Blub", "Jelly Bunny", "Follower that grants night vision while worn and protects the wearer from death");
+        addConfig("nightVisionInterval", "Night Vision Refresh Interval", "Ticks between refreshes, 0 refreshes every tick; keep it well below the effect duration or the effect expires and flickers");
+        addConfig("effects", "Effect List", "One entry per line, formatted as effect|duration|amplifier; amplifier 0 is level I, up to 255");
+        addConfig("RadiusEffects", "Range Effects", "Effects applied to nearby mobs when death protection triggers");
+        addConfig("radius", "Range Radius", "Radius in blocks around the wearer");
+        addConfig("affectSelf", "Affect Self", "Whether the wearer itself is affected");
+        addConfig("affectPlayers", "Affect Players", "Whether players are affected");
+        addConfig("affectPets", "Affect Pets", "Whether tamed pets are affected, meaning any creature with an owner");
+        addConfig("affectOtherMobs", "Affect Other Mobs", "Whether other mobs are affected, meaning creatures that are neither the wearer, nor players, nor tamed pets");
 
         addConfig("MobPickup", "Mob Pickup", "Whether mobs can pick up and wear followers");
         addConfig("mobPickupEnabled", "Enable Mob Pickup", "Allow mobs to pick up and wear followers");
@@ -104,7 +132,25 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(itemKeyPrefix + "effect.death_protection.restore_food_level", "，饥饿值恢复至%s点，饱和度恢复至%s点");
         add(itemKeyPrefix + "effect.death_protection.cooldown", "死亡保护冷却时间：%s秒");
         add(itemKeyPrefix + "effect.death_protection.wake_up", "睡醒后重置死亡保护的冷却时间");
-        add(itemKeyPrefix + "effect.death_protection.disabled", "死亡保护已在配置中禁用");
+
+        addItem(CatBurgerItems.BLUB, "果冻兔兔");
+
+        String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
+        add(blubKeyPrefix + "description.0", "布噜~");
+        add(blubKeyPrefix + "effect.tick_effects.entry", "佩戴时每%1$s秒获得%2$s（%3$s秒）");
+        add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "佩戴时每刻获得%1$s（%2$s秒）");
+        add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "受到致命伤害时触发死亡保护，生命值恢复至最大生命值的%s%%");
+        add(blubKeyPrefix + "effect.death_protection.restore_health", "受到致命伤害时触发死亡保护，生命值恢复至%s点");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_all", "，对%1$s格内的生物施加%2$s");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_excluded", "，对%1$s格内的除%2$s外的生物施加%3$s");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope", "，对%1$s格内的%2$s施加%3$s");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.item", "%1$s（%2$s秒）");
+        add(blubKeyPrefix + "effect.list_separator", "、");
+        add(blubKeyPrefix + "effect.target.self", "自己");
+        add(blubKeyPrefix + "effect.target.players", "玩家");
+        add(blubKeyPrefix + "effect.target.pets", "宠物");
+        add(blubKeyPrefix + "effect.death_protection.cooldown", "死亡保护冷却时间：%s秒");
+        add(blubKeyPrefix + "effect.death_protection.wake_up", "睡醒后重置死亡保护的冷却时间");
 
         addConfig("title", "猫猫汉堡配置");
 
@@ -125,6 +171,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreHealth", "恢复生命值", "固定数值模式下恢复至此数值");
         addConfig("restoreFoodLevel", "恢复饥饿值", "恢复至此数值");
         addConfig("restoreSaturation", "恢复饱和度", "恢复至此数值");
+
+        addConfig("Blub", "果冻兔兔", "佩戴时提供夜视并在死亡时保护佩戴者的追随者");
+        addConfig("nightVisionInterval", "夜视刷新间隔", "刷新效果的间隔刻数，0为每刻刷新；需明显短于效果时长，否则效果会在到期后重新获得而闪烁");
+        addConfig("effects", "效果列表", "每行一条，格式为「效果|持续刻数|等级」，等级按原版计，0为I级，最高255级");
+        addConfig("RadiusEffects", "范围效果", "死亡保护触发时对周围生物施加的效果");
+        addConfig("radius", "范围半径", "以佩戴者为中心的半径格数");
+        addConfig("affectSelf", "影响自己", "佩戴者本人是否受影响");
+        addConfig("affectPlayers", "影响玩家", "玩家是否受影响");
+        addConfig("affectPets", "影响宠物", "已驯服的宠物（任何有主人的生物）是否受影响");
+        addConfig("affectOtherMobs", "影响其他生物", "既非佩戴者本人、也非玩家与宠物的生物是否受影响");
 
         addConfig("MobPickup", "生物拾取", "生物是否能捡起并佩戴追随者");
         addConfig("mobPickupEnabled", "启用生物拾取", "允许生物捡起并佩戴追随者");
@@ -172,7 +228,25 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(itemKeyPrefix + "effect.death_protection.restore_food_level", "、満腹度が%s、隠し満腹度が%sまで回復");
         add(itemKeyPrefix + "effect.death_protection.cooldown", "死亡保護のクールダウン：%s秒");
         add(itemKeyPrefix + "effect.death_protection.wake_up", "起床すると死亡保護のクールダウンがリセットされる");
-        add(itemKeyPrefix + "effect.death_protection.disabled", "死亡保護は設定で無効になっている");
+
+        addItem(CatBurgerItems.BLUB, "ジェリーバニー");
+
+        String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
+        add(blubKeyPrefix + "description.0", "ぷるん");
+        add(blubKeyPrefix + "effect.tick_effects.entry", "装備中、%1$s秒ごとに%2$s（%3$s秒間）を付与する");
+        add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "装備中、毎tick %1$s（%2$s秒間）を付与する");
+        add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "致死ダメージを受けると死亡保護が発動し、体力が最大体力の%s%%まで回復");
+        add(blubKeyPrefix + "effect.death_protection.restore_health", "致死ダメージを受けると死亡保護が発動し、体力が%sまで回復");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_all", "、%1$sブロック以内のMobに%2$sを付与する");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope_excluded", "、%1$sブロック以内の%2$s以外のMobに%3$sを付与する");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.scope", "、%1$sブロック以内の%2$sに%3$sを付与する");
+        add(blubKeyPrefix + "effect.death_protection.radius_effects.item", "%1$s（%2$s秒間）");
+        add(blubKeyPrefix + "effect.list_separator", "、");
+        add(blubKeyPrefix + "effect.target.self", "自分");
+        add(blubKeyPrefix + "effect.target.players", "プレイヤー");
+        add(blubKeyPrefix + "effect.target.pets", "手懐けたペット");
+        add(blubKeyPrefix + "effect.death_protection.cooldown", "死亡保護のクールダウン：%s秒");
+        add(blubKeyPrefix + "effect.death_protection.wake_up", "起床すると死亡保護のクールダウンがリセットされる");
 
         addConfig("title", "猫バーガーの設定");
 
@@ -193,6 +267,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreHealth", "体力を回復", "固定値モードではこの値まで回復する");
         addConfig("restoreFoodLevel", "満腹度を回復", "この値まで回復する");
         addConfig("restoreSaturation", "隠し満腹度を回復", "この値まで回復する");
+
+        addConfig("Blub", "ジェリーバニー", "装備中は暗視を付与し、死亡時に装備者を保護するフォロワー");
+        addConfig("nightVisionInterval", "暗視の更新間隔", "効果を更新する間隔のtick数、0で毎tick更新；効果時間より十分短くしないと効果が切れてちらつく");
+        addConfig("effects", "効果リスト", "1行に1件、「効果|効果時間|レベル」の形式；レベルは0がI、最大255");
+        addConfig("RadiusEffects", "範囲効果", "死亡保護の発動時に周囲のMobへ付与する効果");
+        addConfig("radius", "効果範囲の半径", "装備者を中心とした半径のブロック数");
+        addConfig("affectSelf", "自分に影響", "装備者自身が影響を受けるかどうか");
+        addConfig("affectPlayers", "プレイヤーに影響", "プレイヤーが影響を受けるかどうか");
+        addConfig("affectPets", "ペットに影響", "手懐けたペット（飼い主のいるMob）が影響を受けるかどうか");
+        addConfig("affectOtherMobs", "その他のMobに影響", "装備者でもプレイヤーでも手懐けたペットでもないMobが影響を受けるかどうか");
 
         addConfig("MobPickup", "Mobの拾得", "Mobがフォロワーを拾って装備できるかどうか");
         addConfig("mobPickupEnabled", "Mobの拾得を有効化", "Mobがフォロワーを拾って装備できるようにする");

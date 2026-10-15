@@ -2,6 +2,8 @@ package net.zhaiji.catburger.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
+import java.util.List;
+
 public class CatBurgerServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
@@ -110,7 +112,115 @@ public class CatBurgerServerConfig {
                     20
             );
 
+    public static final ModConfigSpec.IntValue BLUB_NIGHT_VISION_INTERVAL = BUILDER
+            .pop()
+            .pop()
+            .comment("Follower that grants night vision while worn and protects the wearer from death")
+            .push("Blub")
+            .comment("Effects that trigger repeatedly while the follower is worn")
+            .push("TickEffects")
+            .comment("Ticks between refreshes, 0 refreshes every tick; keep it well below the effect duration or the effect expires and flickers")
+            .defineInRange(
+                    "nightVisionInterval",
+                    100,
+                    0,
+                    Integer.MAX_VALUE
+            );
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BLUB_TICK_EFFECTS = BUILDER
+            .comment("Effects granted on each refresh, one entry per line as effect|duration|amplifier, e.g. minecraft:night_vision|400|0")
+            .defineListAllowEmpty(
+                    "effects",
+                    List.of("minecraft:night_vision|400|0"),
+                    () -> "minecraft:night_vision|400|0",
+                    ConfiguredEffect::isValidElement
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_DEATH_PROTECTION_ENABLED = BUILDER
+            .pop()
+            .comment("Death protection while a follower is worn")
+            .push("DeathProtectionEffect")
+            .comment("Trigger when the wearer takes fatal damage")
+            .define(
+                    "deathProtectionEnabled",
+                    true
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_USE_HEALTH_PERCENTAGE = BUILDER
+            .comment("Health is restored as a percentage of max health, otherwise to a fixed value")
+            .define(
+                    "useHealthPercentage",
+                    true
+            );
+
+    public static final ModConfigSpec.DoubleValue BLUB_RESTORE_HEALTH_PERCENTAGE = BUILDER
+            .comment("Health is restored to this percentage of max health")
+            .defineInRange(
+                    "restoreHealthPercentage",
+                    100.0,
+                    0.0,
+                    100.0
+            );
+
+    public static final ModConfigSpec.IntValue BLUB_RESTORE_HEALTH = BUILDER
+            .comment("In fixed value mode, restored to this value")
+            .defineInRange(
+                    "restoreHealth",
+                    20,
+                    0,
+                    Integer.MAX_VALUE
+            );
+
+    public static final ModConfigSpec.DoubleValue BLUB_RADIUS = BUILDER
+            .comment("Effects applied to nearby mobs when death protection triggers")
+            .push("RadiusEffects")
+            .comment("Radius in blocks around the wearer; which creatures are affected is set by the toggles below")
+            .defineInRange(
+                    "radius",
+                    10.0,
+                    0.0,
+                    64.0
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_RADIUS_AFFECT_SELF = BUILDER
+            .comment("Whether the wearer itself is affected")
+            .define(
+                    "affectSelf",
+                    false
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_RADIUS_AFFECT_PLAYERS = BUILDER
+            .comment("Whether players are affected")
+            .define(
+                    "affectPlayers",
+                    false
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_RADIUS_AFFECT_PETS = BUILDER
+            .comment("Whether tamed pets are affected, meaning any creature with an owner")
+            .define(
+                    "affectPets",
+                    false
+            );
+
+    public static final ModConfigSpec.BooleanValue BLUB_RADIUS_AFFECT_OTHER_MOBS = BUILDER
+            .comment("Whether other mobs are affected, meaning creatures that are neither the wearer, nor players, nor tamed pets")
+            .define(
+                    "affectOtherMobs",
+                    true
+            );
+
+    public static final ModConfigSpec.ConfigValue<List<? extends String>> BLUB_RADIUS_EFFECTS = BUILDER
+            .comment("Effects applied to every affected mob, one entry per line as effect|duration|amplifier, e.g. minecraft:weakness|400|0")
+            .defineListAllowEmpty(
+                    "effects",
+                    List.of("minecraft:weakness|400|0", "minecraft:slowness|400|0"),
+                    () -> "minecraft:weakness|400|0",
+                    ConfiguredEffect::isValidElement
+            );
+
     public static final ModConfigSpec.BooleanValue MOB_PICKUP_ENABLED = BUILDER
+            .pop()
             .pop()
             .pop()
             .pop()
