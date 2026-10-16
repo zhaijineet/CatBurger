@@ -40,6 +40,8 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private boolean useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.getDefault();
     private double orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.getDefault();
 
+    private boolean gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.getDefault();
+
     /**
      * 按本机客户端配置填充全部字段，只在客户端发送前调用。
      */
@@ -60,6 +62,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         rotationFollowSpeed = CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get();
         useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.get();
         orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get();
+        gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get();
     }
 
     /**
@@ -89,6 +92,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         ModConfigSpec.Range<Double> range = value.getSpec().getRange();
         return Mth.clamp(rawValue, range.getMin(), range.getMax());
     }
+
     private static void encode(RegistryFriendlyByteBuf buf, FollowerRenderData data) {
         FollowerRenderMode.STREAM_CODEC.encode(buf, data.renderMode);
         buf.writeDouble(data.scale);
@@ -106,6 +110,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         buf.writeDouble(data.rotationFollowSpeed);
         buf.writeBoolean(data.useShortestArc);
         buf.writeDouble(data.orientationFollowSpeed);
+        buf.writeBoolean(data.gazeAtViewTarget);
     }
 
     private static FollowerRenderData decode(RegistryFriendlyByteBuf buf) {
@@ -126,6 +131,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         data.rotationFollowSpeed = buf.readDouble();
         data.useShortestArc = buf.readBoolean();
         data.orientationFollowSpeed = buf.readDouble();
+        data.gazeAtViewTarget = buf.readBoolean();
         return data;
     }
 
@@ -148,6 +154,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         tag.putDouble("rotationFollowSpeed", rotationFollowSpeed);
         tag.putBoolean("useShortestArc", useShortestArc);
         tag.putDouble("orientationFollowSpeed", orientationFollowSpeed);
+        tag.putBoolean("gazeAtViewTarget", gazeAtViewTarget);
         return tag;
     }
 
@@ -169,5 +176,70 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.contains("rotationFollowSpeed")) rotationFollowSpeed = tag.getDouble("rotationFollowSpeed");
         if (tag.contains("useShortestArc")) useShortestArc = tag.getBoolean("useShortestArc");
         if (tag.contains("orientationFollowSpeed")) orientationFollowSpeed = tag.getDouble("orientationFollowSpeed");
+        if (tag.contains("gazeAtViewTarget")) gazeAtViewTarget = tag.getBoolean("gazeAtViewTarget");
+    }
+
+    public double getScale() {
+        return scale;
+    }
+
+    public double getFrontBackOffset() {
+        return frontBackOffset;
+    }
+
+    public double getLeftRightOffset() {
+        return leftRightOffset;
+    }
+
+    public double getVerticalOffset() {
+        return verticalOffset;
+    }
+
+    public double getCrouchOffset() {
+        return crouchOffset;
+    }
+
+    public double getFloatDistance() {
+        return floatDistance;
+    }
+
+    public double getFloatCycleDuration() {
+        return floatCycleDuration;
+    }
+
+    public double getFollowSpeed() {
+        return followSpeed;
+    }
+
+    public double getMaxLagDistance() {
+        return maxLagDistance;
+    }
+
+    public boolean isSpringMotionEnabled() {
+        return springMotionEnabled;
+    }
+
+    public double getSpringStiffness() {
+        return springStiffness;
+    }
+
+    public double getSpringDamping() {
+        return springDamping;
+    }
+
+    public double getRotationFollowSpeed() {
+        return rotationFollowSpeed;
+    }
+
+    public boolean isUseShortestArc() {
+        return useShortestArc;
+    }
+
+    public double getOrientationFollowSpeed() {
+        return orientationFollowSpeed;
+    }
+
+    public boolean isGazeAtViewTarget() {
+        return gazeAtViewTarget;
     }
 }

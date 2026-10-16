@@ -58,7 +58,7 @@
   "catburger.configuration.frontBackOffset": "前後オフセット",
   "catburger.configuration.frontBackOffset.tooltip": "周回方向へ前に動かすブロック数、負の値で後ろ",
   "catburger.configuration.gazeAtViewTarget": "視線の終点を注視",
-  "catburger.configuration.gazeAtViewTarget.tooltip": "カメラの視点となるエンティティのフォロワーを照準点に向けさせ、通常は自分のフォロワーで、他者のフォロワーには影響しない",
+  "catburger.configuration.gazeAtViewTarget.tooltip": "プレイヤーが装着しているフォロワーを、そのプレイヤー自身の照準点に向けさせる（同期された設定に従う）。非プレイヤーの装着者はローカル設定に従う",
   "catburger.configuration.leftRightOffset": "左右オフセット",
   "catburger.configuration.leftRightOffset.tooltip": "周回方向の右に動かすブロック数、負の値で左",
   "catburger.configuration.maxLagDistance": "最大遅延距離",

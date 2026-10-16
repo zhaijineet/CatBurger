@@ -115,7 +115,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("rotationFollowSpeed", "Rotation Follow Speed", "How quickly the orbit catches up with the head, higher is faster, 1.0 follows instantly");
         addConfig("useShortestArc", "Use Shortest Arc", "Catch up along the shortest arc instead of following every full turn");
         addConfig("orientationFollowSpeed", "Orientation Follow Speed", "How quickly the facing catches up with its target, higher is faster, 1.0 follows instantly");
-        addConfig("gazeAtViewTarget", "Gaze at View Target", "Aim the follower worn by the camera entity, usually yourself, at the crosshair hit point; followers worn by others are unaffected");
+        addConfig("gazeAtViewTarget", "Gaze at View Target", "Aim the follower worn by a player at that player's own crosshair hit point, using the setting they synced to the server; followers on non-player wearers use this local setting");
     }
 
     public void Chinese() {
@@ -212,7 +212,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("rotationFollowSpeed", "转向跟随速度", "环绕追上头部朝向的速度，越大越快，1.0为瞬时跟随");
         addConfig("useShortestArc", "使用最短路径", "沿最短弧线追上头部朝向，不再跟随每一圈完整转身");
         addConfig("orientationFollowSpeed", "朝向跟随速度", "朝向追上目标的速度，越大越快，1.0为瞬时跟随");
-        addConfig("gazeAtViewTarget", "注视视线终点", "让当前视角所属实体佩戴的追随者注视准心命中点，通常就是你自己，其他人佩戴的不受影响");
+        addConfig("gazeAtViewTarget", "注视视线终点", "让玩家佩戴的追随者注视该玩家自己的准心命中点，按其同步过来的设置生效；非玩家佩戴的追随者按本机设置");
     }
 
     public void Japanese() {
@@ -309,7 +309,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("rotationFollowSpeed", "回転の追従速度", "周回が頭の向きに追いつく速さ、大きいほど速い、1.0で即座に追従");
         addConfig("useShortestArc", "最短経路を使用", "1周ごとに追従せず、最短の弧で頭の向きに追いつく");
         addConfig("orientationFollowSpeed", "向きの追従速度", "向きが目標に追いつく速さ、大きいほど速い、1.0で即座に追従");
-        addConfig("gazeAtViewTarget", "視線の終点を注視", "カメラの視点となるエンティティのフォロワーを照準点に向けさせ、通常は自分のフォロワーで、他者のフォロワーには影響しない");
+        addConfig("gazeAtViewTarget", "視線の終点を注視", "プレイヤーが装着しているフォロワーを、そのプレイヤー自身の照準点に向けさせる（同期された設定に従う）。非プレイヤーの装着者はローカル設定に従う");
     }
 
     /**

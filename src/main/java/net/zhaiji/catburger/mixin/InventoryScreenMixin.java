@@ -3,7 +3,7 @@ package net.zhaiji.catburger.mixin;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.world.entity.LivingEntity;
-import net.zhaiji.catburger.client.render.CatBurgerRenderer;
+import net.zhaiji.catburger.client.render.FollowerRenderer;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -29,7 +29,7 @@ public abstract class InventoryScreenMixin {
             LivingEntity entity,
             CallbackInfo ci
     ) {
-        CatBurgerRenderer.beginInventoryPreview();
+        FollowerRenderer.beginInventoryPreview();
     }
 
     @Inject(
@@ -47,6 +47,6 @@ public abstract class InventoryScreenMixin {
             LivingEntity entity,
             CallbackInfo ci
     ) {
-        CatBurgerRenderer.endInventoryPreview();
+        FollowerRenderer.endInventoryPreview();
     }
 }

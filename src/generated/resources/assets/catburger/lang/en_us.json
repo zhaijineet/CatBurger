@@ -58,7 +58,7 @@
   "catburger.configuration.frontBackOffset": "Front/Back Offset",
   "catburger.configuration.frontBackOffset.tooltip": "Blocks to move forward along the orbit direction, negative moves backward",
   "catburger.configuration.gazeAtViewTarget": "Gaze at View Target",
-  "catburger.configuration.gazeAtViewTarget.tooltip": "Aim the follower worn by the camera entity, usually yourself, at the crosshair hit point; followers worn by others are unaffected",
+  "catburger.configuration.gazeAtViewTarget.tooltip": "Aim the follower worn by a player at that player's own crosshair hit point, using the setting they synced to the server; followers on non-player wearers use this local setting",
   "catburger.configuration.leftRightOffset": "Left/Right Offset",
   "catburger.configuration.leftRightOffset.tooltip": "Blocks to move to the right of the orbit direction, negative moves left",
   "catburger.configuration.maxLagDistance": "Max Lag Distance",

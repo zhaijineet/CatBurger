@@ -158,7 +158,7 @@ public class CatBurgerClientConfig {
             );
 
     public static final ModConfigSpec.BooleanValue GAZE_AT_VIEW_TARGET = BUILDER
-            .comment("Aim the follower worn by the camera entity, usually yourself, at the crosshair hit point; followers worn by others are unaffected")
+            .comment("Aim the follower worn by a player at that player's own crosshair hit point, using the setting they synced to the server; followers on non-player wearers use this local setting")
             .define(
                     "gazeAtViewTarget",
                     true

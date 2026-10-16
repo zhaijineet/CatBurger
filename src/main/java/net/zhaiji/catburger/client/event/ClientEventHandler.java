@@ -4,7 +4,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
-import net.zhaiji.catburger.client.render.CatBurgerRenderer;
+import net.zhaiji.catburger.client.render.FollowerRenderer;
+import net.zhaiji.catburger.client.render.RenderParamsResolver;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.network.client.ClientPacketHandler;
@@ -23,9 +24,9 @@ public class ClientEventHandler {
         List<WornFollower> wornFollowers = FollowerUtil.findAll(livingEntity);
         if (wornFollowers.isEmpty() || !wornFollowers.getFirst().renderable()) return;
 
-        CatBurgerRenderer.render(
+        FollowerRenderer.render(
                 livingEntity,
-                wornFollowers.getFirst().itemStack(),
+                wornFollowers.getFirst(),
                 event.getPoseStack(),
                 event.getMultiBufferSource(),
                 event.getPackedLight(),
@@ -42,10 +43,13 @@ public class ClientEventHandler {
 
     /**
      * 服务端配置加载、被修改、从服务器同步或卸载时清空 tooltip 缓存，使效果说明行按新配置重建；
-     * 客户端配置被修改时把新的渲染参数上传给服务端。
+     * 客户端配置被修改时丢弃按旧配置构造的本机回退渲染参数，并把新参数上传给服务端。
      */
     public static void handlerModConfigEvent(ModConfigEvent event) {
         if (event.getConfig().getSpec() == CatBurgerServerConfig.SPEC) TooltipUtil.invalidateEffectLineCache();
-        if (event.getConfig().getSpec() == CatBurgerClientConfig.SPEC) ClientPacketHandler.sendFollowerRenderData();
+        if (event.getConfig().getSpec() == CatBurgerClientConfig.SPEC) {
+            RenderParamsResolver.invalidateLocalFallback();
+            ClientPacketHandler.sendFollowerRenderData();
+        }
     }
 }

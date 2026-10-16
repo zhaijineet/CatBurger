@@ -10,7 +10,8 @@
   ],
   "client": [
     "CustomHeadLayerMixin",
-    "InventoryScreenMixin"
+    "InventoryScreenMixin",
+    "LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -211,11 +211,11 @@ public class CatBurgerServerConfig {
             );
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> BLUB_RADIUS_EFFECTS = BUILDER
-            .comment("Effects applied to every affected mob, one entry per line as effect|duration|amplifier, e.g. minecraft:weakness|400|0")
+            .comment("Effects applied to every affected mob, one entry per line as effect|duration|amplifier, e.g. minecraft:weakness|100|0")
             .defineListAllowEmpty(
                     "effects",
-                    List.of("minecraft:weakness|400|0", "minecraft:slowness|400|0"),
-                    () -> "minecraft:weakness|400|0",
+                    List.of("minecraft:weakness|100|0", "minecraft:slowness|200|0"),
+                    () -> "minecraft:weakness|100|0",
                     ConfiguredEffect::isValidElement
             );
 

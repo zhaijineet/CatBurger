@@ -58,7 +58,7 @@
   "catburger.configuration.frontBackOffset": "前后偏移",
   "catburger.configuration.frontBackOffset.tooltip": "沿环绕方向向前偏移的格数，负值向后",
   "catburger.configuration.gazeAtViewTarget": "注视视线终点",
-  "catburger.configuration.gazeAtViewTarget.tooltip": "让当前视角所属实体佩戴的追随者注视准心命中点，通常就是你自己，其他人佩戴的不受影响",
+  "catburger.configuration.gazeAtViewTarget.tooltip": "让玩家佩戴的追随者注视该玩家自己的准心命中点，按其同步过来的设置生效；非玩家佩戴的追随者按本机设置",
   "catburger.configuration.leftRightOffset": "左右偏移",
   "catburger.configuration.leftRightOffset.tooltip": "沿环绕方向向右偏移的格数，负值向左",
   "catburger.configuration.maxLagDistance": "最大滞后距离",
