@@ -43,8 +43,8 @@ public class FollowerLayout {
     }
 
     /**
-     * 第 0 件落在配置位置，其后每件以已放置的某一件为母点随机散开；间距是绝对格数，与显示尺寸无关。
-     * 与已放置件过近或落入佩戴者圆柱时重试，重试用尽仍在圆柱内则沿水平方向推出。
+     * 第0件落在配置位置，其后每件以已放置的某一件为母点随机散开；间距是绝对格数，与显示尺寸无关。
+     * 候选先压回圆柱与活动半径之间再判间距，全部尝试都过近时取与已放置件最远的那一次。
      */
     public static double[] scatter(
             LivingEntity livingEntity,
@@ -56,18 +56,20 @@ public class FollowerLayout {
         double[] layout = new double[followerCount * 3];
         double minSpacing = Math.min(renderParams.getMinSpacing(), renderParams.getMaxSpacing());
         double maxSpacing = Math.max(renderParams.getMinSpacing(), renderParams.getMaxSpacing());
+        double minSpacingSqr = minSpacing * minSpacing;
         double maxRadius = renderParams.getMaxRadius();
         float entityScale = livingEntity.getScale();
         double anchorForward = renderParams.getFrontBackOffset() * entityScale;
         double anchorRight = renderParams.getLeftRightOffset() * entityScale;
-        double anchorUp = FollowerState.anchorHeightOf(livingEntity, renderParams) + renderParams.getVerticalOffset() * entityScale;
         double wearerRadius = livingEntity.getBbWidth() / 2.0 + displaySize / 2.0;
+        double[] constrained = new double[2];
 
         for (int index = 1; index < followerCount; index++) {
             RandomSource random = RandomSource.create(seedOf(livingEntity, wornFollowers.get(index).slotKey()));
             double forward = 0.0;
             double right = 0.0;
             double up = 0.0;
+            double bestClearanceSqr = -1.0;
             for (int attempt = 0; attempt < MAX_PLACEMENT_ATTEMPTS; attempt++) {
                 int parent = random.nextInt(index);
                 double azimuth = random.nextDouble() * Mth.TWO_PI;
@@ -82,35 +84,31 @@ public class FollowerLayout {
                                 + directionUp * directionUp
                 );
                 double distance = minSpacing + random.nextDouble() * (maxSpacing - minSpacing);
-                forward = layout[parent * 3] + directionForward / directionLength * distance;
-                right = layout[parent * 3 + 1] + directionRight / directionLength * distance;
-                up = layout[parent * 3 + 2] + directionUp / directionLength * distance;
-                if (isClearOfPlaced(layout, index, forward, right, up, minSpacing)
-                        && !isInsideWearer(anchorForward + forward, anchorRight + right, wearerRadius)) {
+                double candidateForward = layout[parent * 3] + directionForward / directionLength * distance;
+                double candidateRight = layout[parent * 3 + 1] + directionRight / directionLength * distance;
+                double candidateUp = layout[parent * 3 + 2] + directionUp / directionLength * distance;
+                constrainToRing(
+                        constrained,
+                        anchorForward,
+                        anchorRight,
+                        candidateForward,
+                        candidateRight,
+                        wearerRadius,
+                        maxRadius
+                );
+                double clearanceSqr = nearestPlacedDistanceSqr(layout, index, constrained[0], constrained[1], candidateUp);
+                if (clearanceSqr >= minSpacingSqr) {
+                    forward = constrained[0];
+                    right = constrained[1];
+                    up = candidateUp;
                     break;
                 }
-            }
-            if (isInsideWearer(anchorForward + forward, anchorRight + right, wearerRadius)) {
-                double horizontalForward = anchorForward + forward;
-                double horizontalRight = anchorRight + right;
-                double horizontalDistance = Math.sqrt(horizontalForward * horizontalForward + horizontalRight * horizontalRight);
-                // 恰好落在佩戴者中轴上时没有可用的水平方向，改向正后方推出
-                if (horizontalDistance < MIN_PUSH_DISTANCE) {
-                    horizontalForward = -1.0;
-                    horizontalRight = 0.0;
-                    horizontalDistance = 1.0;
+                if (clearanceSqr > bestClearanceSqr) {
+                    bestClearanceSqr = clearanceSqr;
+                    forward = constrained[0];
+                    right = constrained[1];
+                    up = candidateUp;
                 }
-                forward = horizontalForward / horizontalDistance * wearerRadius - anchorForward;
-                right = horizontalRight / horizontalDistance * wearerRadius - anchorRight;
-            }
-            double absoluteForward = anchorForward + forward;
-            double absoluteRight = anchorRight + right;
-            double absoluteHorizontalDistance = Math.sqrt(absoluteForward * absoluteForward + absoluteRight * absoluteRight);
-            // 圆柱比活动半径更硬：半径小于圆柱时以圆柱为准
-            if (absoluteHorizontalDistance > maxRadius && maxRadius >= wearerRadius) {
-                double radiusScale = maxRadius / absoluteHorizontalDistance;
-                forward = absoluteForward * radiusScale - anchorForward;
-                right = absoluteRight * radiusScale - anchorRight;
             }
             layout[index * 3] = forward;
             layout[index * 3 + 1] = right;
@@ -131,39 +129,66 @@ public class FollowerLayout {
         return layout;
     }
 
-    private static boolean isClearOfPlaced(
+    /**
+     * 与已放置件的最小三维距离平方：够远时用于接受候选，都不够远时用于挑出最远的那一次作兜底。
+     */
+    private static double nearestPlacedDistanceSqr(
             double[] layout,
             int placedCount,
             double forward,
             double right,
-            double up,
-            double minSpacing
+            double up
     ) {
-        double minSpacingSqr = minSpacing * minSpacing;
+        double nearestSqr = Double.MAX_VALUE;
         for (int index = 0; index < placedCount; index++) {
             double deltaForward = forward - layout[index * 3];
             double deltaRight = right - layout[index * 3 + 1];
             double deltaUp = up - layout[index * 3 + 2];
-            if (deltaForward * deltaForward + deltaRight * deltaRight + deltaUp * deltaUp < minSpacingSqr) {
-                return false;
+            double distanceSqr = deltaForward * deltaForward + deltaRight * deltaRight + deltaUp * deltaUp;
+            if (distanceSqr < nearestSqr) {
+                nearestSqr = distanceSqr;
             }
         }
 
-        return true;
+        return nearestSqr;
     }
 
     /**
-     * 佩戴者碰撞箱按以实体中轴为轴的圆柱近似，并按跟随者显示尺寸外扩，偏移相对实体脚部原点。
+     * 把候选的相对水平位置压回允许范围：落入佩戴者圆柱时沿径向推到圆柱面上，超出活动半径时拉回半径之内。
+     * 结果按相对锚点的偏移写入output数组，第0项为前向、第1项为右向。
      */
-    /**
-     * 佩戴者按以实体中轴为轴的无限高圆柱处理：跟随者无论高低，水平方向都不得落入圆柱内，
-     * 否则垂直移动时会被身体穿过。
-     */
-    private static boolean isInsideWearer(
-            double forward,
-            double right,
-            double wearerRadius
+    private static void constrainToRing(
+            double[] output,
+            double anchorForward,
+            double anchorRight,
+            double candidateForward,
+            double candidateRight,
+            double wearerRadius,
+            double maxRadius
     ) {
-        return forward * forward + right * right < wearerRadius * wearerRadius;
+        double absoluteForward = anchorForward + candidateForward;
+        double absoluteRight = anchorRight + candidateRight;
+        double horizontalDistance = Math.sqrt(absoluteForward * absoluteForward + absoluteRight * absoluteRight);
+        // 佩戴者按以实体中轴为轴的无限高圆柱处理：无论高低，水平落入圆柱就会在垂直移动时被身体穿过
+        if (horizontalDistance < wearerRadius) {
+            // 恰好落在佩戴者中轴上时没有可用的水平方向，改向正后方推出
+            if (horizontalDistance < MIN_PUSH_DISTANCE) {
+                absoluteForward = -1.0;
+                absoluteRight = 0.0;
+                horizontalDistance = 1.0;
+            }
+            double pushScale = wearerRadius / horizontalDistance;
+            absoluteForward *= pushScale;
+            absoluteRight *= pushScale;
+            horizontalDistance = wearerRadius;
+        }
+        // 圆柱比活动半径更硬：半径小于圆柱时以圆柱为准
+        if (horizontalDistance > maxRadius && maxRadius >= wearerRadius) {
+            double radiusScale = maxRadius / horizontalDistance;
+            absoluteForward *= radiusScale;
+            absoluteRight *= radiusScale;
+        }
+        output[0] = absoluteForward - anchorForward;
+        output[1] = absoluteRight - anchorRight;
     }
 }
