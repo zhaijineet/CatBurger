@@ -51,25 +51,32 @@ public class FollowerRenderer {
         List<WornFollower> renderedFollowers = selectRendered(livingEntity, wornFollowers, renderParams);
         if (renderedFollowers.isEmpty()) return;
 
-        if (renderParams.getRenderMode() == FollowerRenderMode.FORMATION) {
-            renderOne(
-                    livingEntity,
-                    renderedFollowers.getFirst(),
-                    0,
-                    0,
-                    0,
-                    renderParams,
-                    poseStack,
-                    buffer,
-                    packedLight,
-                    partialTicks
-            );
-            return;
-        }
-
         double displaySize = MIN_DISPLAY_SIZE;
         for (WornFollower wornFollower : renderedFollowers) {
             displaySize = Math.max(displaySize, displaySizeOf(livingEntity, wornFollower.itemStack(), renderParams));
+        }
+
+        if (renderParams.getRenderMode() == FollowerRenderMode.FORMATION) {
+            if (renderingInventoryPreview) {
+                double[] lineLayout = FollowerLayout.line(renderedFollowers.size(), renderParams.getFormationSpacing());
+                for (int index = 0; index < renderedFollowers.size(); index++) {
+                    renderOne(
+                            livingEntity,
+                            renderedFollowers.get(index),
+                            lineLayout[index * 3],
+                            lineLayout[index * 3 + 1],
+                            lineLayout[index * 3 + 2],
+                            renderParams,
+                            poseStack,
+                            buffer,
+                            packedLight,
+                            partialTicks
+                    );
+                }
+            } else {
+                renderFormation(livingEntity, renderedFollowers, renderParams, displaySize, poseStack, buffer, packedLight, partialTicks);
+            }
+            return;
         }
 
         double[] layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);
@@ -85,6 +92,60 @@ public class FollowerRenderer {
                     buffer,
                     packedLight,
                     partialTicks
+            );
+        }
+    }
+
+    /**
+     * 编队模式：首件按自身状态渲染，其后各节取尾巴的世界坐标与朝向，缩放沿用首件。
+     */
+    private static void renderFormation(
+            LivingEntity livingEntity,
+            List<WornFollower> renderedFollowers,
+            FollowerRenderData renderParams,
+            double displaySize,
+            PoseStack poseStack,
+            MultiBufferSource buffer,
+            int packedLight,
+            float partialTicks
+    ) {
+        FollowerState followerState = FollowerState.of(livingEntity, FollowerState.FORMATION_KEY, renderParams);
+        followerState.updateFormation(
+                renderParams,
+                renderedFollowers.size() - 1,
+                renderParams.getFormationSpacing(),
+                displaySize
+        );
+        float scale = followerState.scale();
+        draw(
+                livingEntity,
+                renderedFollowers.getFirst().itemStack(),
+                followerState.xOffset(partialTicks),
+                followerState.yOffset(partialTicks),
+                followerState.zOffset(partialTicks),
+                followerState.renderYaw(partialTicks),
+                followerState.headPitch(partialTicks),
+                followerState.gazeYaw(partialTicks),
+                scale,
+                poseStack,
+                buffer,
+                packedLight
+        );
+        for (int index = 1; index < renderedFollowers.size(); index++) {
+            int segment = index - 1;
+            draw(
+                    livingEntity,
+                    renderedFollowers.get(index).itemStack(),
+                    followerState.tailXOffset(segment, partialTicks),
+                    followerState.tailYOffset(segment, partialTicks),
+                    followerState.tailZOffset(segment, partialTicks),
+                    followerState.tailYaw(segment, partialTicks),
+                    followerState.tailPitch(segment, partialTicks),
+                    followerState.tailGazeYaw(segment, partialTicks),
+                    scale,
+                    poseStack,
+                    buffer,
+                    packedLight
             );
         }
     }

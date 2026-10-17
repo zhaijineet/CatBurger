@@ -1,17 +1,27 @@
 package net.zhaiji.catburger.client.render;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
+import net.zhaiji.catburger.config.FormationGazeTarget;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
 /**
- * 一名佩戴者某个槽位上的跟随者运动状态：位置拖尾、环绕偏航、朝向缓冲与屏幕扶正滚转。
+ * 一名佩戴者某个槽位上的跟随者运动状态：位置拖尾、环绕偏航、朝向缓冲，以及编队模式下的一条尾巴状态。
  * 状态挂在佩戴者实体上（见 LivingEntityMixin），随实体生灭；读取时按 partialTicks 插值。
  */
 public class FollowerState {
+    public static final String FORMATION_KEY = "formation";
+
     // TODO(阶段 7): 目前只按槽位分列状态，仍未遍历渲染全部跟随者与按槽位键播种相位
     private static final double MIN_MOTION_LENGTH = 1.0E-4;
     private static final double DEGENERATE_GAZE_DISTANCE = 0.1;
@@ -52,6 +62,10 @@ public class FollowerState {
     private double layoutForward;
     private double layoutRight;
     private double layoutUp;
+    private final FollowerTail tail = new FollowerTail();
+    private int tailLength;
+    private double tailSpacing;
+    private double tailDisplaySize;
     private final double floatPhase;
     private final double floatPeriodScale;
 
@@ -171,18 +185,86 @@ public class FollowerState {
         lastHeadYaw = headYaw;
         lastTick = currentTick;
 
-        updateOrientation(tickGap);
+        Vec3 gazePosition = gazePositionOf(livingEntity, renderParams);
+        updateOrientation(gazePosition, tickGap);
+        if (tailLength > 0) updateTail(gazePosition, tickGap);
+    }
+
+    /**
+     * 编队模式推进：全队共用一条状态，首件之外的各节由尾巴按刻跟随。
+     */
+    public void updateFormation(FollowerRenderData renderParams, int tailLength, double tailSpacing, double displaySize) {
+        this.renderParams = renderParams;
+        this.tailLength = tailLength;
+        this.tailSpacing = tailSpacing;
+        this.tailDisplaySize = displaySize;
+        tail.resize(
+                tailLength,
+                tickPosition(),
+                tickBackward(),
+                livingEntity.getViewYRot(1.0F),
+                livingEntity.getViewXRot(1.0F),
+                tailSpacing
+        );
+        update(renderParams, 0, 0, 0);
+    }
+
+    /**
+     * 尾巴按刻推进；跳帧或首件被瞬移拉开时整条重排到首件正后方，避免一条长绳从旧位置甩过来。
+     */
+    private void updateTail(Vec3 gazePosition, boolean snap) {
+        Vec3 leaderPosition = tickPosition();
+        Vec3 backward = tickBackward();
+        double detachDistance = renderParams.getMaxLagDistance() + tailSpacing * (tailLength + 1);
+        if (snap || tail.isDetached(leaderPosition, detachDistance)) {
+            tail.reset(leaderPosition, backward, targetOrientationYaw, livingEntity.getViewXRot(1.0F), tailSpacing);
+            return;
+        }
+
+        tail.advance(
+                leaderPosition,
+                backward,
+                tailSpacing,
+                renderParams.getFollowSpeed(),
+                gazePosition,
+                renderParams.getFormationGazeTarget() == FormationGazeTarget.FRONT_FOLLOWER,
+                targetOrientationYaw,
+                livingEntity.getViewXRot(1.0F),
+                (float) renderParams.getOrientationFollowSpeed(),
+                livingEntity,
+                tailDisplaySize
+        );
+    }
+
+    /**
+     * 本刻首件的世界坐标，取刻末的状态值，注视解算与尾巴推进共用。
+     */
+    private Vec3 tickPosition() {
+        double tickOrbitYaw = pickUsedYaw(springYaw, dragYaw);
+        return new Vec3(
+                livingEntity.getX() + orbitXOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetX),
+                livingEntity.getY() + orbitYOffset(renderParams, livingEntity, anchorHeight, offsetY, layoutUp, floatOffset(1.0F)),
+                livingEntity.getZ() + orbitZOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetZ)
+        );
+    }
+
+    /**
+     * 本刻环绕方向的正后方（水平单位向量），尾巴各节归位、新增与重排时都沿它展开。
+     */
+    private Vec3 tickBackward() {
+        double yawRadians = Math.toRadians(pickUsedYaw(springYaw, dragYaw));
+        return new Vec3(Math.sin(yawRadians), 0.0, -Math.cos(yawRadians));
     }
 
     /**
      * 按 tick 推进朝向缓冲：朝向只受朝向延迟一处缓冲，注视只决定目标朝向。
      */
-    private void updateOrientation(boolean snap) {
+    private void updateOrientation(Vec3 gazePosition, boolean snap) {
         prevOrientationYaw = orientationYaw;
         prevOrientationPitch = orientationPitch;
         prevGazeYaw = gazeYaw;
 
-        if (!resolveOrientationTarget()) return;
+        if (!resolveOrientationTarget(gazePosition)) return;
 
         // 长时间跳帧后直接落到目标，并把上一帧一并拉平，不从过期朝向插值过来
         if (snap) {
@@ -204,12 +286,11 @@ public class FollowerState {
     /**
      * 求本 tick 的目标朝向并写入目标字段，返回 false 表示本刻应保持当前朝向：目标贴脸，或正在背后致使锥面方位角无定义。
      */
-    private boolean resolveOrientationTarget() {
+    private boolean resolveOrientationTarget(Vec3 gazePosition) {
         float viewYaw = livingEntity.getViewYRot(1.0F);
         float viewPitch = livingEntity.getViewXRot(1.0F);
 
         Vec3 viewFrameDirection;
-        Vec3 gazePosition = GazeResolver.gazePositionOf(livingEntity, renderParams);
         if (gazePosition == null) {
             viewFrameDirection = FollowerOrientation.viewDirectionInViewFrame(viewPitch);
         } else {
@@ -289,6 +370,48 @@ public class FollowerState {
      */
     public float gazeYaw(float partialTicks) {
         return Mth.lerp(partialTicks, prevGazeYaw, gazeYaw);
+    }
+
+    /**
+     * 取尾巴第 segment 节相对佩戴者渲染原点的横向偏移。
+     */
+    public double tailXOffset(int segment, float partialTicks) {
+        return tail.x(segment, partialTicks) - livingEntity.getPosition(partialTicks).x;
+    }
+
+    /**
+     * 取尾巴第 segment 节相对佩戴者渲染原点的竖直偏移。
+     */
+    public double tailYOffset(int segment, float partialTicks) {
+        return tail.y(segment, partialTicks) - livingEntity.getPosition(partialTicks).y;
+    }
+
+    /**
+     * 取尾巴第 segment 节相对佩戴者渲染原点的纵向偏移。
+     */
+    public double tailZOffset(int segment, float partialTicks) {
+        return tail.z(segment, partialTicks) - livingEntity.getPosition(partialTicks).z;
+    }
+
+    /**
+     * 取尾巴第 segment 节的视线系偏航。
+     */
+    public float tailYaw(int segment, float partialTicks) {
+        return tail.yaw(segment, partialTicks);
+    }
+
+    /**
+     * 取尾巴第 segment 节的视线系俯仰。
+     */
+    public float tailPitch(int segment, float partialTicks) {
+        return tail.pitch(segment, partialTicks);
+    }
+
+    /**
+     * 取尾巴第 segment 节注视会聚的局部偏航。
+     */
+    public float tailGazeYaw(int segment, float partialTicks) {
+        return tail.gazeYaw(segment, partialTicks);
     }
 
     /**
@@ -441,5 +564,58 @@ public class FollowerState {
     private static double floatOffsetOf(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks) {
         return renderParams.getFloatDistance() / 2
                 * Math.sin((livingEntity.tickCount + partialTicks) * Mth.TWO_PI / renderParams.getFloatCycleDuration());
+    }
+
+    /**
+     * 解析注视点的世界坐标：摄像机实体直接取本机准心命中点，其他玩家按他自己的眼位、朝向与交互距离在本地重算，
+     * 非玩家实体没有准心概念故返回 null 由调用方改用视线方向。
+     */
+    @Nullable
+    private static Vec3 gazePositionOf(LivingEntity livingEntity, FollowerRenderData renderParams) {
+        if (!renderParams.isGazeAtViewTarget()) return null;
+
+        Minecraft minecraft = Minecraft.getInstance();
+        if (livingEntity == minecraft.getCameraEntity()) {
+            HitResult hitResult = minecraft.hitResult;
+            return hitResult == null ? null : hitResult.getLocation();
+        }
+
+        if (livingEntity instanceof Player player) return replicaGazePosition(player);
+
+        // TODO(其他生物注视): 非玩家实体暂返回 null，由调用方改用它的视线方向；后续要让它们也做命中点会聚，实现方式待定
+        return null;
+    }
+
+    /**
+     * 按游戏内求准心命中点的方式在本地重算：从佩戴者眼位沿其视线做方块与实体射线检测，取更近的那个。
+     * 游戏内的交互距离过滤只把超距结果的判定类型改成 MISS、并不移动命中位置，因此这里取位置时无需复现它。
+     */
+    private static Vec3 replicaGazePosition(Player wearer) {
+        double interactionRange = Math.max(wearer.blockInteractionRange(), wearer.entityInteractionRange());
+        double entitySearchRangeSqr = Mth.square(interactionRange);
+        Vec3 eyePosition = wearer.getEyePosition(1.0F);
+        HitResult blockHitResult = wearer.pick(interactionRange, 1.0F, false);
+        double blockHitDistanceSqr = blockHitResult.getLocation().distanceToSqr(eyePosition);
+        if (blockHitResult.getType() != HitResult.Type.MISS) {
+            interactionRange = Math.sqrt(blockHitDistanceSqr);
+            entitySearchRangeSqr = blockHitDistanceSqr;
+        }
+
+        Vec3 viewVector = wearer.getViewVector(1.0F);
+        Vec3 rayEndPosition = eyePosition.add(viewVector.scale(interactionRange));
+        AABB searchBox = wearer.getBoundingBox().expandTowards(viewVector.scale(interactionRange)).inflate(1.0, 1.0, 1.0);
+        EntityHitResult entityHitResult = ProjectileUtil.getEntityHitResult(
+                wearer,
+                eyePosition,
+                rayEndPosition,
+                searchBox,
+                candidate -> !candidate.isSpectator() && candidate.isPickable(),
+                entitySearchRangeSqr
+        );
+
+        if (entityHitResult != null && entityHitResult.getLocation().distanceToSqr(eyePosition) < blockHitDistanceSqr)
+            return entityHitResult.getLocation();
+
+        return blockHitResult.getLocation();
     }
 }
