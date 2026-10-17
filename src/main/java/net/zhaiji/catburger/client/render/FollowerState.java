@@ -22,7 +22,6 @@ import java.util.Map;
 public class FollowerState {
     public static final String FORMATION_KEY = "formation";
 
-    // TODO(阶段 7): 目前只按槽位分列状态，仍未遍历渲染全部跟随者与按槽位键播种相位
     private static final double MIN_MOTION_LENGTH = 1.0E-4;
     private static final double DEGENERATE_GAZE_DISTANCE = 0.1;
     // 与跳帧复位同一阈值：超过该刻数未推进的槽位状态视为失效
@@ -35,7 +34,11 @@ public class FollowerState {
     private double lastEntityX;
     private double lastEntityY;
     private double lastEntityZ;
-    private float lastHeadYaw;
+    // 佩戴者本刻相对上一刻的世界位移，尾巴各节的漂移层据此保持世界惯性
+    private Vec3 wearerMotion = Vec3.ZERO;
+    private float sampledHeadYaw;
+    // 距上次刻推进累积的帧间转角，每刻取用一次，使一刻内转过180°以上仍能判定方向
+    private float accumulatedYawDelta;
     private float targetYaw;
     private double offsetX;
     private double offsetY;
@@ -76,12 +79,11 @@ public class FollowerState {
         lastEntityX = livingEntity.getX();
         lastEntityY = livingEntity.getY();
         lastEntityZ = livingEntity.getZ();
-        float headYaw = livingEntity.getYHeadRot();
-        lastHeadYaw = targetYaw = dragYaw = prevDragYaw = springYaw = prevSpringYaw = headYaw;
+        float headYaw = livingEntity.getViewYRot(1.0F);
+        sampledHeadYaw = targetYaw = dragYaw = prevDragYaw = springYaw = prevSpringYaw = headYaw;
         anchorHeight = prevAnchorHeight = anchorHeightOf(livingEntity, renderParams);
         orientationYaw = prevOrientationYaw = headYaw;
         orientationPitch = prevOrientationPitch = livingEntity.getViewXRot(1.0F);
-        gazeYaw = prevGazeYaw = 0.0F;
         if (renderParams.isIndependentFloat()) {
             floatPhase = FollowerLayout.floatPhaseOf(livingEntity, slotKey);
             floatPeriodScale = FollowerLayout.floatPeriodScaleOf(livingEntity, slotKey);
@@ -103,20 +105,20 @@ public class FollowerState {
     }
 
     /**
-     * 按佩戴者的 tick 推进状态，同一刻重复调用只生效一次。
+     * 每帧采样佩戴者头部偏航并累加帧间转角，按佩戴者的 tick 推进状态，同一刻只推进一次。
      */
-    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp) {
+    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp, float partialTicks) {
         this.renderParams = renderParams;
         this.layoutForward = layoutForward;
         this.layoutRight = layoutRight;
         this.layoutUp = layoutUp;
+        sampleHeadYaw(partialTicks);
         int currentTick = livingEntity.tickCount;
         if (currentTick == lastTick) return;
 
         double entityX = livingEntity.getX();
         double entityY = livingEntity.getY();
         double entityZ = livingEntity.getZ();
-        float headYaw = livingEntity.getYHeadRot();
         double targetAnchorHeight = anchorHeightOf(livingEntity, renderParams);
 
         boolean tickGap = currentTick - lastTick > TICK_GAP_RESET_THRESHOLD;
@@ -124,14 +126,14 @@ public class FollowerState {
             lastEntityX = entityX;
             lastEntityY = entityY;
             lastEntityZ = entityZ;
-            lastHeadYaw = headYaw;
-            targetYaw = headYaw;
+            accumulatedYawDelta = 0;
+            targetYaw = sampledHeadYaw;
             offsetX = 0;
             offsetY = 0;
             offsetZ = 0;
             anchorHeight = targetAnchorHeight;
-            dragYaw = headYaw;
-            springYaw = headYaw;
+            dragYaw = sampledHeadYaw;
+            springYaw = sampledHeadYaw;
             springVelocity = 0;
         }
 
@@ -142,13 +144,15 @@ public class FollowerState {
         prevDragYaw = dragYaw;
         prevSpringYaw = springYaw;
 
-        targetYaw += Mth.wrapDegrees(headYaw - lastHeadYaw);
+        targetYaw += accumulatedYawDelta;
+        accumulatedYawDelta = 0;
 
         double followSpeed = renderParams.getFollowSpeed();
         double motionX = entityX - lastEntityX;
         double motionY = entityY - lastEntityY;
         double motionZ = entityZ - lastEntityZ;
         double motionLength = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        wearerMotion = new Vec3(motionX, motionY, motionZ);
         double targetOffsetX = 0;
         double targetOffsetY = 0;
         double targetOffsetZ = 0;
@@ -182,7 +186,6 @@ public class FollowerState {
         lastEntityX = entityX;
         lastEntityY = entityY;
         lastEntityZ = entityZ;
-        lastHeadYaw = headYaw;
         lastTick = currentTick;
 
         Vec3 gazePosition = gazePositionOf(livingEntity, renderParams);
@@ -191,49 +194,118 @@ public class FollowerState {
     }
 
     /**
-     * 编队模式推进：全队共用一条状态，首件之外的各节由尾巴按刻跟随。
+     * 每帧采样头部偏航：本机玩家取鼠标每帧改写的朝向，其他实体退化为刻间插值；
+     * 相邻两帧的差按最短弧累加，使一刻内转过180°以上也能判定方向。
      */
-    public void updateFormation(FollowerRenderData renderParams, int tailLength, double tailSpacing, double displaySize) {
+    private void sampleHeadYaw(float partialTicks) {
+        float headYaw = livingEntity.getViewYRot(partialTicks);
+        accumulatedYawDelta += Mth.wrapDegrees(headYaw - sampledHeadYaw);
+        sampledHeadYaw = headYaw;
+    }
+
+    /**
+     * 编队模式推进：全队共用一条状态，首件之外的各节由尾巴按首件两层状态与静止队形逐刻跟随。
+     */
+    public void updateFormation(FollowerRenderData renderParams, int tailLength, double tailSpacing, double displaySize, float partialTicks) {
         this.renderParams = renderParams;
         this.tailLength = tailLength;
         this.tailSpacing = tailSpacing;
         this.tailDisplaySize = displaySize;
         tail.resize(
                 tailLength,
-                tickPosition(),
+                tickLeaderShapeAngle(),
+                tickLeaderShapeRadius(),
+                tickLeaderShapeHeight(),
+                tickLeaderDrift(),
                 tickBackward(),
                 livingEntity.getViewYRot(1.0F),
                 livingEntity.getViewXRot(1.0F),
                 tailSpacing
         );
-        update(renderParams, 0, 0, 0);
+        update(renderParams, 0, 0, 0, partialTicks);
     }
 
     /**
-     * 尾巴按刻推进；跳帧或首件被瞬移拉开时整条重排到首件正后方，避免一条长绳从旧位置甩过来。
+     * 尾巴按刻推进；跳帧或相邻两节拉开超过上限时整条重排到首件正后方，避免一条长绳从旧位置甩过来。
+     * 本刻佩戴者位移交给尾巴的漂移层，使各节先在世界中原地不动，再由归位逐节拉回；
+     * 每节的拖尾距离与首件共用 maxLagDistance，正常运动下不会触发重排。
      */
     private void updateTail(Vec3 gazePosition, boolean snap) {
-        Vec3 leaderPosition = tickPosition();
+        double leaderAngle = tickLeaderShapeAngle();
+        double leaderRadius = tickLeaderShapeRadius();
+        double leaderHeight = tickLeaderShapeHeight();
+        Vec3 leaderDrift = tickLeaderDrift();
         Vec3 backward = tickBackward();
-        double detachDistance = renderParams.getMaxLagDistance() + tailSpacing * (tailLength + 1);
-        if (snap || tail.isDetached(leaderPosition, detachDistance)) {
-            tail.reset(leaderPosition, backward, targetOrientationYaw, livingEntity.getViewXRot(1.0F), tailSpacing);
+        double detachDistance = 2 * (tailSpacing + renderParams.getMaxLagDistance());
+        if (snap || tail.isDetached(leaderAngle, leaderRadius, leaderHeight, leaderDrift, detachDistance)) {
+            tail.reset(
+                    leaderAngle,
+                    leaderRadius,
+                    leaderHeight,
+                    leaderDrift,
+                    backward,
+                    livingEntity.getViewYRot(1.0F),
+                    livingEntity.getViewXRot(1.0F),
+                    tailSpacing
+            );
             return;
         }
 
         tail.advance(
-                leaderPosition,
+                leaderAngle,
+                leaderRadius,
+                leaderHeight,
+                leaderDrift,
                 backward,
+                wearerMotion,
                 tailSpacing,
                 renderParams.getFollowSpeed(),
+                renderParams.getMaxLagDistance(),
                 gazePosition,
                 renderParams.getFormationGazeTarget() == FormationGazeTarget.FRONT_FOLLOWER,
-                targetOrientationYaw,
+                livingEntity.getViewYRot(1.0F),
                 livingEntity.getViewXRot(1.0F),
                 (float) renderParams.getOrientationFollowSpeed(),
+                livingEntity.position(),
                 livingEntity,
                 tailDisplaySize
         );
+    }
+
+    /**
+     * 本刻首件的形状角：环绕偏航本身就是累计角，加上配置位置在环绕系中的方位角，
+     * 因此整圈转动与左右侧都由它保持，不需要任何展开。
+     */
+    private double tickLeaderShapeAngle() {
+        double usedYaw = pickUsedYaw(springYaw, dragYaw);
+        double frontBack = frontBackOffset();
+        double leftRight = leftRightOffset();
+        // 配置位置落在中轴上时方位无定义，退回环绕偏航本身
+        if (Math.abs(frontBack) < MIN_MOTION_LENGTH && Math.abs(leftRight) < MIN_MOTION_LENGTH) return usedYaw;
+        return usedYaw + Math.toDegrees(Math.atan2(leftRight, frontBack));
+    }
+
+    /**
+     * 本刻首件的形状半径：配置位置在环绕系中的水平距离，不含拖尾。
+     */
+    private double tickLeaderShapeRadius() {
+        double frontBack = frontBackOffset();
+        double leftRight = leftRightOffset();
+        return Math.sqrt(frontBack * frontBack + leftRight * leftRight);
+    }
+
+    /**
+     * 本刻首件的形状高度：锚点高度加浮动、竖直偏移与散布高度，不含拖尾。
+     */
+    private double tickLeaderShapeHeight() {
+        return orbitYOffset(renderParams, livingEntity, anchorHeight, 0.0, layoutUp, floatOffset(1.0F));
+    }
+
+    /**
+     * 本刻首件的漂移：位置拖尾的三个分量。
+     */
+    private Vec3 tickLeaderDrift() {
+        return new Vec3(offsetX, offsetY, offsetZ);
     }
 
     /**
@@ -257,59 +329,52 @@ public class FollowerState {
     }
 
     /**
-     * 按 tick 推进朝向缓冲：朝向只受朝向延迟一处缓冲，注视只决定目标朝向。
+     * 按 tick 推进朝向缓冲：头部朝向缓动追随佩戴者视线，局部偏航在缓动后的头部参考系里解算并同样缓动。
      */
     private void updateOrientation(Vec3 gazePosition, boolean snap) {
         prevOrientationYaw = orientationYaw;
         prevOrientationPitch = orientationPitch;
         prevGazeYaw = gazeYaw;
 
-        if (!resolveOrientationTarget(gazePosition)) return;
-
+        targetOrientationYaw = livingEntity.getViewYRot(1.0F);
+        targetOrientationPitch = livingEntity.getViewXRot(1.0F);
         // 长时间跳帧后直接落到目标，并把上一帧一并拉平，不从过期朝向插值过来
         if (snap) {
-            orientationYaw = targetOrientationYaw;
-            orientationPitch = targetOrientationPitch;
-            gazeYaw = targetGazeYaw;
-            prevOrientationYaw = orientationYaw;
-            prevOrientationPitch = orientationPitch;
-            prevGazeYaw = gazeYaw;
+            orientationYaw = prevOrientationYaw = targetOrientationYaw;
+            orientationPitch = prevOrientationPitch = targetOrientationPitch;
+        } else {
+            float orientationFollowSpeed = (float) renderParams.getOrientationFollowSpeed();
+            orientationYaw += Mth.wrapDegrees(targetOrientationYaw - orientationYaw) * orientationFollowSpeed;
+            orientationPitch += (targetOrientationPitch - orientationPitch) * orientationFollowSpeed;
+        }
+
+        if (!resolveGazeTarget(gazePosition)) return;
+
+        if (snap) {
+            gazeYaw = prevGazeYaw = targetGazeYaw;
             return;
         }
 
-        float orientationFollowSpeed = (float) renderParams.getOrientationFollowSpeed();
-        orientationYaw += Mth.wrapDegrees(targetOrientationYaw - orientationYaw) * orientationFollowSpeed;
-        orientationPitch += (targetOrientationPitch - orientationPitch) * orientationFollowSpeed;
-        gazeYaw += Mth.wrapDegrees(targetGazeYaw - gazeYaw) * orientationFollowSpeed;
+        gazeYaw += Mth.wrapDegrees(targetGazeYaw - gazeYaw) * (float) renderParams.getOrientationFollowSpeed();
     }
 
     /**
-     * 求本 tick 的目标朝向并写入目标字段，返回 false 表示本刻应保持当前朝向：目标贴脸，或正在背后致使锥面方位角无定义。
+     * 求本 tick 的目标局部偏航：无注视点时为 0，有注视点时在已缓动的头部参考系里对准它；
+     * 返回 false 表示目标贴脸或沿头部竖轴，本刻保持当前局部偏航。
      */
-    private boolean resolveOrientationTarget(Vec3 gazePosition) {
-        float viewYaw = livingEntity.getViewYRot(1.0F);
-        float viewPitch = livingEntity.getViewXRot(1.0F);
-
-        Vec3 viewFrameDirection;
+    private boolean resolveGazeTarget(Vec3 gazePosition) {
         if (gazePosition == null) {
-            viewFrameDirection = FollowerOrientation.viewDirectionInViewFrame(viewPitch);
-        } else {
-            double tickOrbitYaw = pickUsedYaw(springYaw, dragYaw);
-            Vec3 toTarget = gazePosition.subtract(
-                    livingEntity.getX() + orbitXOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetX),
-                    livingEntity.getY() + orbitYOffset(renderParams, livingEntity, anchorHeight, offsetY, layoutUp, floatOffset(1.0F)),
-                    livingEntity.getZ() + orbitZOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetZ)
-            );
-            if (toTarget.lengthSqr() <= DEGENERATE_GAZE_DISTANCE * DEGENERATE_GAZE_DISTANCE) return false;
-            viewFrameDirection = FollowerOrientation.toViewFrame(toTarget, viewYaw);
+            targetGazeYaw = 0.0F;
+            return true;
         }
 
-        Vec3 clampedDirection = FollowerOrientation.clampToCone(viewFrameDirection);
-        if (clampedDirection == null) return false;
+        Vec3 toTarget = gazePosition.subtract(tickPosition());
+        if (toTarget.lengthSqr() <= DEGENERATE_GAZE_DISTANCE * DEGENERATE_GAZE_DISTANCE) return false;
 
-        targetOrientationYaw = viewYaw;
-        targetOrientationPitch = FollowerOrientation.pitchOf(clampedDirection);
-        targetGazeYaw = FollowerOrientation.localYawOf(clampedDirection);
+        Vec3 headFrameDirection = FollowerOrientation.toHeadFrame(toTarget, orientationYaw, orientationPitch);
+        if (FollowerOrientation.isAlongHeadAxis(headFrameDirection)) return false;
+
+        targetGazeYaw = FollowerOrientation.localYawOf(headFrameDirection);
         return true;
     }
 
@@ -366,7 +431,7 @@ public class FollowerState {
     }
 
     /**
-     * 取绕自身竖直轴的局部偏航。
+     * 取头部水平面内的局部偏航。
      */
     public float gazeYaw(float partialTicks) {
         return Mth.lerp(partialTicks, prevGazeYaw, gazeYaw);
@@ -376,39 +441,39 @@ public class FollowerState {
      * 取尾巴第 segment 节相对佩戴者渲染原点的横向偏移。
      */
     public double tailXOffset(int segment, float partialTicks) {
-        return tail.x(segment, partialTicks) - livingEntity.getPosition(partialTicks).x;
+        return tail.x(segment, partialTicks);
     }
 
     /**
      * 取尾巴第 segment 节相对佩戴者渲染原点的竖直偏移。
      */
     public double tailYOffset(int segment, float partialTicks) {
-        return tail.y(segment, partialTicks) - livingEntity.getPosition(partialTicks).y;
+        return tail.y(segment, partialTicks);
     }
 
     /**
      * 取尾巴第 segment 节相对佩戴者渲染原点的纵向偏移。
      */
     public double tailZOffset(int segment, float partialTicks) {
-        return tail.z(segment, partialTicks) - livingEntity.getPosition(partialTicks).z;
+        return tail.z(segment, partialTicks);
     }
 
     /**
-     * 取尾巴第 segment 节的视线系偏航。
+     * 取尾巴第 segment 节的偏航。
      */
     public float tailYaw(int segment, float partialTicks) {
         return tail.yaw(segment, partialTicks);
     }
 
     /**
-     * 取尾巴第 segment 节的视线系俯仰。
+     * 取尾巴第 segment 节的俯仰。
      */
     public float tailPitch(int segment, float partialTicks) {
         return tail.pitch(segment, partialTicks);
     }
 
     /**
-     * 取尾巴第 segment 节注视会聚的局部偏航。
+     * 取尾巴第 segment 节头部水平面内的局部偏航。
      */
     public float tailGazeYaw(int segment, float partialTicks) {
         return tail.gazeYaw(segment, partialTicks);
@@ -483,9 +548,6 @@ public class FollowerState {
         );
     }
 
-    private float bodyYaw(float partialTicks) {
-        return Mth.lerp(partialTicks, livingEntity.yBodyRotO, livingEntity.yBodyRot);
-    }
     private double frontBackOffset() {
         return renderParams.getFrontBackOffset() * livingEntity.getScale() + layoutForward;
     }

@@ -35,7 +35,7 @@ public class FollowerRenderer {
     }
 
     /**
-     * 渲染一名佩戴者身上的全部可渲染跟随者：去重后求一份散布布局并逐件渲染；编队模式在阶段5 接管前仍只渲染首件。
+     * 渲染一名佩戴者身上的全部可渲染跟随者：去重后独立模式求一份散布布局逐件渲染，编队模式由尾巴逐节渲染。
      */
     public static void renderAll(
             LivingEntity livingEntity,
@@ -114,7 +114,8 @@ public class FollowerRenderer {
                 renderParams,
                 renderedFollowers.size() - 1,
                 renderParams.getFormationSpacing(),
-                displaySize
+                displaySize,
+                partialTicks
         );
         float scale = followerState.scale();
         draw(
@@ -222,7 +223,7 @@ public class FollowerRenderer {
             scale = FollowerState.previewScale(livingEntity, renderParams);
         } else {
             FollowerState followerState = FollowerState.of(livingEntity, wornFollower.slotKey(), renderParams);
-            followerState.update(renderParams, layoutForward, layoutRight, layoutUp);
+            followerState.update(renderParams, layoutForward, layoutRight, layoutUp, partialTicks);
             xOffset = followerState.xOffset(partialTicks);
             yOffset = followerState.yOffset(partialTicks);
             zOffset = followerState.zOffset(partialTicks);
