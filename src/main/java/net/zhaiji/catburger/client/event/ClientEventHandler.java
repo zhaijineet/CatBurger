@@ -48,6 +48,7 @@ public class ClientEventHandler {
 
         Camera camera = event.getCamera();
         if (camera.isDetached() || !(camera.getEntity() instanceof LivingEntity livingEntity)) return;
+        if (!CatBurgerClientConfig.SHOW_IN_FIRST_PERSON.get()) return;
         if (livingEntity.isSleeping() || livingEntity.isSpectator()) return;
 
         List<WornFollower> wornFollowers = FollowerUtil.findAll(livingEntity);

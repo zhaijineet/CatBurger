@@ -34,7 +34,7 @@ public class CatBurgerClientConfig {
             .comment("Minimum blocks between followers")
             .defineInRange(
                     "minSpacing",
-                    1.2,
+                    0.5,
                     0.5,
                     4.0
             );
@@ -43,9 +43,18 @@ public class CatBurgerClientConfig {
             .comment("Maximum blocks between followers")
             .defineInRange(
                     "maxSpacing",
-                    2.0,
+                    0.8,
                     0.5,
                     4.0
+            );
+
+    public static final ModConfigSpec.DoubleValue MAX_RADIUS = BUILDER
+            .comment("Maximum horizontal distance in blocks a follower may drift from the wearer, independent mode only")
+            .defineInRange(
+                    "maxRadius",
+                    2.0,
+                    0.5,
+                    8.0
             );
 
     public static final ModConfigSpec.DoubleValue FORMATION_SPACING = BUILDER
@@ -55,7 +64,7 @@ public class CatBurgerClientConfig {
             .comment("Blocks between each follower and the one ahead of it")
             .defineInRange(
                     "formationSpacing",
-                    1.2,
+                    0.8,
                     0.5,
                     4.0
             );
@@ -67,8 +76,18 @@ public class CatBurgerClientConfig {
                     FormationGazeTarget.WEARER_VIEW
             );
 
-    public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
+    public static final ModConfigSpec.BooleanValue SHOW_IN_FIRST_PERSON = BUILDER
             .pop()
+            .pop()
+            .comment("First person display")
+            .push("FirstPersonDisplay")
+            .comment("Show your own followers in first person")
+            .define(
+                    "showInFirstPerson",
+                    true
+            );
+
+    public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
             .pop()
             .comment("Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing")
             .push("ScaleAndOffset")

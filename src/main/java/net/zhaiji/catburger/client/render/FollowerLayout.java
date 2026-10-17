@@ -56,13 +56,12 @@ public class FollowerLayout {
         double[] layout = new double[followerCount * 3];
         double minSpacing = Math.min(renderParams.getMinSpacing(), renderParams.getMaxSpacing());
         double maxSpacing = Math.max(renderParams.getMinSpacing(), renderParams.getMaxSpacing());
+        double maxRadius = renderParams.getMaxRadius();
         float entityScale = livingEntity.getScale();
         double anchorForward = renderParams.getFrontBackOffset() * entityScale;
         double anchorRight = renderParams.getLeftRightOffset() * entityScale;
         double anchorUp = FollowerState.anchorHeightOf(livingEntity, renderParams) + renderParams.getVerticalOffset() * entityScale;
         double wearerRadius = livingEntity.getBbWidth() / 2.0 + displaySize / 2.0;
-        double wearerBottom = -displaySize / 2.0;
-        double wearerTop = livingEntity.getBbHeight() + displaySize / 2.0;
 
         for (int index = 1; index < followerCount; index++) {
             RandomSource random = RandomSource.create(seedOf(livingEntity, wornFollowers.get(index).slotKey()));
@@ -87,11 +86,11 @@ public class FollowerLayout {
                 right = layout[parent * 3 + 1] + directionRight / directionLength * distance;
                 up = layout[parent * 3 + 2] + directionUp / directionLength * distance;
                 if (isClearOfPlaced(layout, index, forward, right, up, minSpacing)
-                        && !isInsideWearer(anchorForward + forward, anchorRight + right, anchorUp + up, wearerRadius, wearerBottom, wearerTop)) {
+                        && !isInsideWearer(anchorForward + forward, anchorRight + right, wearerRadius)) {
                     break;
                 }
             }
-            if (isInsideWearer(anchorForward + forward, anchorRight + right, anchorUp + up, wearerRadius, wearerBottom, wearerTop)) {
+            if (isInsideWearer(anchorForward + forward, anchorRight + right, wearerRadius)) {
                 double horizontalForward = anchorForward + forward;
                 double horizontalRight = anchorRight + right;
                 double horizontalDistance = Math.sqrt(horizontalForward * horizontalForward + horizontalRight * horizontalRight);
@@ -103,6 +102,15 @@ public class FollowerLayout {
                 }
                 forward = horizontalForward / horizontalDistance * wearerRadius - anchorForward;
                 right = horizontalRight / horizontalDistance * wearerRadius - anchorRight;
+            }
+            double absoluteForward = anchorForward + forward;
+            double absoluteRight = anchorRight + right;
+            double absoluteHorizontalDistance = Math.sqrt(absoluteForward * absoluteForward + absoluteRight * absoluteRight);
+            // 圆柱比活动半径更硬：半径小于圆柱时以圆柱为准
+            if (absoluteHorizontalDistance > maxRadius && maxRadius >= wearerRadius) {
+                double radiusScale = maxRadius / absoluteHorizontalDistance;
+                forward = absoluteForward * radiusScale - anchorForward;
+                right = absoluteRight * radiusScale - anchorRight;
             }
             layout[index * 3] = forward;
             layout[index * 3 + 1] = right;
@@ -147,14 +155,15 @@ public class FollowerLayout {
     /**
      * 佩戴者碰撞箱按以实体中轴为轴的圆柱近似，并按跟随者显示尺寸外扩，偏移相对实体脚部原点。
      */
+    /**
+     * 佩戴者按以实体中轴为轴的无限高圆柱处理：跟随者无论高低，水平方向都不得落入圆柱内，
+     * 否则垂直移动时会被身体穿过。
+     */
     private static boolean isInsideWearer(
             double forward,
             double right,
-            double up,
-            double wearerRadius,
-            double wearerBottom,
-            double wearerTop
+            double wearerRadius
     ) {
-        return forward * forward + right * right < wearerRadius * wearerRadius && up > wearerBottom && up < wearerTop;
+        return forward * forward + right * right < wearerRadius * wearerRadius;
     }
 }

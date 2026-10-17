@@ -106,6 +106,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("formationGazeTarget", "Formation Gaze Target", "Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it");
         addFormationGazeTargets("Wearer's View", "Follower Ahead");
 
+        addConfigGroup("FirstPersonDisplay", "First Person Display", "First person display of your own followers");
+        addConfig("showInFirstPerson", "Show in First Person", "Show your own followers in first person");
+
         addConfigGroup("ScaleAndOffset", "Scale and Offset", "Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing");
         addConfig("renderScale", "Render Scale", "Multiplied by the wearer's own scale");
         addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the orbit direction, negative moves backward");
@@ -222,6 +225,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("formationGazeTarget", "编队注视方向", "编队中每一节看向何处：跟随佩戴者的视线，或看向它前面那一节");
         addFormationGazeTargets("跟随佩戴者视线", "看向前一节");
 
+        addConfigGroup("FirstPersonDisplay", "第一人称显示", "自己跟随者在第一人称下的显示");
+        addConfig("showInFirstPerson", "第一人称显示", "在第一人称下显示自己的跟随者");
+
         addConfigGroup("ScaleAndOffset", "缩放与偏移", "追随者相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动或转向决定，与追随者自身朝向无关");
         addConfig("renderScale", "渲染缩放", "与佩戴者自身缩放相乘");
         addConfig("frontBackOffset", "前后偏移", "沿环绕方向向前偏移的格数，负值向后");
@@ -337,6 +343,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("formationSpacing", "編隊の間隔", "各フォロワーと前のフォロワーとの間隔、ブロック数");
         addConfig("formationGazeTarget", "編隊の注視方向", "編隊の各節がどこを見るか：装備者の視線に従う、または前の節を見る");
         addFormationGazeTargets("装備者の視線に従う", "前の節を見る");
+
+        addConfigGroup("FirstPersonDisplay", "一人称表示", "自分のフォロワーの一人称での表示");
+        addConfig("showInFirstPerson", "一人称で表示", "一人称で自分のフォロワーを表示する");
 
         addConfigGroup("ScaleAndOffset", "スケールとオフセット", "装備者の目の位置を基準としたフォロワーの大きさと位置；オフセットはバネ運動または回転で決まる周回方向に沿い、フォロワー自身の向きとは無関係");
         addConfig("renderScale", "描画倍率", "装備者自身のスケールに乗算される");

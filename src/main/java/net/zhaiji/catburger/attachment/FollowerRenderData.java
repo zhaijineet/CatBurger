@@ -25,6 +25,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
     private double minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
     private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
+    private double maxRadius = CatBurgerClientConfig.MAX_RADIUS.getDefault();
     private double formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.getDefault();
     private FormationGazeTarget formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.getDefault();
     private double scale = CatBurgerClientConfig.RENDER_SCALE.getDefault();
@@ -58,6 +59,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
         minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
         maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
+        maxRadius = clampToConfig(CatBurgerClientConfig.MAX_RADIUS, maxRadius);
         formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
         formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
         scale = CatBurgerClientConfig.RENDER_SCALE.get();
@@ -115,6 +117,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         buf.writeBoolean(data.independentFloat);
         buf.writeDouble(data.minSpacing);
         buf.writeDouble(data.maxSpacing);
+        buf.writeDouble(data.maxRadius);
         buf.writeDouble(data.formationSpacing);
         FormationGazeTarget.STREAM_CODEC.encode(buf, data.formationGazeTarget);
         buf.writeDouble(data.scale);
@@ -142,6 +145,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         data.independentFloat = buf.readBoolean();
         data.minSpacing = buf.readDouble();
         data.maxSpacing = buf.readDouble();
+        data.maxRadius = buf.readDouble();
         data.formationSpacing = buf.readDouble();
         data.formationGazeTarget = FormationGazeTarget.STREAM_CODEC.decode(buf);
         data.scale = buf.readDouble();
@@ -171,6 +175,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         tag.putBoolean("independentFloat", independentFloat);
         tag.putDouble("minSpacing", minSpacing);
         tag.putDouble("maxSpacing", maxSpacing);
+        tag.putDouble("maxRadius", maxRadius);
         tag.putDouble("formationSpacing", formationSpacing);
         tag.putString("formationGazeTarget", formationGazeTarget.getSerializedName());
         tag.putDouble("scale", scale);
@@ -199,6 +204,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.contains("independentFloat")) independentFloat = tag.getBoolean("independentFloat");
         if (tag.contains("minSpacing")) minSpacing = tag.getDouble("minSpacing");
         if (tag.contains("maxSpacing")) maxSpacing = tag.getDouble("maxSpacing");
+        if (tag.contains("maxRadius")) maxRadius = tag.getDouble("maxRadius");
         if (tag.contains("formationSpacing")) formationSpacing = tag.getDouble("formationSpacing");
         if (tag.contains("formationGazeTarget")) formationGazeTarget = FormationGazeTarget.byName(tag.getString("formationGazeTarget"));
         if (tag.contains("scale")) scale = tag.getDouble("scale");
@@ -301,6 +307,10 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     public double getMaxSpacing() {
         return maxSpacing;
+    }
+
+    public double getMaxRadius() {
+        return maxRadius;
     }
 
     public double getFormationSpacing() {

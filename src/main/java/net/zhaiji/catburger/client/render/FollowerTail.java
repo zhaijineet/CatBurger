@@ -102,8 +102,6 @@ public class FollowerTail {
         System.arraycopy(pitches, 0, previousPitches, 0, segmentCount);
         System.arraycopy(gazeYaws, 0, previousGazeYaws, 0, segmentCount);
         double wearerRadius = wearer.getBbWidth() / 2.0 + displaySize / 2.0;
-        double wearerBottom = wearer.getY() - displaySize / 2.0;
-        double wearerTop = wearer.getY() + wearer.getBbHeight() + displaySize / 2.0;
         double aheadX = leaderPosition.x;
         double aheadY = leaderPosition.y;
         double aheadZ = leaderPosition.z;
@@ -112,7 +110,7 @@ public class FollowerTail {
             positions[base] += (aheadX + backward.x * spacing - positions[base]) * followSpeed;
             positions[base + 1] += (aheadY + backward.y * spacing - positions[base + 1]) * followSpeed;
             positions[base + 2] += (aheadZ + backward.z * spacing - positions[base + 2]) * followSpeed;
-            pushOutOfWearer(base, wearer.getX(), wearer.getZ(), wearerRadius, wearerBottom, wearerTop);
+            pushOutOfWearer(base, wearer.getX(), wearer.getZ(), wearerRadius);
             advanceOrientation(
                     segment,
                     new Vec3(aheadX, aheadY, aheadZ),
@@ -129,12 +127,10 @@ public class FollowerTail {
     }
 
     /**
-     * 佩戴者碰撞箱按以实体中轴为轴的圆柱近似，并按跟随者显示尺寸外扩。
+     * 佩戴者按以实体中轴为轴的无限高圆柱处理，半径按跟随者显示尺寸外扩；
+     * 跟随者无论高低，水平方向都不得落入圆柱内，否则垂直移动时会被身体穿过。
      */
-    private void pushOutOfWearer(int base, double centerX, double centerZ, double radius, double bottom, double top) {
-        double y = positions[base + 1];
-        if (y <= bottom || y >= top) return;
-
+    private void pushOutOfWearer(int base, double centerX, double centerZ, double radius) {
         double offsetX = positions[base] - centerX;
         double offsetZ = positions[base + 2] - centerZ;
         double horizontalDistance = Math.sqrt(offsetX * offsetX + offsetZ * offsetZ);
