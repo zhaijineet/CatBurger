@@ -100,6 +100,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("IndependentMode", "Independent Mode", "Settings for independent mode, where each follower drifts on its own");
         addConfig("minSpacing", "Min Spacing", "Minimum blocks between followers");
         addConfig("maxSpacing", "Max Spacing", "Maximum blocks between followers");
+        addConfig("maxRadius", "Max Radius", "Maximum horizontal distance in blocks a follower may drift from the wearer, independent mode only");
 
         addConfigGroup("FormationMode", "Formation Mode", "Settings for formation mode, where followers line up in a tail");
         addConfig("formationSpacing", "Formation Spacing", "Blocks between each follower and the one ahead of it");
@@ -219,6 +220,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("IndependentMode", "独立模式", "独立模式的设置，每件追随者各自漂移");
         addConfig("minSpacing", "最小间距", "追随者之间的最小间距，单位为格");
         addConfig("maxSpacing", "最大间距", "追随者之间的最大间距，单位为格");
+        addConfig("maxRadius", "活动半径", "追随者与佩戴者之间的最大水平距离，单位为格，仅独立模式生效");
 
         addConfigGroup("FormationMode", "编队模式", "编队模式的设置，多件追随者排成一条尾巴");
         addConfig("formationSpacing", "编队间距", "每件追随者与它前面一件之间的间距，单位为格");
@@ -338,6 +340,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("IndependentMode", "独立モード", "独立モードの設定、各フォロワーが個別に漂う");
         addConfig("minSpacing", "最小間隔", "フォロワー同士の最小間隔、ブロック数");
         addConfig("maxSpacing", "最大間隔", "フォロワー同士の最大間隔、ブロック数");
+        addConfig("maxRadius", "活動半径", "フォロワーと装着者との最大水平距離、ブロック数、独立モードのみ有効");
 
         addConfigGroup("FormationMode", "編隊モード", "編隊モードの設定、複数のフォロワーが尻尾のように一列に並ぶ");
         addConfig("formationSpacing", "編隊の間隔", "各フォロワーと前のフォロワーとの間隔、ブロック数");

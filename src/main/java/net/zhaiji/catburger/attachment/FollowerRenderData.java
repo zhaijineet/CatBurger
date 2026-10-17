@@ -59,7 +59,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
         minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
         maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
-        maxRadius = clampToConfig(CatBurgerClientConfig.MAX_RADIUS, maxRadius);
+        maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
         formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
         formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
         scale = CatBurgerClientConfig.RENDER_SCALE.get();
@@ -86,6 +86,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public void clampToBounds() {
         minSpacing = clampToConfig(CatBurgerClientConfig.MIN_SPACING, minSpacing);
         maxSpacing = clampToConfig(CatBurgerClientConfig.MAX_SPACING, maxSpacing);
+        maxRadius = clampToConfig(CatBurgerClientConfig.MAX_RADIUS, maxRadius);
         formationSpacing = clampToConfig(CatBurgerClientConfig.FORMATION_SPACING, formationSpacing);
         scale = clampToConfig(CatBurgerClientConfig.RENDER_SCALE, scale);
         frontBackOffset = clampToConfig(CatBurgerClientConfig.FRONT_BACK_OFFSET, frontBackOffset);

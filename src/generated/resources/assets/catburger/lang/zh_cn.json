@@ -100,6 +100,8 @@
   "catburger.configuration.leftRightOffset.tooltip": "沿环绕方向向右偏移的格数，负值向左",
   "catburger.configuration.maxLagDistance": "最大滞后距离",
   "catburger.configuration.maxLagDistance.tooltip": "追随者最多落后的格数，0为不拖尾",
+  "catburger.configuration.maxRadius": "活动半径",
+  "catburger.configuration.maxRadius.tooltip": "追随者与佩戴者之间的最大水平距离，单位为格，仅独立模式生效",
   "catburger.configuration.maxSpacing": "最大间距",
   "catburger.configuration.maxSpacing.tooltip": "追随者之间的最大间距，单位为格",
   "catburger.configuration.minSpacing": "最小间距",

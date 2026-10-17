@@ -100,6 +100,8 @@
   "catburger.configuration.leftRightOffset.tooltip": "Blocks to move to the right of the orbit direction, negative moves left",
   "catburger.configuration.maxLagDistance": "Max Lag Distance",
   "catburger.configuration.maxLagDistance.tooltip": "Maximum distance in blocks the follower trails behind, 0 disables trailing",
+  "catburger.configuration.maxRadius": "Max Radius",
+  "catburger.configuration.maxRadius.tooltip": "Maximum horizontal distance in blocks a follower may drift from the wearer, independent mode only",
   "catburger.configuration.maxSpacing": "Max Spacing",
   "catburger.configuration.maxSpacing.tooltip": "Maximum blocks between followers",
   "catburger.configuration.minSpacing": "Min Spacing",

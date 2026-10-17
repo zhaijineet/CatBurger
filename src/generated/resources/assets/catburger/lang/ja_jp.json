@@ -100,6 +100,8 @@
   "catburger.configuration.leftRightOffset.tooltip": "周回方向の右に動かすブロック数、負の値で左",
   "catburger.configuration.maxLagDistance": "最大遅延距離",
   "catburger.configuration.maxLagDistance.tooltip": "フォロワーが遅れる最大のブロック数、0で遅延なし",
+  "catburger.configuration.maxRadius": "活動半径",
+  "catburger.configuration.maxRadius.tooltip": "フォロワーと装着者との最大水平距離、ブロック数、独立モードのみ有効",
   "catburger.configuration.maxSpacing": "最大間隔",
   "catburger.configuration.maxSpacing.tooltip": "フォロワー同士の最大間隔、ブロック数",
   "catburger.configuration.minSpacing": "最小間隔",
