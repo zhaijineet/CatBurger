@@ -14,6 +14,7 @@ public class ClientEventManager {
 
     public static void gameBusListener(IEventBus gameBus) {
         gameBus.addListener(ClientEventHandler::handlerRenderLivingEvent$Post);
+        gameBus.addListener(ClientEventHandler::handlerRenderLevelStageEvent);
         gameBus.addListener(ClientEventHandler::handlerClientPlayerNetworkEvent$LoggingIn);
     }
 }
