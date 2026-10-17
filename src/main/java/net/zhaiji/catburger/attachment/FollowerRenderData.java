@@ -9,6 +9,7 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.FollowerRenderMode;
+import net.zhaiji.catburger.config.FormationGazeTarget;
 
 /**
  * 一名玩家用于渲染其跟随者的全部参数：客户端按本机配置填好后上传，服务端收束并广播给追踪者。
@@ -20,6 +21,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     );
 
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
+    private boolean deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
+    private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
+    private double minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
+    private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
+    private double formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.getDefault();
+    private FormationGazeTarget formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.getDefault();
     private double scale = CatBurgerClientConfig.RENDER_SCALE.getDefault();
     private double frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.getDefault();
     private double leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.getDefault();
@@ -47,6 +54,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
      */
     public void loadFromClientConfig() {
         renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
+        deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
+        minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
+        maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
+        formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
+        formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
         scale = CatBurgerClientConfig.RENDER_SCALE.get();
         frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
         leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.get();
@@ -69,6 +82,9 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
      * 把各数值字段收束到配置声明的边界内，用于校验跨端传入的值。
      */
     public void clampToBounds() {
+        minSpacing = clampToConfig(CatBurgerClientConfig.MIN_SPACING, minSpacing);
+        maxSpacing = clampToConfig(CatBurgerClientConfig.MAX_SPACING, maxSpacing);
+        formationSpacing = clampToConfig(CatBurgerClientConfig.FORMATION_SPACING, formationSpacing);
         scale = clampToConfig(CatBurgerClientConfig.RENDER_SCALE, scale);
         frontBackOffset = clampToConfig(CatBurgerClientConfig.FRONT_BACK_OFFSET, frontBackOffset);
         leftRightOffset = clampToConfig(CatBurgerClientConfig.LEFT_RIGHT_OFFSET, leftRightOffset);
@@ -95,6 +111,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     private static void encode(RegistryFriendlyByteBuf buf, FollowerRenderData data) {
         FollowerRenderMode.STREAM_CODEC.encode(buf, data.renderMode);
+        buf.writeBoolean(data.deduplicateRendering);
+        buf.writeBoolean(data.independentFloat);
+        buf.writeDouble(data.minSpacing);
+        buf.writeDouble(data.maxSpacing);
+        buf.writeDouble(data.formationSpacing);
+        FormationGazeTarget.STREAM_CODEC.encode(buf, data.formationGazeTarget);
         buf.writeDouble(data.scale);
         buf.writeDouble(data.frontBackOffset);
         buf.writeDouble(data.leftRightOffset);
@@ -116,6 +138,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private static FollowerRenderData decode(RegistryFriendlyByteBuf buf) {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = FollowerRenderMode.STREAM_CODEC.decode(buf);
+        data.deduplicateRendering = buf.readBoolean();
+        data.independentFloat = buf.readBoolean();
+        data.minSpacing = buf.readDouble();
+        data.maxSpacing = buf.readDouble();
+        data.formationSpacing = buf.readDouble();
+        data.formationGazeTarget = FormationGazeTarget.STREAM_CODEC.decode(buf);
         data.scale = buf.readDouble();
         data.frontBackOffset = buf.readDouble();
         data.leftRightOffset = buf.readDouble();
@@ -139,6 +167,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         tag.putString("renderMode", renderMode.getSerializedName());
+        tag.putBoolean("deduplicateRendering", deduplicateRendering);
+        tag.putBoolean("independentFloat", independentFloat);
+        tag.putDouble("minSpacing", minSpacing);
+        tag.putDouble("maxSpacing", maxSpacing);
+        tag.putDouble("formationSpacing", formationSpacing);
+        tag.putString("formationGazeTarget", formationGazeTarget.getSerializedName());
         tag.putDouble("scale", scale);
         tag.putDouble("frontBackOffset", frontBackOffset);
         tag.putDouble("leftRightOffset", leftRightOffset);
@@ -161,6 +195,12 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     @Override
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
         if (tag.contains("renderMode")) renderMode = FollowerRenderMode.byName(tag.getString("renderMode"));
+        if (tag.contains("deduplicateRendering")) deduplicateRendering = tag.getBoolean("deduplicateRendering");
+        if (tag.contains("independentFloat")) independentFloat = tag.getBoolean("independentFloat");
+        if (tag.contains("minSpacing")) minSpacing = tag.getDouble("minSpacing");
+        if (tag.contains("maxSpacing")) maxSpacing = tag.getDouble("maxSpacing");
+        if (tag.contains("formationSpacing")) formationSpacing = tag.getDouble("formationSpacing");
+        if (tag.contains("formationGazeTarget")) formationGazeTarget = FormationGazeTarget.byName(tag.getString("formationGazeTarget"));
         if (tag.contains("scale")) scale = tag.getDouble("scale");
         if (tag.contains("frontBackOffset")) frontBackOffset = tag.getDouble("frontBackOffset");
         if (tag.contains("leftRightOffset")) leftRightOffset = tag.getDouble("leftRightOffset");
@@ -177,6 +217,10 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.contains("useShortestArc")) useShortestArc = tag.getBoolean("useShortestArc");
         if (tag.contains("orientationFollowSpeed")) orientationFollowSpeed = tag.getDouble("orientationFollowSpeed");
         if (tag.contains("gazeAtViewTarget")) gazeAtViewTarget = tag.getBoolean("gazeAtViewTarget");
+    }
+
+    public FollowerRenderMode getRenderMode() {
+        return renderMode;
     }
 
     public double getScale() {
@@ -241,5 +285,29 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     public boolean isGazeAtViewTarget() {
         return gazeAtViewTarget;
+    }
+
+    public boolean isDeduplicateRendering() {
+        return deduplicateRendering;
+    }
+
+    public boolean isIndependentFloat() {
+        return independentFloat;
+    }
+
+    public double getMinSpacing() {
+        return minSpacing;
+    }
+
+    public double getMaxSpacing() {
+        return maxSpacing;
+    }
+
+    public double getFormationSpacing() {
+        return formationSpacing;
+    }
+
+    public FormationGazeTarget getFormationGazeTarget() {
+        return formationGazeTarget;
     }
 }

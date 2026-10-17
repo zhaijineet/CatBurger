@@ -4,6 +4,7 @@ import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.config.FollowerRenderMode;
+import net.zhaiji.catburger.config.FormationGazeTarget;
 import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
 import net.zhaiji.catburger.init.CatBurgerItems;
 import net.zhaiji.catburger.util.TooltipUtil;
@@ -90,8 +91,22 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("MobPickup", "Mob Pickup", "Whether mobs can pick up and wear followers");
         addConfig("mobPickupEnabled", "Enable Mob Pickup", "Allow mobs to pick up and wear followers");
 
-        addConfig("ScaleAndOffset", "Scale and Offset", "Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing");
+        addConfig("MultipleFollowers", "Multiple Followers", "How multiple followers worn by the same wearer are arranged");
+        addConfig("followerRenderMode", "Render Mode", "Independent scatters them loosely around the configured position, formation lines them up in a tail where each follows the one ahead");
         addFollowerRenderModes("Independent", "Formation");
+        addConfig("deduplicateRendering", "Deduplicate Rendering", "Render only one follower of each kind when the same follower is worn in several slots");
+        addConfig("independentFloat", "Independent Float", "Give each follower its own float rhythm and period instead of floating in sync");
+
+        addConfig("IndependentMode", "Independent Mode", "Settings for independent mode, where each follower drifts on its own");
+        addConfig("minSpacing", "Min Spacing", "Minimum blocks between followers");
+        addConfig("maxSpacing", "Max Spacing", "Maximum blocks between followers");
+
+        addConfig("FormationMode", "Formation Mode", "Settings for formation mode, where followers line up in a tail");
+        addConfig("formationSpacing", "Formation Spacing", "Blocks between each follower and the one ahead of it");
+        addConfig("formationGazeTarget", "Formation Gaze Target", "Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it");
+        addFormationGazeTargets("Wearer's View", "Follower Ahead");
+
+        addConfig("ScaleAndOffset", "Scale and Offset", "Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing");
         addConfig("renderScale", "Render Scale", "Multiplied by the wearer's own scale");
         addConfig("frontBackOffset", "Front/Back Offset", "Blocks to move forward along the orbit direction, negative moves backward");
         addConfig("leftRightOffset", "Left/Right Offset", "Blocks to move to the right of the orbit direction, negative moves left");
@@ -106,16 +121,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("followSpeed", "Follow Speed", "How quickly the follower catches up, higher values give a shorter trail, 1.0 follows instantly");
         addConfig("maxLagDistance", "Max Lag Distance", "Maximum distance in blocks the follower trails behind, 0 disables trailing");
 
-        addConfig("SpringMotion", "Spring Motion", "Spring motion for orbiting, overrides rotation when enabled");
-        addConfig("springMotionEnabled", "Enable Spring Motion", "Orbit with spring motion that can overshoot and bounce back");
-        addConfig("springStiffness", "Spring Stiffness", "Spring stiffness, higher is snappier");
-        addConfig("springDamping", "Spring Damping", "Fraction of spring speed kept each tick, lower settles faster");
-
         addConfig("TurningAndFacing", "Turning and Facing", "How the follower orbits and faces when the wearer turns or looks around");
         addConfig("rotationFollowSpeed", "Rotation Follow Speed", "How quickly the orbit catches up with the head, higher is faster, 1.0 follows instantly");
         addConfig("useShortestArc", "Use Shortest Arc", "Catch up along the shortest arc instead of following every full turn");
         addConfig("orientationFollowSpeed", "Orientation Follow Speed", "How quickly the facing catches up with its target, higher is faster, 1.0 follows instantly");
         addConfig("gazeAtViewTarget", "Gaze at View Target", "Aim the follower worn by a player at that player's own crosshair hit point, using the setting they synced to the server; followers on non-player wearers use this local setting");
+
+        addConfig("SpringMotion", "Spring Motion", "Spring motion for orbiting, overrides rotation when enabled");
+        addConfig("springMotionEnabled", "Enable Spring Motion", "Orbit with spring motion that can overshoot and bounce back");
+        addConfig("springStiffness", "Spring Stiffness", "Spring stiffness, higher is snappier");
+        addConfig("springDamping", "Spring Damping", "Fraction of spring speed kept each tick, lower settles faster");
     }
 
     public void Chinese() {
@@ -187,8 +202,22 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("MobPickup", "生物拾取", "生物是否能捡起并佩戴追随者");
         addConfig("mobPickupEnabled", "启用生物拾取", "允许生物捡起并佩戴追随者");
 
-        addConfig("ScaleAndOffset", "缩放与偏移", "追随者相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动或转向决定，与追随者自身朝向无关");
+        addConfig("MultipleFollowers", "多件追随者", "同一佩戴者佩戴多件追随者时的排布");
+        addConfig("followerRenderMode", "排布方式", "独立让各件围绕配置位置松散散开，编队让它们排成一条尾巴、每件跟随前一件");
         addFollowerRenderModes("独立", "编队");
+        addConfig("deduplicateRendering", "渲染去重", "同一种追随者戴在多个槽位时只渲染一件");
+        addConfig("independentFloat", "独立浮动", "每件追随者使用各自的浮动节奏与周期，而不是同步上下浮动");
+
+        addConfig("IndependentMode", "独立模式", "独立模式的设置，每件追随者各自漂移");
+        addConfig("minSpacing", "最小间距", "追随者之间的最小间距，单位为格");
+        addConfig("maxSpacing", "最大间距", "追随者之间的最大间距，单位为格");
+
+        addConfig("FormationMode", "编队模式", "编队模式的设置，多件追随者排成一条尾巴");
+        addConfig("formationSpacing", "编队间距", "每件追随者与它前面一件之间的间距，单位为格");
+        addConfig("formationGazeTarget", "编队注视方向", "编队中每一节看向何处：跟随佩戴者的视线，或看向它前面那一节");
+        addFormationGazeTargets("跟随佩戴者视线", "看向前一节");
+
+        addConfig("ScaleAndOffset", "缩放与偏移", "追随者相对佩戴者眼部的大小与位置；偏移沿环绕方向计算，环绕方向由弹簧运动或转向决定，与追随者自身朝向无关");
         addConfig("renderScale", "渲染缩放", "与佩戴者自身缩放相乘");
         addConfig("frontBackOffset", "前后偏移", "沿环绕方向向前偏移的格数，负值向后");
         addConfig("leftRightOffset", "左右偏移", "沿环绕方向向右偏移的格数，负值向左");
@@ -203,16 +232,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("followSpeed", "跟随速度", "追随者追上佩戴者的速度，越大拖尾越短，1.0为瞬时跟随");
         addConfig("maxLagDistance", "最大滞后距离", "追随者最多落后的格数，0为不拖尾");
 
-        addConfig("SpringMotion", "弹簧运动", "以弹簧运动环绕跟随，启用时覆盖转向");
-        addConfig("springMotionEnabled", "启用弹簧运动", "以可能越过并回弹的弹簧运动环绕跟随");
-        addConfig("springStiffness", "弹簧刚度", "弹簧刚度，越大回弹越快");
-        addConfig("springDamping", "弹簧阻尼", "每刻保留的弹簧速度比例，越小越快静止");
-
         addConfig("TurningAndFacing", "转向与朝向", "佩戴者转头或环顾时追随者如何环绕和朝向");
         addConfig("rotationFollowSpeed", "转向跟随速度", "环绕追上头部朝向的速度，越大越快，1.0为瞬时跟随");
         addConfig("useShortestArc", "使用最短路径", "沿最短弧线追上头部朝向，不再跟随每一圈完整转身");
         addConfig("orientationFollowSpeed", "朝向跟随速度", "朝向追上目标的速度，越大越快，1.0为瞬时跟随");
         addConfig("gazeAtViewTarget", "注视视线终点", "让玩家佩戴的追随者注视该玩家自己的准心命中点，按其同步过来的设置生效；非玩家佩戴的追随者按本机设置");
+
+        addConfig("SpringMotion", "弹簧运动", "以弹簧运动环绕跟随，启用时覆盖转向");
+        addConfig("springMotionEnabled", "启用弹簧运动", "以可能越过并回弹的弹簧运动环绕跟随");
+        addConfig("springStiffness", "弹簧刚度", "弹簧刚度，越大回弹越快");
+        addConfig("springDamping", "弹簧阻尼", "每刻保留的弹簧速度比例，越小越快静止");
     }
 
     public void Japanese() {
@@ -284,8 +313,22 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("MobPickup", "Mobの拾得", "Mobがフォロワーを拾って装備できるかどうか");
         addConfig("mobPickupEnabled", "Mobの拾得を有効化", "Mobがフォロワーを拾って装備できるようにする");
 
-        addConfig("ScaleAndOffset", "スケールとオフセット", "装備者の目の位置を基準としたフォロワーの大きさと位置；オフセットはバネ運動または回転で決まる周回方向に沿い、フォロワー自身の向きとは無関係");
+        addConfig("MultipleFollowers", "複数のフォロワー", "同じ装備者が複数のフォロワーを装備した時の並べ方");
+        addConfig("followerRenderMode", "配置方式", "独立は設定位置の周りに緩く散らばり、編隊は尻尾のように一列に並んで前のフォロワーを追う");
         addFollowerRenderModes("独立", "編隊");
+        addConfig("deduplicateRendering", "描画の重複排除", "同じフォロワーを複数のスロットに装備した時は1つだけ描画する");
+        addConfig("independentFloat", "個別の浮遊", "フォロワーごとに浮遊のリズムと周期を変え、同期して浮遊しないようにする");
+
+        addConfig("IndependentMode", "独立モード", "独立モードの設定、各フォロワーが個別に漂う");
+        addConfig("minSpacing", "最小間隔", "フォロワー同士の最小間隔、ブロック数");
+        addConfig("maxSpacing", "最大間隔", "フォロワー同士の最大間隔、ブロック数");
+
+        addConfig("FormationMode", "編隊モード", "編隊モードの設定、複数のフォロワーが尻尾のように一列に並ぶ");
+        addConfig("formationSpacing", "編隊の間隔", "各フォロワーと前のフォロワーとの間隔、ブロック数");
+        addConfig("formationGazeTarget", "編隊の注視方向", "編隊の各節がどこを見るか：装備者の視線に従う、または前の節を見る");
+        addFormationGazeTargets("装備者の視線に従う", "前の節を見る");
+
+        addConfig("ScaleAndOffset", "スケールとオフセット", "装備者の目の位置を基準としたフォロワーの大きさと位置；オフセットはバネ運動または回転で決まる周回方向に沿い、フォロワー自身の向きとは無関係");
         addConfig("renderScale", "描画倍率", "装備者自身のスケールに乗算される");
         addConfig("frontBackOffset", "前後オフセット", "周回方向へ前に動かすブロック数、負の値で後ろ");
         addConfig("leftRightOffset", "左右オフセット", "周回方向の右に動かすブロック数、負の値で左");
@@ -300,16 +343,16 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("followSpeed", "追従速度", "フォロワーが追いつく速さ、大きいほど遅れが短い、1.0で即座に追従");
         addConfig("maxLagDistance", "最大遅延距離", "フォロワーが遅れる最大のブロック数、0で遅延なし");
 
-        addConfig("SpringMotion", "バネ運動", "バネ運動で周回する、有効時は回転より優先");
-        addConfig("springMotionEnabled", "バネ運動を有効化", "行き過ぎて跳ね返るバネ運動で周回する");
-        addConfig("springStiffness", "バネの硬さ", "バネの硬さ、大きいほど素早く戻る");
-        addConfig("springDamping", "バネの減衰", "毎tick保持されるバネの速度の割合、小さいほど早く静止");
-
         addConfig("TurningAndFacing", "回転と向き", "装備者が振り向いたり見回したりした時のフォロワーの周回と向き");
         addConfig("rotationFollowSpeed", "回転の追従速度", "周回が頭の向きに追いつく速さ、大きいほど速い、1.0で即座に追従");
         addConfig("useShortestArc", "最短経路を使用", "1周ごとに追従せず、最短の弧で頭の向きに追いつく");
         addConfig("orientationFollowSpeed", "向きの追従速度", "向きが目標に追いつく速さ、大きいほど速い、1.0で即座に追従");
         addConfig("gazeAtViewTarget", "視線の終点を注視", "プレイヤーが装着しているフォロワーを、そのプレイヤー自身の照準点に向けさせる（同期された設定に従う）。非プレイヤーの装着者はローカル設定に従う");
+
+        addConfig("SpringMotion", "バネ運動", "バネ運動で周回する、有効時は回転より優先");
+        addConfig("springMotionEnabled", "バネ運動を有効化", "行き過ぎて跳ね返るバネ運動で周回する");
+        addConfig("springStiffness", "バネの硬さ", "バネの硬さ、大きいほど素早く戻る");
+        addConfig("springDamping", "バネの減衰", "毎tick保持されるバネの速度の割合、小さいほど早く静止");
     }
 
     /**
@@ -320,6 +363,18 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
             addConfig("followerRenderMode." + renderMode.getSerializedName(), switch (renderMode) {
                 case INDEPENDENT -> independent;
                 case FORMATION -> formation;
+            });
+        }
+    }
+
+    /**
+     * 为编队注视方向枚举的每个常量写入显示名，穷尽 switch 使新增常量时编译失败以强制补译名。
+     */
+    private void addFormationGazeTargets(String wearerView, String frontFollower) {
+        for (FormationGazeTarget gazeTarget : FormationGazeTarget.values()) {
+            addConfig("formationGazeTarget." + gazeTarget.getSerializedName(), switch (gazeTarget) {
+                case WEARER_VIEW -> wearerView;
+                case FRONT_FOLLOWER -> frontFollower;
             });
         }
     }

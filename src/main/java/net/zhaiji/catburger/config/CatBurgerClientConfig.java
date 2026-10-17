@@ -6,15 +6,72 @@ public class CatBurgerClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.EnumValue<FollowerRenderMode> FOLLOWER_RENDER_MODE = BUILDER
-            .comment("Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing")
-            .push("ScaleAndOffset")
-            .comment("How multiple followers worn by the same wearer are arranged; independent lets each follower drift on its own, formation spreads them evenly around the wearer")
+            .comment("How multiple followers worn by the same wearer are arranged")
+            .push("MultipleFollowers")
+            .comment("Independent scatters them loosely around the configured position, formation lines them up in a tail where each follows the one ahead")
             .defineEnum(
                     "followerRenderMode",
                     FollowerRenderMode.INDEPENDENT
             );
 
+    public static final ModConfigSpec.BooleanValue DEDUPLICATE_RENDERING = BUILDER
+            .comment("Render only one follower of each kind when the same follower is worn in several slots")
+            .define(
+                    "deduplicateRendering",
+                    true
+            );
+
+    public static final ModConfigSpec.BooleanValue INDEPENDENT_FLOAT = BUILDER
+            .comment("Give each follower its own float rhythm and period instead of floating in sync")
+            .define(
+                    "independentFloat",
+                    true
+            );
+
+    public static final ModConfigSpec.DoubleValue MIN_SPACING = BUILDER
+            .comment("Settings for independent mode, where each follower drifts on its own")
+            .push("IndependentMode")
+            .comment("Minimum blocks between followers")
+            .defineInRange(
+                    "minSpacing",
+                    1.2,
+                    0.5,
+                    4.0
+            );
+
+    public static final ModConfigSpec.DoubleValue MAX_SPACING = BUILDER
+            .comment("Maximum blocks between followers")
+            .defineInRange(
+                    "maxSpacing",
+                    2.0,
+                    0.5,
+                    4.0
+            );
+
+    public static final ModConfigSpec.DoubleValue FORMATION_SPACING = BUILDER
+            .pop()
+            .comment("Settings for formation mode, where followers line up in a tail")
+            .push("FormationMode")
+            .comment("Blocks between each follower and the one ahead of it")
+            .defineInRange(
+                    "formationSpacing",
+                    1.2,
+                    0.5,
+                    4.0
+            );
+
+    public static final ModConfigSpec.EnumValue<FormationGazeTarget> FORMATION_GAZE_TARGET = BUILDER
+            .comment("Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it")
+            .defineEnum(
+                    "formationGazeTarget",
+                    FormationGazeTarget.WEARER_VIEW
+            );
+
     public static final ModConfigSpec.DoubleValue RENDER_SCALE = BUILDER
+            .pop()
+            .pop()
+            .comment("Size and position of the follower relative to the wearer's eyes; offsets follow the orbit direction set by spring motion or rotation, not the follower's facing")
+            .push("ScaleAndOffset")
             .comment("Multiplied by the wearer's own scale")
             .defineInRange(
                     "renderScale",
@@ -101,35 +158,7 @@ public class CatBurgerClientConfig {
                     5.0
             );
 
-    public static final ModConfigSpec.BooleanValue SPRING_MOTION_ENABLED = BUILDER
-            .comment("Spring motion for orbiting, overrides rotation when enabled")
-            .push("SpringMotion")
-            .comment("Orbit with spring motion that can overshoot and bounce back")
-            .define(
-                    "springMotionEnabled",
-                    false
-            );
-
-    public static final ModConfigSpec.DoubleValue SPRING_STIFFNESS = BUILDER
-            .comment("Spring stiffness, higher is snappier")
-            .defineInRange(
-                    "springStiffness",
-                    0.9,
-                    0.1,
-                    2.0
-            );
-
-    public static final ModConfigSpec.DoubleValue SPRING_DAMPING = BUILDER
-            .comment("Fraction of spring speed kept each tick, lower settles faster")
-            .defineInRange(
-                    "springDamping",
-                    0.7,
-                    0.1,
-                    0.99
-            );
-
     public static final ModConfigSpec.DoubleValue ROTATION_FOLLOW_SPEED = BUILDER
-            .pop()
             .pop()
             .comment("How the follower orbits and faces when the wearer turns or looks around")
             .push("TurningAndFacing")
@@ -164,5 +193,32 @@ public class CatBurgerClientConfig {
                     true
             );
 
-    public static final ModConfigSpec SPEC = BUILDER.pop().build();
+    public static final ModConfigSpec.BooleanValue SPRING_MOTION_ENABLED = BUILDER
+            .comment("Spring motion for orbiting, overrides rotation when enabled")
+            .push("SpringMotion")
+            .comment("Orbit with spring motion that can overshoot and bounce back")
+            .define(
+                    "springMotionEnabled",
+                    false
+            );
+
+    public static final ModConfigSpec.DoubleValue SPRING_STIFFNESS = BUILDER
+            .comment("Spring stiffness, higher is snappier")
+            .defineInRange(
+                    "springStiffness",
+                    0.9,
+                    0.1,
+                    2.0
+            );
+
+    public static final ModConfigSpec.DoubleValue SPRING_DAMPING = BUILDER
+            .comment("Fraction of spring speed kept each tick, lower settles faster")
+            .defineInRange(
+                    "springDamping",
+                    0.7,
+                    0.1,
+                    0.99
+            );
+
+    public static final ModConfigSpec SPEC = BUILDER.pop().pop().build();
 }
