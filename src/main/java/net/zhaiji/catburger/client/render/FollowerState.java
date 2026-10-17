@@ -44,13 +44,18 @@ public class FollowerState {
     private float prevOrientationYaw;
     private float orientationPitch;
     private float prevOrientationPitch;
-    private float orientationLocalYaw;
-    private float prevOrientationLocalYaw;
+    private float gazeYaw;
+    private float prevGazeYaw;
     private float targetOrientationYaw;
     private float targetOrientationPitch;
-    private float targetOrientationLocalYaw;
+    private float targetGazeYaw;
+    private double layoutForward;
+    private double layoutRight;
+    private double layoutUp;
+    private final double floatPhase;
+    private final double floatPeriodScale;
 
-    private FollowerState(LivingEntity livingEntity, FollowerRenderData renderParams) {
+    private FollowerState(LivingEntity livingEntity, FollowerRenderData renderParams, String slotKey) {
         this.livingEntity = livingEntity;
         this.renderParams = renderParams;
         lastTick = livingEntity.tickCount;
@@ -62,7 +67,14 @@ public class FollowerState {
         anchorHeight = prevAnchorHeight = anchorHeightOf(livingEntity, renderParams);
         orientationYaw = prevOrientationYaw = headYaw;
         orientationPitch = prevOrientationPitch = livingEntity.getViewXRot(1.0F);
-        orientationLocalYaw = prevOrientationLocalYaw = 0.0F;
+        gazeYaw = prevGazeYaw = 0.0F;
+        if (renderParams.isIndependentFloat()) {
+            floatPhase = FollowerLayout.floatPhaseOf(livingEntity, slotKey);
+            floatPeriodScale = FollowerLayout.floatPeriodScaleOf(livingEntity, slotKey);
+        } else {
+            floatPhase = 0.0;
+            floatPeriodScale = 1.0;
+        }
     }
 
     /**
@@ -73,14 +85,17 @@ public class FollowerState {
         Map<String, FollowerState> slotStates = ((FollowerStateHolder) livingEntity).catburger$followerStates();
         slotStates.entrySet().removeIf(entry -> !entry.getKey().equals(slotKey)
                 && livingEntity.tickCount - entry.getValue().lastTick > TICK_GAP_RESET_THRESHOLD);
-        return slotStates.computeIfAbsent(slotKey, slot -> new FollowerState(livingEntity, renderParams));
+        return slotStates.computeIfAbsent(slotKey, slot -> new FollowerState(livingEntity, renderParams, slot));
     }
 
     /**
      * 按佩戴者的 tick 推进状态，同一刻重复调用只生效一次。
      */
-    public void update(FollowerRenderData renderParams) {
+    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp) {
         this.renderParams = renderParams;
+        this.layoutForward = layoutForward;
+        this.layoutRight = layoutRight;
+        this.layoutUp = layoutUp;
         int currentTick = livingEntity.tickCount;
         if (currentTick == lastTick) return;
 
@@ -165,7 +180,7 @@ public class FollowerState {
     private void updateOrientation(boolean snap) {
         prevOrientationYaw = orientationYaw;
         prevOrientationPitch = orientationPitch;
-        prevOrientationLocalYaw = orientationLocalYaw;
+        prevGazeYaw = gazeYaw;
 
         if (!resolveOrientationTarget()) return;
 
@@ -173,17 +188,17 @@ public class FollowerState {
         if (snap) {
             orientationYaw = targetOrientationYaw;
             orientationPitch = targetOrientationPitch;
-            orientationLocalYaw = targetOrientationLocalYaw;
+            gazeYaw = targetGazeYaw;
             prevOrientationYaw = orientationYaw;
             prevOrientationPitch = orientationPitch;
-            prevOrientationLocalYaw = orientationLocalYaw;
+            prevGazeYaw = gazeYaw;
             return;
         }
 
         float orientationFollowSpeed = (float) renderParams.getOrientationFollowSpeed();
         orientationYaw += Mth.wrapDegrees(targetOrientationYaw - orientationYaw) * orientationFollowSpeed;
         orientationPitch += (targetOrientationPitch - orientationPitch) * orientationFollowSpeed;
-        orientationLocalYaw += Mth.wrapDegrees(targetOrientationLocalYaw - orientationLocalYaw) * orientationFollowSpeed;
+        gazeYaw += Mth.wrapDegrees(targetGazeYaw - gazeYaw) * orientationFollowSpeed;
     }
 
     /**
@@ -200,9 +215,9 @@ public class FollowerState {
         } else {
             double tickOrbitYaw = pickUsedYaw(springYaw, dragYaw);
             Vec3 toTarget = gazePosition.subtract(
-                    livingEntity.getX() + orbitXOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetX),
-                    livingEntity.getY() + orbitYOffset(renderParams, livingEntity, 1.0F, anchorHeight, offsetY),
-                    livingEntity.getZ() + orbitZOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetZ)
+                    livingEntity.getX() + orbitXOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetX),
+                    livingEntity.getY() + orbitYOffset(renderParams, livingEntity, anchorHeight, offsetY, layoutUp, floatOffset(1.0F)),
+                    livingEntity.getZ() + orbitZOffset(frontBackOffset(), leftRightOffset(), tickOrbitYaw, offsetZ)
             );
             if (toTarget.lengthSqr() <= DEGENERATE_GAZE_DISTANCE * DEGENERATE_GAZE_DISTANCE) return false;
             viewFrameDirection = FollowerOrientation.toViewFrame(toTarget, viewYaw);
@@ -213,7 +228,7 @@ public class FollowerState {
 
         targetOrientationYaw = viewYaw;
         targetOrientationPitch = FollowerOrientation.pitchOf(clampedDirection);
-        targetOrientationLocalYaw = FollowerOrientation.localYawOf(clampedDirection);
+        targetGazeYaw = FollowerOrientation.localYawOf(clampedDirection);
         return true;
     }
 
@@ -222,8 +237,8 @@ public class FollowerState {
      */
     public double xOffset(float partialTicks) {
         return orbitXOffset(
-                renderParams,
-                livingEntity.getScale(),
+                frontBackOffset(),
+                leftRightOffset(),
                 orbitYaw(partialTicks),
                 Mth.lerp(partialTicks, prevOffsetX, offsetX)
         );
@@ -236,9 +251,10 @@ public class FollowerState {
         return orbitYOffset(
                 renderParams,
                 livingEntity,
-                partialTicks,
                 Mth.lerp(partialTicks, prevAnchorHeight, anchorHeight),
-                Mth.lerp(partialTicks, prevOffsetY, offsetY)
+                Mth.lerp(partialTicks, prevOffsetY, offsetY),
+                layoutUp,
+                floatOffset(partialTicks)
         );
     }
 
@@ -247,8 +263,8 @@ public class FollowerState {
      */
     public double zOffset(float partialTicks) {
         return orbitZOffset(
-                renderParams,
-                livingEntity.getScale(),
+                frontBackOffset(),
+                leftRightOffset(),
                 orbitYaw(partialTicks),
                 Mth.lerp(partialTicks, prevOffsetZ, offsetZ)
         );
@@ -271,8 +287,8 @@ public class FollowerState {
     /**
      * 取绕自身竖直轴的局部偏航。
      */
-    public float localYaw(float partialTicks) {
-        return Mth.lerp(partialTicks, prevOrientationLocalYaw, orientationLocalYaw);
+    public float gazeYaw(float partialTicks) {
+        return Mth.lerp(partialTicks, prevGazeYaw, gazeYaw);
     }
 
     /**
@@ -285,22 +301,41 @@ public class FollowerState {
     /**
      * 背包等界面预览用的无状态横向偏移：取实体当前朝向，不含拖尾。
      */
-    public static double previewXOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw) {
-        return orbitXOffset(renderParams, livingEntity.getScale(), viewYaw, 0);
+    public static double previewXOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw, double layoutForward, double layoutRight) {
+        float entityScale = livingEntity.getScale();
+        return orbitXOffset(
+                renderParams.getFrontBackOffset() * entityScale + layoutForward,
+                renderParams.getLeftRightOffset() * entityScale + layoutRight,
+                viewYaw,
+                0
+        );
     }
 
     /**
-     * 背包等界面预览用的无状态竖直偏移：取实体当前锚点，不含拖尾。
+     * 背包等界面预览用的无状态竖直偏移：取实体当前锚点，叠加散布布局，不含拖尾。
      */
-    public static double previewYOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks) {
-        return orbitYOffset(renderParams, livingEntity, partialTicks, anchorHeightOf(livingEntity, renderParams), 0);
+    public static double previewYOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks, double layoutUp) {
+        return orbitYOffset(
+                renderParams,
+                livingEntity,
+                anchorHeightOf(livingEntity, renderParams),
+                0,
+                layoutUp,
+                floatOffsetOf(livingEntity, renderParams, partialTicks)
+        );
     }
 
     /**
-     * 背包等界面预览用的无状态纵向偏移：取实体当前朝向，不含拖尾。
+     * 背包等界面预览用的无状态纵向偏移：取实体当前朝向，叠加散布布局，不含拖尾。
      */
-    public static double previewZOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw) {
-        return orbitZOffset(renderParams, livingEntity.getScale(), viewYaw, 0);
+    public static double previewZOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw, double layoutForward, double layoutRight) {
+        float entityScale = livingEntity.getScale();
+        return orbitZOffset(
+                renderParams.getFrontBackOffset() * entityScale + layoutForward,
+                renderParams.getLeftRightOffset() * entityScale + layoutRight,
+                viewYaw,
+                0
+        );
     }
 
     /**
@@ -325,9 +360,18 @@ public class FollowerState {
         );
     }
 
-    private static double orbitXOffset(FollowerRenderData renderParams, float entityScale, double orbitYaw, double dragOffsetX) {
-        double frontBackOffset = renderParams.getFrontBackOffset() * entityScale;
-        double leftRightOffset = renderParams.getLeftRightOffset() * entityScale;
+    private float bodyYaw(float partialTicks) {
+        return Mth.lerp(partialTicks, livingEntity.yBodyRotO, livingEntity.yBodyRot);
+    }
+    private double frontBackOffset() {
+        return renderParams.getFrontBackOffset() * livingEntity.getScale() + layoutForward;
+    }
+
+    private double leftRightOffset() {
+        return renderParams.getLeftRightOffset() * livingEntity.getScale() + layoutRight;
+    }
+
+    private static double orbitXOffset(double frontBackOffset, double leftRightOffset, double orbitYaw, double dragOffsetX) {
         double yawRadians = Math.toRadians(-orbitYaw);
         return Math.cos(yawRadians - Mth.HALF_PI) * frontBackOffset
                 - Math.cos(yawRadians) * leftRightOffset
@@ -337,19 +381,19 @@ public class FollowerState {
     private static double orbitYOffset(
             FollowerRenderData renderParams,
             LivingEntity livingEntity,
-            float partialTicks,
             double anchorHeight,
-            double dragOffsetY
+            double dragOffsetY,
+            double layoutUp,
+            double floatOffset
     ) {
         float entityScale = livingEntity.getScale();
         return anchorHeight
-                + (floatOffsetOf(livingEntity, renderParams, partialTicks) + renderParams.getVerticalOffset()) * entityScale
+                + (floatOffset + renderParams.getVerticalOffset()) * entityScale
+                + layoutUp
                 + dragOffsetY;
     }
 
-    private static double orbitZOffset(FollowerRenderData renderParams, float entityScale, double orbitYaw, double dragOffsetZ) {
-        double frontBackOffset = renderParams.getFrontBackOffset() * entityScale;
-        double leftRightOffset = renderParams.getLeftRightOffset() * entityScale;
+    private static double orbitZOffset(double frontBackOffset, double leftRightOffset, double orbitYaw, double dragOffsetZ) {
         double yawRadians = Math.toRadians(-orbitYaw);
         return -Math.sin(yawRadians - Mth.HALF_PI) * frontBackOffset
                 + Math.sin(yawRadians) * leftRightOffset
@@ -359,14 +403,14 @@ public class FollowerState {
     /**
      * 渲染缩放：参数里的缩放乘以佩戴者自身缩放，使跟随者随佩戴者体型等比缩放。
      */
-    private static float renderScale(LivingEntity livingEntity, FollowerRenderData renderParams) {
+    public static float renderScale(LivingEntity livingEntity, FollowerRenderData renderParams) {
         return (float) renderParams.getScale() * livingEntity.getScale();
     }
 
     /**
      * 锚点高度取实体眼高，眼高随姿态与缩放变化，潜行时再叠加参数里的 crouchOffset。
      */
-    private static double anchorHeightOf(LivingEntity livingEntity, FollowerRenderData renderParams) {
+    public static double anchorHeightOf(LivingEntity livingEntity, FollowerRenderData renderParams) {
         double eyeHeight = livingEntity.getEyeHeight();
         if (!livingEntity.isCrouching()) return eyeHeight;
         return eyeHeight + renderParams.getCrouchOffset() * livingEntity.getScale();
@@ -383,7 +427,16 @@ public class FollowerState {
     }
 
     /**
-     * 浮动偏移：按佩戴者刻数与参数里的浮动距离与周期做往复。
+     * 浮动偏移：相位与周期倍率按槽位播种，独立浮动时多件节奏不同。
+     */
+    private double floatOffset(float partialTicks) {
+        return renderParams.getFloatDistance() / 2
+                * Math.sin((livingEntity.tickCount + partialTicks) * Mth.TWO_PI
+                / (renderParams.getFloatCycleDuration() * floatPeriodScale) + floatPhase);
+    }
+
+    /**
+     * 浮动偏移：按佩戴者刻数与参数里的浮动距离与周期做往复，预览路径使用。
      */
     private static double floatOffsetOf(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks) {
         return renderParams.getFloatDistance() / 2
