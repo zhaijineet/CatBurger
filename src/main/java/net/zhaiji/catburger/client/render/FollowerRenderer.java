@@ -36,7 +36,7 @@ public class FollowerRenderer {
         double zOffset;
         float renderYaw;
         float headPitch;
-        float screenRoll;
+        float localYaw;
         float scale;
         if (renderingInventoryPreview) {
             float viewYaw = livingEntity.getViewYRot(partialTicks);
@@ -45,7 +45,7 @@ public class FollowerRenderer {
             zOffset = FollowerState.previewZOffset(livingEntity, renderParams, viewYaw);
             renderYaw = viewYaw;
             headPitch = livingEntity.getViewXRot(partialTicks);
-            screenRoll = 0.0F;
+            localYaw = 0.0F;
             scale = FollowerState.previewScale(livingEntity, renderParams);
         } else {
             FollowerState followerState = FollowerState.of(livingEntity, wornFollower.slotKey(), renderParams);
@@ -55,7 +55,7 @@ public class FollowerRenderer {
             zOffset = followerState.zOffset(partialTicks);
             renderYaw = followerState.renderYaw(partialTicks);
             headPitch = followerState.headPitch(partialTicks);
-            screenRoll = followerState.screenRoll(partialTicks);
+            localYaw = followerState.localYaw(partialTicks);
             scale = followerState.scale();
         }
 
@@ -65,7 +65,7 @@ public class FollowerRenderer {
         // 模型正面朝北（-Z）建模，偏航按 (180 - 偏航) 换算，模型自身不再做任何翻转
         poseStack.mulPose(Axis.YP.rotationDegrees(180 - renderYaw));
         poseStack.mulPose(Axis.XP.rotationDegrees(-headPitch));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(screenRoll));
+        poseStack.mulPose(Axis.YP.rotationDegrees(-localYaw));
         Minecraft.getInstance().getItemRenderer().renderStatic(
                 livingEntity,
                 wornFollower.itemStack(),

@@ -14,7 +14,6 @@ import java.util.Map;
 public class FollowerState {
     // TODO(阶段 7): 目前只按槽位分列状态，仍未遍历渲染全部跟随者与按槽位键播种相位
     private static final double MIN_MOTION_LENGTH = 1.0E-4;
-    private static final double MIN_GAZE_HORIZONTAL_DISTANCE = 0.5;
     private static final double DEGENERATE_GAZE_DISTANCE = 0.1;
     // 与跳帧复位同一阈值：超过该刻数未推进的槽位状态视为失效
     private static final int TICK_GAP_RESET_THRESHOLD = 5;
@@ -45,11 +44,11 @@ public class FollowerState {
     private float prevOrientationYaw;
     private float orientationPitch;
     private float prevOrientationPitch;
-    private float orientationRoll;
-    private float prevOrientationRoll;
+    private float orientationLocalYaw;
+    private float prevOrientationLocalYaw;
     private float targetOrientationYaw;
     private float targetOrientationPitch;
-    private float targetOrientationRoll;
+    private float targetOrientationLocalYaw;
 
     private FollowerState(LivingEntity livingEntity, FollowerRenderData renderParams) {
         this.livingEntity = livingEntity;
@@ -63,7 +62,7 @@ public class FollowerState {
         anchorHeight = prevAnchorHeight = anchorHeightOf(livingEntity, renderParams);
         orientationYaw = prevOrientationYaw = headYaw;
         orientationPitch = prevOrientationPitch = livingEntity.getViewXRot(1.0F);
-        orientationRoll = prevOrientationRoll = 0.0F;
+        orientationLocalYaw = prevOrientationLocalYaw = 0.0F;
     }
 
     /**
@@ -166,7 +165,7 @@ public class FollowerState {
     private void updateOrientation(boolean snap) {
         prevOrientationYaw = orientationYaw;
         prevOrientationPitch = orientationPitch;
-        prevOrientationRoll = orientationRoll;
+        prevOrientationLocalYaw = orientationLocalYaw;
 
         if (!resolveOrientationTarget()) return;
 
@@ -174,49 +173,47 @@ public class FollowerState {
         if (snap) {
             orientationYaw = targetOrientationYaw;
             orientationPitch = targetOrientationPitch;
-            orientationRoll = targetOrientationRoll;
+            orientationLocalYaw = targetOrientationLocalYaw;
             prevOrientationYaw = orientationYaw;
             prevOrientationPitch = orientationPitch;
-            prevOrientationRoll = orientationRoll;
+            prevOrientationLocalYaw = orientationLocalYaw;
             return;
         }
 
         float orientationFollowSpeed = (float) renderParams.getOrientationFollowSpeed();
         orientationYaw += Mth.wrapDegrees(targetOrientationYaw - orientationYaw) * orientationFollowSpeed;
         orientationPitch += (targetOrientationPitch - orientationPitch) * orientationFollowSpeed;
-        orientationRoll += Mth.wrapDegrees(targetOrientationRoll - orientationRoll) * orientationFollowSpeed;
+        orientationLocalYaw += Mth.wrapDegrees(targetOrientationLocalYaw - orientationLocalYaw) * orientationFollowSpeed;
     }
 
     /**
-     * 求本 tick 的目标朝向并写入目标字段，返回 false 表示注视点与跟随者几乎重合、应保持当前朝向。
-     * 水平分量过小时沿用当前偏航，俯仰与滚转照常更新。
+     * 求本 tick 的目标朝向并写入目标字段，返回 false 表示本刻应保持当前朝向：目标贴脸，或正在背后致使锥面方位角无定义。
      */
     private boolean resolveOrientationTarget() {
+        float viewYaw = livingEntity.getViewYRot(1.0F);
+        float viewPitch = livingEntity.getViewXRot(1.0F);
+
+        Vec3 viewFrameDirection;
         Vec3 gazePosition = GazeResolver.gazePositionOf(livingEntity, renderParams);
-        // 无注视目标时朝向取视线方向，滚转补偿照常算，使抬头低头的扶正不依赖注视开关
         if (gazePosition == null) {
-            targetOrientationYaw = livingEntity.getViewYRot(1.0F);
-            targetOrientationPitch = livingEntity.getViewXRot(1.0F);
-            Vec3 viewForward = Vec3.directionFromRotation(targetOrientationPitch, targetOrientationYaw);
-            targetOrientationRoll = GazeResolver.screenRoll(viewForward);
-            return true;
+            viewFrameDirection = FollowerOrientation.viewDirectionInViewFrame(viewPitch);
+        } else {
+            double tickOrbitYaw = pickUsedYaw(springYaw, dragYaw);
+            Vec3 toTarget = gazePosition.subtract(
+                    livingEntity.getX() + orbitXOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetX),
+                    livingEntity.getY() + orbitYOffset(renderParams, livingEntity, 1.0F, anchorHeight, offsetY),
+                    livingEntity.getZ() + orbitZOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetZ)
+            );
+            if (toTarget.lengthSqr() <= DEGENERATE_GAZE_DISTANCE * DEGENERATE_GAZE_DISTANCE) return false;
+            viewFrameDirection = FollowerOrientation.toViewFrame(toTarget, viewYaw);
         }
 
-        double tickOrbitYaw = pickUsedYaw(springYaw, dragYaw);
-        Vec3 toTarget = gazePosition.subtract(
-                livingEntity.getX() + orbitXOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetX),
-                livingEntity.getY() + orbitYOffset(renderParams, livingEntity, 1.0F, anchorHeight, offsetY),
-                livingEntity.getZ() + orbitZOffset(renderParams, livingEntity.getScale(), tickOrbitYaw, offsetZ)
-        );
-        if (toTarget.lengthSqr() <= DEGENERATE_GAZE_DISTANCE * DEGENERATE_GAZE_DISTANCE) return false;
+        Vec3 clampedDirection = FollowerOrientation.clampToCone(viewFrameDirection);
+        if (clampedDirection == null) return false;
 
-        double horizontalDistance = toTarget.horizontalDistance();
-        targetOrientationYaw = horizontalDistance <= MIN_GAZE_HORIZONTAL_DISTANCE
-                ? orientationYaw
-                : (float) Math.toDegrees(Math.atan2(-toTarget.x, toTarget.z));
-        targetOrientationPitch = (float) Math.toDegrees(Math.atan2(-toTarget.y, horizontalDistance));
-        Vec3 forward = Vec3.directionFromRotation(targetOrientationPitch, targetOrientationYaw);
-        targetOrientationRoll = GazeResolver.screenRoll(forward);
+        targetOrientationYaw = viewYaw;
+        targetOrientationPitch = FollowerOrientation.pitchOf(clampedDirection);
+        targetOrientationLocalYaw = FollowerOrientation.localYawOf(clampedDirection);
         return true;
     }
 
@@ -272,10 +269,10 @@ public class FollowerState {
     }
 
     /**
-     * 取屏幕扶正滚转，由本机相机决定。
+     * 取绕自身竖直轴的局部偏航。
      */
-    public float screenRoll(float partialTicks) {
-        return Mth.lerp(partialTicks, prevOrientationRoll, orientationRoll);
+    public float localYaw(float partialTicks) {
+        return Mth.lerp(partialTicks, prevOrientationLocalYaw, orientationLocalYaw);
     }
 
     /**

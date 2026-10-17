@@ -1,6 +1,5 @@
 package net.zhaiji.catburger.client.render;
 
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
@@ -14,14 +13,9 @@ import net.zhaiji.catburger.attachment.FollowerRenderData;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * 观察者侧的注视解算：给出跟随者该朝向的注视点，以及把它的 up 在屏幕上扶正所需的滚转补偿。
- * 本类是渲染逻辑里唯一读取本机准心与主相机的地方。
+ * 观察者侧的注视解算：给出跟随者该朝向的注视点，是本类渲染逻辑里唯一读取本机准心的地方。
  */
 public class GazeResolver {
-    private static final Vec3 WORLD_UP = new Vec3(0.0, 1.0, 0.0);
-    private static final double MIN_GAZE_ALIGNMENT = 1.0E-4;
-    private static final double GAZE_ROLL_FADE_ALIGNMENT = 0.2;
-
     /**
      * 解析注视点的世界坐标：摄像机实体直接取本机准心命中点，其他玩家按他自己的眼位、朝向与交互距离在本地重算，
      * 非玩家实体没有准心概念故返回 null 由调用方改用视线方向。
@@ -40,26 +34,6 @@ public class GazeResolver {
 
         // TODO(其他生物注视): 非玩家实体暂返回 null，由调用方改用它的视线方向；后续要让它们也做命中点会聚，实现方式待定
         return null;
-    }
-
-    /**
-     * 求绕前向轴的补偿滚转：把跟随者 up 从无滚转方向转到“投影到相机屏幕后与相机 up 重合”的方向。
-     * 前向接近垂直于相机视线时投影会翻转，补偿量随 |cameraForward·forward| 线性淡出到 0，避免滚转翻转 180°。
-     */
-    public static float screenRoll(Vec3 forward) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 cameraUp = new Vec3(camera.getUpVector().x, camera.getUpVector().y, camera.getUpVector().z);
-        Vec3 cameraForward = new Vec3(camera.getLookVector().x, camera.getLookVector().y, camera.getLookVector().z);
-
-        double alignment = cameraForward.dot(forward);
-        if (Math.abs(alignment) < MIN_GAZE_ALIGNMENT) return 0.0F;
-
-        Vec3 noRollUp = WORLD_UP.subtract(forward.scale(WORLD_UP.dot(forward))).normalize();
-        // 相机 up 沿相机前向平移到与前向垂直的平面上，其屏幕投影仍等于相机 up，是满足该条件的唯一解
-        Vec3 screenUp = cameraUp.subtract(cameraForward.scale(cameraUp.dot(forward) / alignment)).normalize();
-        double signedAngle = Math.atan2(noRollUp.cross(screenUp).dot(forward), noRollUp.dot(screenUp));
-        double rollWeight = Math.min(Math.abs(alignment) / GAZE_ROLL_FADE_ALIGNMENT, 1.0);
-        return (float) (-Math.toDegrees(signedAngle) * rollWeight);
     }
 
     /**
