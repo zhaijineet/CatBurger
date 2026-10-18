@@ -88,6 +88,8 @@
   "catburger.configuration.formationGazeTarget.front_follower": "Follower Ahead",
   "catburger.configuration.formationGazeTarget.tooltip": "Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it",
   "catburger.configuration.formationGazeTarget.wearer_view": "Wearer's View",
+  "catburger.configuration.formationMaxLagDistance": "Formation Max Lag Distance",
+  "catburger.configuration.formationMaxLagDistance.tooltip": "Extra blocks a follower may be pulled beyond the formation spacing from the one ahead of it, 0 keeps it within the spacing; to stay out of the wearer's body it may be pushed up to about one wearer radius further",
   "catburger.configuration.formationSpacing": "Formation Spacing",
   "catburger.configuration.formationSpacing.tooltip": "Blocks between each follower and the one ahead of it",
   "catburger.configuration.frontBackOffset": "Front/Back Offset",

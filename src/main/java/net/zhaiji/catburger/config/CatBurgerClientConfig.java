@@ -69,11 +69,20 @@ public class CatBurgerClientConfig {
                     4.0
             );
 
+    public static final ModConfigSpec.DoubleValue FORMATION_MAX_LAG_DISTANCE = BUILDER
+            .comment("Extra blocks a follower may be pulled beyond the formation spacing from the one ahead of it, 0 keeps it within the spacing; to stay out of the wearer's body it may be pushed up to about one wearer radius further")
+            .defineInRange(
+                    "formationMaxLagDistance",
+                    0.5,
+                    0.0,
+                    5.0
+            );
+
     public static final ModConfigSpec.EnumValue<FormationGazeTarget> FORMATION_GAZE_TARGET = BUILDER
             .comment("Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it")
             .defineEnum(
                     "formationGazeTarget",
-                    FormationGazeTarget.WEARER_VIEW
+                    FormationGazeTarget.FRONT_FOLLOWER
             );
 
     public static final ModConfigSpec.BooleanValue SHOW_IN_FIRST_PERSON = BUILDER

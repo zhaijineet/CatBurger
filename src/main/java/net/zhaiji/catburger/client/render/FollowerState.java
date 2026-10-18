@@ -228,7 +228,7 @@ public class FollowerState {
     /**
      * 尾巴按刻推进；跳帧或相邻两节拉开超过上限时整条重排到首件正后方，避免一条长绳从旧位置甩过来。
      * 本刻佩戴者位移交给尾巴的漂移层，使各节先在世界中原地不动，再由归位逐节拉回；
-     * 每节的拖尾距离与首件共用 maxLagDistance，正常运动下不会触发重排。
+     * 各节的拖尾滞后仍由与首件共用的 maxLagDistance 驱动，相邻两节的额外距离由编队最大滞后距离截断，正常运动下不会触发重排。
      */
     private void updateTail(Vec3 gazePosition, boolean snap) {
         double leaderAngle = tickLeaderShapeAngle();
@@ -236,8 +236,10 @@ public class FollowerState {
         double leaderHeight = tickLeaderShapeHeight();
         Vec3 leaderDrift = tickLeaderDrift();
         Vec3 backward = tickBackward();
-        double detachDistance = 2 * (tailSpacing + renderParams.getMaxLagDistance());
-        if (snap || tail.isDetached(leaderAngle, leaderRadius, leaderHeight, leaderDrift, detachDistance)) {
+        double wearerRadius = livingEntity.getBbWidth() / 2.0 + tailDisplaySize / 2.0;
+        // 正常推进下相邻两节不超过链长加佩戴者半径，取两倍链长是留余量
+        double detachDistance = 2 * (tailSpacing + renderParams.getFormationMaxLagDistance()) + wearerRadius;
+        if (snap || tail.isDetached(detachDistance)) {
             tail.reset(
                     leaderAngle,
                     leaderRadius,
@@ -261,13 +263,14 @@ public class FollowerState {
                 tailSpacing,
                 renderParams.getFollowSpeed(),
                 renderParams.getMaxLagDistance(),
+                renderParams.getFormationMaxLagDistance(),
                 gazePosition,
                 renderParams.getFormationGazeTarget() == FormationGazeTarget.FRONT_FOLLOWER,
                 livingEntity.getViewYRot(1.0F),
                 livingEntity.getViewXRot(1.0F),
                 (float) renderParams.getOrientationFollowSpeed(),
                 livingEntity.position(),
-                livingEntity,
+                wearerRadius,
                 tailDisplaySize
         );
     }

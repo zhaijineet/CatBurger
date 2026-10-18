@@ -88,6 +88,8 @@
   "catburger.configuration.formationGazeTarget.front_follower": "前の節を見る",
   "catburger.configuration.formationGazeTarget.tooltip": "編隊の各節がどこを見るか：装備者の視線に従う、または前の節を見る",
   "catburger.configuration.formationGazeTarget.wearer_view": "装備者の視線に従う",
+  "catburger.configuration.formationMaxLagDistance": "編隊の最大遅延距離",
+  "catburger.configuration.formationMaxLagDistance.tooltip": "各フォロワーが前のフォロワーから編隊の間隔を超えて引き離される最大のブロック数、0で間隔を超えない；装備者の体にめり込まないよう、さらに装備者の半径ほど押し出されることがある",
   "catburger.configuration.formationSpacing": "編隊の間隔",
   "catburger.configuration.formationSpacing.tooltip": "各フォロワーと前のフォロワーとの間隔、ブロック数",
   "catburger.configuration.frontBackOffset": "前後オフセット",

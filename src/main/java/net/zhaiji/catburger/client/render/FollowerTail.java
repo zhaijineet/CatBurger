@@ -1,7 +1,6 @@
 package net.zhaiji.catburger.client.render;
 
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -10,7 +9,7 @@ import java.util.Arrays;
 /**
  * 编队模式的尾巴：每节拆成形状层与漂移层两层状态。
  * 形状层是以累计环绕角、水平半径、高度记录的极坐标，只表达绕佩戴者的旋转，归位点由前一节的形状加静止队形步长得到；
- * 漂移层是世界笛卡尔偏移，只表达平移惯性，避让与圆柱修正也写回这里，因此转身与平移互不污染。
+ * 漂移层是世界笛卡尔偏移，只表达平移惯性，避让、链长与圆柱修正也写回这里，因此转身与平移互不污染。
  * 各节朝向复用与首件同一个头部参考系内核，注视前一节时改用世界系 lookAt。
  */
 public class FollowerTail {
@@ -36,6 +35,9 @@ public class FollowerTail {
     private float[] gazeYaws = new float[0];
     private float[] previousGazeYaws = new float[0];
     private int segmentCount;
+    private double solvedLeaderOffsetX;
+    private double solvedLeaderOffsetY;
+    private double solvedLeaderOffsetZ;
 
     /**
      * 环绕角与半径换算成世界偏移的横向分量，角度取与实体偏航同一约定。
@@ -64,6 +66,20 @@ public class FollowerTail {
     private static double saturatedScale(double length, double maxDistance) {
         if (maxDistance <= 0) return 0.0;
         return maxDistance * Math.tanh(length / maxDistance) / length;
+    }
+
+    /**
+     * 记录最近一次求解所用的首件最终偏移，脱节判定用它比较首件与第0节，首件自身的刻间位移不参与判定。
+     */
+    private void recordSolvedLeaderOffset(
+            double leaderAngle,
+            double leaderRadius,
+            double leaderHeight,
+            Vec3 leaderDrift
+    ) {
+        solvedLeaderOffsetX = offsetX(leaderAngle, leaderRadius) + leaderDrift.x;
+        solvedLeaderOffsetY = leaderHeight + leaderDrift.y;
+        solvedLeaderOffsetZ = offsetZ(leaderAngle, leaderRadius) + leaderDrift.z;
     }
 
     /**
@@ -109,6 +125,8 @@ public class FollowerTail {
         if (segmentCount == this.segmentCount) return;
 
         int keptCount = Math.min(segmentCount, this.segmentCount);
+        // 无保留节时新节全部由首件展开
+        if (keptCount == 0) recordSolvedLeaderOffset(leaderAngle, leaderRadius, leaderHeight, leaderDrift);
         angles = Arrays.copyOf(angles, segmentCount);
         previousAngles = Arrays.copyOf(previousAngles, segmentCount);
         radii = Arrays.copyOf(radii, segmentCount);
@@ -168,6 +186,7 @@ public class FollowerTail {
         double referenceAngle = leaderAngle;
         double referenceRadius = leaderRadius;
         double referenceHeight = leaderHeight;
+        recordSolvedLeaderOffset(leaderAngle, leaderRadius, leaderHeight, leaderDrift);
         double[] step = new double[3];
         for (int segment = 0; segment < segmentCount; segment++) {
             staticFormationStep(segment, leaderAngle, leaderRadius, leaderHeight, backward, spacing, step);
@@ -185,22 +204,17 @@ public class FollowerTail {
     }
 
     /**
-     * 脱节判定：首件与第0节、任意相邻两节最终偏移的三维距离超过上限，或任一节两层状态出现非有限值，
-     * 即视为脱节，通常由佩戴者瞬移或坐标损坏造成；上限的语义是相邻两节的最大允许距离，
-     * 正常运动下相邻两节的距离上界为静止队形间距、形状层拖尾饱和与漂移层差饱和三者之和再加一次避让推开量，故取两倍（间距加最大拖尾距离）。
+     * 脱节判定：任一节两层状态出现非有限值，或首件与第0节、任意相邻两节最终偏移的三维距离超过上限，即视为脱节；
+     * 首件与第0节这一对比较的是最近一次求解所用的首件偏移，首件自身的刻间位移不受链长约束，因此不参与该判定。
+     * 正常推进下链长截断把相邻距离压在编队间距加编队最大滞后距离内，其后的圆柱下限至多再推远一个佩戴者半径，
+     * 所以该判定实际捕获的是坐标损坏，以及间距、显示尺寸或缩放等参数调小后旧状态的残留。
      */
-    public boolean isDetached(
-            double leaderAngle,
-            double leaderRadius,
-            double leaderHeight,
-            Vec3 leaderDrift,
-            double maxDistance
-    ) {
+    public boolean isDetached(double maxDistance) {
         if (segmentCount == 0) return false;
 
-        double aheadOffsetX = offsetX(leaderAngle, leaderRadius) + leaderDrift.x;
-        double aheadOffsetY = leaderHeight + leaderDrift.y;
-        double aheadOffsetZ = offsetZ(leaderAngle, leaderRadius) + leaderDrift.z;
+        double aheadOffsetX = solvedLeaderOffsetX;
+        double aheadOffsetY = solvedLeaderOffsetY;
+        double aheadOffsetZ = solvedLeaderOffsetZ;
         double maxDistanceSquared = maxDistance * maxDistance;
         for (int segment = 0; segment < segmentCount; segment++) {
             if (!Double.isFinite(angles[segment]) || !Double.isFinite(radii[segment]) || !Double.isFinite(heights[segment])
@@ -229,9 +243,10 @@ public class FollowerTail {
      * 高度分量保持不变。
      */
     private void applyRadiusFloor(int segment, double[] segmentOffset, double wearerRadius) {
-        double horizontalDistance = Math.sqrt(segmentOffset[0] * segmentOffset[0] + segmentOffset[2] * segmentOffset[2]);
-        if (horizontalDistance >= wearerRadius) return;
+        double horizontalDistanceSquared = segmentOffset[0] * segmentOffset[0] + segmentOffset[2] * segmentOffset[2];
+        if (horizontalDistanceSquared >= wearerRadius * wearerRadius) return;
 
+        double horizontalDistance = Math.sqrt(horizontalDistanceSquared);
         if (horizontalDistance < MIN_SEGMENT_DISTANCE) {
             segmentOffset[0] = offsetX(angles[segment], wearerRadius);
             segmentOffset[2] = offsetZ(angles[segment], wearerRadius);
@@ -244,10 +259,77 @@ public class FollowerTail {
     }
 
     /**
+     * 链长约束：本节与前一节的最终距离超过上限时沿两者连线等比拉回，只缩短间距、不改变滞后方向，
+     * 使移动带来的额外距离不再沿链条逐节累加。
+     */
+    private static void clampSegmentDistance(
+            double[] segmentOffset,
+            double[] occupiedOffsets,
+            int aheadBase,
+            double maxSegmentDistance
+    ) {
+        double gapX = segmentOffset[0] - occupiedOffsets[aheadBase];
+        double gapY = segmentOffset[1] - occupiedOffsets[aheadBase + 1];
+        double gapZ = segmentOffset[2] - occupiedOffsets[aheadBase + 2];
+        double gapDistanceSquared = gapX * gapX + gapY * gapY + gapZ * gapZ;
+        if (gapDistanceSquared <= maxSegmentDistance * maxSegmentDistance) return;
+
+        double pullScale = maxSegmentDistance / Math.sqrt(gapDistanceSquared);
+        segmentOffset[0] = occupiedOffsets[aheadBase] + gapX * pullScale;
+        segmentOffset[1] = occupiedOffsets[aheadBase + 1] + gapY * pullScale;
+        segmentOffset[2] = occupiedOffsets[aheadBase + 2] + gapZ * pullScale;
+    }
+
+    /**
+     * 落位：形状层与漂移层相加得到本节的最终偏移，依次按跟随速度消解穿插、把与前一节的距离截断到编队链长上限、
+     * 推出佩戴者圆柱，修正量写回漂移层，形状层保持纯旋转。
+     * 三条约束的优先级依次升高：穿插消解可被链长截断部分撤销，链长截断可被圆柱下限再推远至多一个佩戴者半径。
+     */
+    private double[] resolveFinalOffset(
+            int segment,
+            double[] occupiedOffsets,
+            double followSpeed,
+            double wearerRadius,
+            double minGap,
+            double maxSegmentDistance
+    ) {
+        double shapeX = offsetX(angles[segment], radii[segment]);
+        double shapeY = heights[segment];
+        double shapeZ = offsetZ(angles[segment], radii[segment]);
+        double[] finalOffset = {
+                shapeX + driftXs[segment],
+                shapeY + driftYs[segment],
+                shapeZ + driftZs[segment]
+        };
+        // 软避让：本刻只消解穿插的一部分，穿插在若干刻内消解，首件因此能从相邻节旁滑过
+        for (int obstacle = 0; obstacle <= segment; obstacle++) {
+            int obstacleBase = obstacle * 3;
+            double gapX = finalOffset[0] - occupiedOffsets[obstacleBase];
+            double gapY = finalOffset[1] - occupiedOffsets[obstacleBase + 1];
+            double gapZ = finalOffset[2] - occupiedOffsets[obstacleBase + 2];
+            double gapDistanceSquared = gapX * gapX + gapY * gapY + gapZ * gapZ;
+            if (gapDistanceSquared >= minGap * minGap
+                    || gapDistanceSquared < MIN_SEGMENT_DISTANCE * MIN_SEGMENT_DISTANCE) continue;
+
+            double gapDistance = Math.sqrt(gapDistanceSquared);
+            double pushScale = (minGap - gapDistance) * followSpeed / gapDistance;
+            finalOffset[0] += gapX * pushScale;
+            finalOffset[1] += gapY * pushScale;
+            finalOffset[2] += gapZ * pushScale;
+        }
+        clampSegmentDistance(finalOffset, occupiedOffsets, segment * 3, maxSegmentDistance);
+        applyRadiusFloor(segment, finalOffset, wearerRadius);
+        driftXs[segment] = finalOffset[0] - shapeX;
+        driftYs[segment] = finalOffset[1] - shapeY;
+        driftZs[segment] = finalOffset[2] - shapeZ;
+
+        return finalOffset;
+    }
+
+    /**
      * 推进一刻：形状层按前一节的累计角加静止队形步长趋近归位点并沿圆柱饱和，只表达绕佩戴者的旋转；
      * 漂移层先扣掉佩戴者位移再跟随前一节的漂移并做同样的有界饱和，只表达平移惯性；
-     * 两层相加得到最终偏移，随后按跟随速度消解与首件和已推进各节的穿插、把最终位置推出佩戴者圆柱，
-     * 修正量全部写回漂移层，形状层保持纯旋转；最后各节按自己的位置转向注视目标。
+     * 两层推进完交给落位解算，修正量写回漂移层、形状层保持纯旋转；最后各节按自己的位置转向注视目标。
      */
     public void advance(
             double leaderAngle,
@@ -259,13 +341,14 @@ public class FollowerTail {
             double spacing,
             double followSpeed,
             double maxLagDistance,
+            double maxSegmentLagDistance,
             @Nullable Vec3 gazePosition,
             boolean gazeFrontFollower,
             float headYaw,
             float headPitch,
             float orientationFollowSpeed,
             Vec3 wearerPosition,
-            LivingEntity wearer,
+            double wearerRadius,
             double displaySize
     ) {
         System.arraycopy(angles, 0, previousAngles, 0, segmentCount);
@@ -278,13 +361,14 @@ public class FollowerTail {
         System.arraycopy(pitches, 0, previousPitches, 0, segmentCount);
         System.arraycopy(gazeYaws, 0, previousGazeYaws, 0, segmentCount);
 
-        double wearerRadius = wearer.getBbWidth() / 2.0 + displaySize / 2.0;
         double minGap = Math.min(displaySize, spacing);
+        double maxSegmentDistance = spacing + maxSegmentLagDistance;
+        recordSolvedLeaderOffset(leaderAngle, leaderRadius, leaderHeight, leaderDrift);
         // 第0槽存首件的最终偏移，其后每槽存已推进完的一节，供避让逐节查询
         double[] occupiedOffsets = new double[(segmentCount + 1) * 3];
-        occupiedOffsets[0] = offsetX(leaderAngle, leaderRadius) + leaderDrift.x;
-        occupiedOffsets[1] = leaderHeight + leaderDrift.y;
-        occupiedOffsets[2] = offsetZ(leaderAngle, leaderRadius) + leaderDrift.z;
+        occupiedOffsets[0] = solvedLeaderOffsetX;
+        occupiedOffsets[1] = solvedLeaderOffsetY;
+        occupiedOffsets[2] = solvedLeaderOffsetZ;
         double[] step = new double[3];
         double referenceAngle = leaderAngle;
         double referenceRadius = leaderRadius;
@@ -313,33 +397,14 @@ public class FollowerTail {
             driftZs[segment] += (referenceDriftZ - driftZs[segment]) * followSpeed;
             saturateDrift(segment, referenceDriftX, referenceDriftY, referenceDriftZ, maxLagDistance);
 
-            double shapeX = offsetX(angles[segment], radii[segment]);
-            double shapeY = heights[segment];
-            double shapeZ = offsetZ(angles[segment], radii[segment]);
-            double[] finalOffset = {
-                    shapeX + driftXs[segment],
-                    shapeY + driftYs[segment],
-                    shapeZ + driftZs[segment]
-            };
-            // 软避让：本刻只消解穿插的一部分，穿插在若干刻内消解，首件因此能从相邻节旁滑过
-            for (int obstacle = 0; obstacle <= segment; obstacle++) {
-                int obstacleBase = obstacle * 3;
-                double gapX = finalOffset[0] - occupiedOffsets[obstacleBase];
-                double gapY = finalOffset[1] - occupiedOffsets[obstacleBase + 1];
-                double gapZ = finalOffset[2] - occupiedOffsets[obstacleBase + 2];
-                double gapDistance = Math.sqrt(gapX * gapX + gapY * gapY + gapZ * gapZ);
-                if (gapDistance >= minGap || gapDistance < MIN_SEGMENT_DISTANCE) continue;
-
-                double pushScale = (minGap - gapDistance) * followSpeed / gapDistance;
-                finalOffset[0] += gapX * pushScale;
-                finalOffset[1] += gapY * pushScale;
-                finalOffset[2] += gapZ * pushScale;
-            }
-            applyRadiusFloor(segment, finalOffset, wearerRadius);
-            // 修正量写回漂移层，形状层保持纯旋转
-            driftXs[segment] = finalOffset[0] - shapeX;
-            driftYs[segment] = finalOffset[1] - shapeY;
-            driftZs[segment] = finalOffset[2] - shapeZ;
+            double[] finalOffset = resolveFinalOffset(
+                    segment,
+                    occupiedOffsets,
+                    followSpeed,
+                    wearerRadius,
+                    minGap,
+                    maxSegmentDistance
+            );
 
             referenceAngle = angles[segment];
             referenceRadius = radii[segment];

@@ -27,6 +27,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
     private double maxRadius = CatBurgerClientConfig.MAX_RADIUS.getDefault();
     private double formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.getDefault();
+    private double formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.getDefault();
     private FormationGazeTarget formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.getDefault();
     private double scale = CatBurgerClientConfig.RENDER_SCALE.getDefault();
     private double frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.getDefault();
@@ -61,6 +62,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
         maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
         formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
+        formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.get();
         formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
         scale = CatBurgerClientConfig.RENDER_SCALE.get();
         frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
@@ -88,6 +90,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         maxSpacing = clampToConfig(CatBurgerClientConfig.MAX_SPACING, maxSpacing);
         maxRadius = clampToConfig(CatBurgerClientConfig.MAX_RADIUS, maxRadius);
         formationSpacing = clampToConfig(CatBurgerClientConfig.FORMATION_SPACING, formationSpacing);
+        formationMaxLagDistance = clampToConfig(CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE, formationMaxLagDistance);
         scale = clampToConfig(CatBurgerClientConfig.RENDER_SCALE, scale);
         frontBackOffset = clampToConfig(CatBurgerClientConfig.FRONT_BACK_OFFSET, frontBackOffset);
         leftRightOffset = clampToConfig(CatBurgerClientConfig.LEFT_RIGHT_OFFSET, leftRightOffset);
@@ -120,6 +123,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         buf.writeDouble(data.maxSpacing);
         buf.writeDouble(data.maxRadius);
         buf.writeDouble(data.formationSpacing);
+        buf.writeDouble(data.formationMaxLagDistance);
         FormationGazeTarget.STREAM_CODEC.encode(buf, data.formationGazeTarget);
         buf.writeDouble(data.scale);
         buf.writeDouble(data.frontBackOffset);
@@ -148,6 +152,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         data.maxSpacing = buf.readDouble();
         data.maxRadius = buf.readDouble();
         data.formationSpacing = buf.readDouble();
+        data.formationMaxLagDistance = buf.readDouble();
         data.formationGazeTarget = FormationGazeTarget.STREAM_CODEC.decode(buf);
         data.scale = buf.readDouble();
         data.frontBackOffset = buf.readDouble();
@@ -178,6 +183,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         tag.putDouble("maxSpacing", maxSpacing);
         tag.putDouble("maxRadius", maxRadius);
         tag.putDouble("formationSpacing", formationSpacing);
+        tag.putDouble("formationMaxLagDistance", formationMaxLagDistance);
         tag.putString("formationGazeTarget", formationGazeTarget.getSerializedName());
         tag.putDouble("scale", scale);
         tag.putDouble("frontBackOffset", frontBackOffset);
@@ -207,6 +213,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.contains("maxSpacing")) maxSpacing = tag.getDouble("maxSpacing");
         if (tag.contains("maxRadius")) maxRadius = tag.getDouble("maxRadius");
         if (tag.contains("formationSpacing")) formationSpacing = tag.getDouble("formationSpacing");
+        if (tag.contains("formationMaxLagDistance")) formationMaxLagDistance = tag.getDouble("formationMaxLagDistance");
         if (tag.contains("formationGazeTarget")) formationGazeTarget = FormationGazeTarget.byName(tag.getString("formationGazeTarget"));
         if (tag.contains("scale")) scale = tag.getDouble("scale");
         if (tag.contains("frontBackOffset")) frontBackOffset = tag.getDouble("frontBackOffset");
@@ -316,6 +323,10 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     public double getFormationSpacing() {
         return formationSpacing;
+    }
+
+    public double getFormationMaxLagDistance() {
+        return formationMaxLagDistance;
     }
 
     public FormationGazeTarget getFormationGazeTarget() {

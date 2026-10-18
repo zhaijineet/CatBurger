@@ -104,6 +104,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
         addConfigGroup("FormationMode", "Formation Mode", "Settings for formation mode, where followers line up in a tail");
         addConfig("formationSpacing", "Formation Spacing", "Blocks between each follower and the one ahead of it");
+        addConfig("formationMaxLagDistance", "Formation Max Lag Distance", "Extra blocks a follower may be pulled beyond the formation spacing from the one ahead of it, 0 keeps it within the spacing; to stay out of the wearer's body it may be pushed up to about one wearer radius further");
         addConfig("formationGazeTarget", "Formation Gaze Target", "Where each follower in the tail looks: along the wearer's view, or at the follower ahead of it");
         addFormationGazeTargets("Wearer's View", "Follower Ahead");
 
@@ -224,6 +225,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
         addConfigGroup("FormationMode", "编队模式", "编队模式的设置，多件追随者排成一条尾巴");
         addConfig("formationSpacing", "编队间距", "每件追随者与它前面一件之间的间距，单位为格");
+        addConfig("formationMaxLagDistance", "编队最大滞后距离", "每件追随者相对它前面一件最多比编队间距多拉开的格数，0为不超过编队间距；为避免穿进佩戴者身体，实际距离最多还会再多出约一个佩戴者半径");
         addConfig("formationGazeTarget", "编队注视方向", "编队中每一节看向何处：跟随佩戴者的视线，或看向它前面那一节");
         addFormationGazeTargets("跟随佩戴者视线", "看向前一节");
 
@@ -344,6 +346,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
         addConfigGroup("FormationMode", "編隊モード", "編隊モードの設定、複数のフォロワーが尻尾のように一列に並ぶ");
         addConfig("formationSpacing", "編隊の間隔", "各フォロワーと前のフォロワーとの間隔、ブロック数");
+        addConfig("formationMaxLagDistance", "編隊の最大遅延距離", "各フォロワーが前のフォロワーから編隊の間隔を超えて引き離される最大のブロック数、0で間隔を超えない；装備者の体にめり込まないよう、さらに装備者の半径ほど押し出されることがある");
         addConfig("formationGazeTarget", "編隊の注視方向", "編隊の各節がどこを見るか：装備者の視線に従う、または前の節を見る");
         addFormationGazeTargets("装備者の視線に従う", "前の節を見る");
 

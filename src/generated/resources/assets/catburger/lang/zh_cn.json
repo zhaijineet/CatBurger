@@ -88,6 +88,8 @@
   "catburger.configuration.formationGazeTarget.front_follower": "看向前一节",
   "catburger.configuration.formationGazeTarget.tooltip": "编队中每一节看向何处：跟随佩戴者的视线，或看向它前面那一节",
   "catburger.configuration.formationGazeTarget.wearer_view": "跟随佩戴者视线",
+  "catburger.configuration.formationMaxLagDistance": "编队最大滞后距离",
+  "catburger.configuration.formationMaxLagDistance.tooltip": "每件追随者相对它前面一件最多比编队间距多拉开的格数，0为不超过编队间距；为避免穿进佩戴者身体，实际距离最多还会再多出约一个佩戴者半径",
   "catburger.configuration.formationSpacing": "编队间距",
   "catburger.configuration.formationSpacing.tooltip": "每件追随者与它前面一件之间的间距，单位为格",
   "catburger.configuration.frontBackOffset": "前后偏移",
