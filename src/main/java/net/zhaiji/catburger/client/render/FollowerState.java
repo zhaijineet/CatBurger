@@ -69,7 +69,7 @@ public class FollowerState {
     private final FollowerTail tail = new FollowerTail();
     private int tailLength;
     private double tailSpacing;
-    private double tailDisplaySize;
+    private double displaySize;
     private final double floatPhase;
     private final double floatPeriodScale;
 
@@ -112,11 +112,12 @@ public class FollowerState {
      * 每帧采样佩戴者头部偏航并累加帧间转角，按佩戴者的 tick 推进状态，同一刻只推进一次；
      * 预览上下文不消费佩戴者位移，也不解析准心注视目标。
      */
-    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp, float partialTicks, boolean preview) {
+    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp, double displaySize, float partialTicks, boolean preview) {
         this.renderParams = renderParams;
         this.layoutForward = layoutForward;
         this.layoutRight = layoutRight;
         this.layoutUp = layoutUp;
+        this.displaySize = displaySize;
         sampleHeadYaw(partialTicks);
         int currentTick = livingEntity.tickCount;
         if (currentTick == lastTick) return;
@@ -216,7 +217,6 @@ public class FollowerState {
         this.renderParams = renderParams;
         this.tailLength = tailLength;
         this.tailSpacing = tailSpacing;
-        this.tailDisplaySize = displaySize;
         tail.resize(
                 tailLength,
                 tickLeaderShapeAngle(),
@@ -228,7 +228,7 @@ public class FollowerState {
                 livingEntity.getViewXRot(1.0F),
                 tailSpacing
         );
-        update(renderParams, 0, 0, 0, partialTicks, preview);
+        update(renderParams, 0, 0, 0, displaySize, partialTicks, preview);
     }
 
     /**
@@ -242,7 +242,7 @@ public class FollowerState {
         double leaderHeight = tickLeaderShapeHeight();
         Vec3 leaderDrift = tickLeaderDrift();
         Vec3 backward = tickBackward();
-        double wearerRadius = livingEntity.getBbWidth() / 2.0 + tailDisplaySize / 2.0;
+        double wearerRadius = livingEntity.getBbWidth() / 2.0 + displaySize / 2.0;
         // 正常推进下相邻两节不超过链长加佩戴者半径，取两倍链长是留余量
         double detachDistance = 2 * (tailSpacing + renderParams.getFormationMaxLagDistance()) + wearerRadius;
         if (snap || tail.isDetached(detachDistance)) {
@@ -277,7 +277,7 @@ public class FollowerState {
                 (float) renderParams.getOrientationFollowSpeed(),
                 livingEntity.position(),
                 wearerRadius,
-                tailDisplaySize
+                displaySize
         );
     }
 
@@ -493,6 +493,43 @@ public class FollowerState {
      */
     public float scale() {
         return renderScale(livingEntity, renderParams);
+    }
+
+    /**
+     * 本状态所有件在世界中的剔除包围盒：以佩戴者中轴为轴，水平半径取各件到中轴的最大距离，
+     * 上下取各件的最低与最高，再外扩半个显示尺寸；刻末与上一刻两端都计入，用来覆盖帧间插值。
+     */
+    public AABB cullingBox() {
+        double[] cullingExtremes = {0.0, Double.MAX_VALUE, -Double.MAX_VALUE};
+        accumulateCullingExtremes(cullingExtremes, 0.0F);
+        accumulateCullingExtremes(cullingExtremes, 1.0F);
+        double halfSize = displaySize / 2.0;
+        double horizontalRadius = cullingExtremes[0] + halfSize;
+        double minYOffset = cullingExtremes[1];
+        double maxYOffset = cullingExtremes[2];
+        return new AABB(
+                livingEntity.getX() - horizontalRadius,
+                livingEntity.getY() + minYOffset - halfSize,
+                livingEntity.getZ() - horizontalRadius,
+                livingEntity.getX() + horizontalRadius,
+                livingEntity.getY() + maxYOffset + halfSize,
+                livingEntity.getZ() + horizontalRadius
+        );
+    }
+
+    /**
+     * 把一个插值端点上所有件的水平距离与竖直范围并进cullingExtremes：第0项为最大水平距离，第1项为最低，第2项为最高。
+     */
+    private void accumulateCullingExtremes(double[] cullingExtremes, float partialTicks) {
+        for (int index = 0; index <= tailLength; index++) {
+            double followerX = index == 0 ? xOffset(partialTicks) : tailXOffset(index - 1, partialTicks);
+            double followerY = index == 0 ? yOffset(partialTicks) : tailYOffset(index - 1, partialTicks);
+            double followerZ = index == 0 ? zOffset(partialTicks) : tailZOffset(index - 1, partialTicks);
+            // 用到中轴的距离而不是x/z各自的极值，是因为它对环绕旋转不敏感，插值过程中转过的弧也能覆盖
+            cullingExtremes[0] = Math.max(cullingExtremes[0], Math.sqrt(followerX * followerX + followerZ * followerZ));
+            cullingExtremes[1] = Math.min(cullingExtremes[1], followerY);
+            cullingExtremes[2] = Math.max(cullingExtremes[2], followerY);
+        }
     }
 
     /**

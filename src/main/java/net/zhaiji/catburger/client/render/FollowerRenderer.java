@@ -76,6 +76,7 @@ public class FollowerRenderer {
                     layout[index * 3],
                     layout[index * 3 + 1],
                     layout[index * 3 + 2],
+                    displaySize,
                     renderParams,
                     poseStack,
                     buffer,
@@ -189,6 +190,7 @@ public class FollowerRenderer {
             double layoutForward,
             double layoutRight,
             double layoutUp,
+            double displaySize,
             FollowerRenderData renderParams,
             PoseStack poseStack,
             MultiBufferSource buffer,
@@ -196,7 +198,7 @@ public class FollowerRenderer {
             float partialTicks
     ) {
         FollowerState followerState = FollowerState.of(livingEntity, wornFollower.slotKey(), renderParams, renderingInventoryPreview);
-        followerState.update(renderParams, layoutForward, layoutRight, layoutUp, partialTicks, renderingInventoryPreview);
+        followerState.update(renderParams, layoutForward, layoutRight, layoutUp, displaySize, partialTicks, renderingInventoryPreview);
 
         draw(
                 livingEntity,
