@@ -23,7 +23,8 @@ import java.util.Set;
 public class FollowerRenderer {
     private static final double MIN_DISPLAY_SIZE = 0.1;
 
-    // 背包等界面预览期间为 true，由 InventoryScreenMixin 在 renderEntityInInventory 前后置位与复位
+    // 背包等界面预览期间为 true，由 InventoryScreenMixin 在 renderEntityInInventory 前后置位与复位；
+    // 它只决定状态取哪一份、partialTicks怎么取、是否消费位移与解析准心，跟随逻辑本身是同一套
     private static boolean renderingInventoryPreview;
 
     public static void beginInventoryPreview() {
@@ -56,26 +57,14 @@ public class FollowerRenderer {
             displaySize = Math.max(displaySize, displaySizeOf(livingEntity, wornFollower.itemStack(), renderParams));
         }
 
+        // 原版预览传入的partialTicks恒为1.0，直接沿用会让状态按刻跳变，改取与世界渲染相同的帧间比例
+        if (renderingInventoryPreview) {
+            partialTicks = Minecraft.getInstance().getTimer()
+                    .getGameTimeDeltaPartialTick(!livingEntity.level().tickRateManager().isEntityFrozen(livingEntity));
+        }
+
         if (renderParams.getRenderMode() == FollowerRenderMode.FORMATION) {
-            if (renderingInventoryPreview) {
-                double[] lineLayout = FollowerLayout.line(renderedFollowers.size(), renderParams.getFormationSpacing());
-                for (int index = 0; index < renderedFollowers.size(); index++) {
-                    renderOne(
-                            livingEntity,
-                            renderedFollowers.get(index),
-                            lineLayout[index * 3],
-                            lineLayout[index * 3 + 1],
-                            lineLayout[index * 3 + 2],
-                            renderParams,
-                            poseStack,
-                            buffer,
-                            packedLight,
-                            partialTicks
-                    );
-                }
-            } else {
-                renderFormation(livingEntity, renderedFollowers, renderParams, displaySize, poseStack, buffer, packedLight, partialTicks);
-            }
+            renderFormation(livingEntity, renderedFollowers, renderParams, displaySize, poseStack, buffer, packedLight, partialTicks);
             return;
         }
 
@@ -109,13 +98,14 @@ public class FollowerRenderer {
             int packedLight,
             float partialTicks
     ) {
-        FollowerState followerState = FollowerState.of(livingEntity, FollowerState.FORMATION_KEY, renderParams);
+        FollowerState followerState = FollowerState.of(livingEntity, FollowerState.FORMATION_KEY, renderParams, renderingInventoryPreview);
         followerState.updateFormation(
                 renderParams,
                 renderedFollowers.size() - 1,
                 renderParams.getFormationSpacing(),
                 displaySize,
-                partialTicks
+                partialTicks,
+                renderingInventoryPreview
         );
         float scale = followerState.scale();
         draw(
@@ -191,7 +181,7 @@ public class FollowerRenderer {
     }
 
     /**
-     * 渲染单件跟随者：世界路径按槽位状态推进并取位置与朝向，预览路径取界面改写后的视角与无状态位置。
+     * 渲染单件跟随者：按槽位状态推进并取位置与朝向，预览与世界共用同一套推进。
      */
     private static void renderOne(
             LivingEntity livingEntity,
@@ -205,44 +195,19 @@ public class FollowerRenderer {
             int packedLight,
             float partialTicks
     ) {
-        double xOffset;
-        double yOffset;
-        double zOffset;
-        float renderYaw;
-        float headPitch;
-        float gazeYaw;
-        float scale;
-        if (renderingInventoryPreview) {
-            float viewYaw = livingEntity.getViewYRot(partialTicks);
-            xOffset = FollowerState.previewXOffset(livingEntity, renderParams, viewYaw, layoutForward, layoutRight);
-            yOffset = FollowerState.previewYOffset(livingEntity, renderParams, partialTicks, layoutUp);
-            zOffset = FollowerState.previewZOffset(livingEntity, renderParams, viewYaw, layoutForward, layoutRight);
-            renderYaw = viewYaw;
-            headPitch = livingEntity.getViewXRot(partialTicks);
-            gazeYaw = 0.0F;
-            scale = FollowerState.previewScale(livingEntity, renderParams);
-        } else {
-            FollowerState followerState = FollowerState.of(livingEntity, wornFollower.slotKey(), renderParams);
-            followerState.update(renderParams, layoutForward, layoutRight, layoutUp, partialTicks);
-            xOffset = followerState.xOffset(partialTicks);
-            yOffset = followerState.yOffset(partialTicks);
-            zOffset = followerState.zOffset(partialTicks);
-            renderYaw = followerState.renderYaw(partialTicks);
-            headPitch = followerState.headPitch(partialTicks);
-            gazeYaw = followerState.gazeYaw(partialTicks);
-            scale = followerState.scale();
-        }
+        FollowerState followerState = FollowerState.of(livingEntity, wornFollower.slotKey(), renderParams, renderingInventoryPreview);
+        followerState.update(renderParams, layoutForward, layoutRight, layoutUp, partialTicks, renderingInventoryPreview);
 
         draw(
                 livingEntity,
                 wornFollower.itemStack(),
-                xOffset,
-                yOffset,
-                zOffset,
-                renderYaw,
-                headPitch,
-                gazeYaw,
-                scale,
+                followerState.xOffset(partialTicks),
+                followerState.yOffset(partialTicks),
+                followerState.zOffset(partialTicks),
+                followerState.renderYaw(partialTicks),
+                followerState.headPitch(partialTicks),
+                followerState.gazeYaw(partialTicks),
+                followerState.scale(),
                 poseStack,
                 buffer,
                 packedLight

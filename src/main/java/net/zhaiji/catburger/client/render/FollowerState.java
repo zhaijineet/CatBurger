@@ -22,6 +22,9 @@ import java.util.Map;
 public class FollowerState {
     public static final String FORMATION_KEY = "formation";
 
+    // 预览状态带此前缀，与世界状态同表共存，两处各推进各自的实例
+    private static final String PREVIEW_KEY_PREFIX = "preview:";
+
     private static final double MIN_MOTION_LENGTH = 1.0E-4;
     private static final double DEGENERATE_GAZE_DISTANCE = 0.1;
     // 与跳帧复位同一阈值：超过该刻数未推进的槽位状态视为失效
@@ -59,8 +62,6 @@ public class FollowerState {
     private float prevOrientationPitch;
     private float gazeYaw;
     private float prevGazeYaw;
-    private float targetOrientationYaw;
-    private float targetOrientationPitch;
     private float targetGazeYaw;
     private double layoutForward;
     private double layoutRight;
@@ -95,19 +96,23 @@ public class FollowerState {
 
     /**
      * 取该佩戴者某个槽位上的跟随者状态，首次访问时按当前参数建立初始状态；
-     * 同时丢弃长期未推进的其他槽位条目，使槽位变化后旧状态不残留。
+     * 预览用带前缀的独立键，与世界各持一份状态，避免世界累积的拖尾和惯性叠加到界面上；
+     * 同时丢弃长期未推进的其他条目，使槽位变化或关闭界面后旧状态不残留。
      */
-    public static FollowerState of(LivingEntity livingEntity, String slotKey, FollowerRenderData renderParams) {
+    public static FollowerState of(LivingEntity livingEntity, String slotKey, FollowerRenderData renderParams, boolean preview) {
         Map<String, FollowerState> slotStates = ((FollowerStateHolder) livingEntity).catburger$followerStates();
-        slotStates.entrySet().removeIf(entry -> !entry.getKey().equals(slotKey)
+        String stateKey = preview ? PREVIEW_KEY_PREFIX + slotKey : slotKey;
+        slotStates.entrySet().removeIf(entry -> !entry.getKey().equals(stateKey)
                 && livingEntity.tickCount - entry.getValue().lastTick > TICK_GAP_RESET_THRESHOLD);
-        return slotStates.computeIfAbsent(slotKey, slot -> new FollowerState(livingEntity, renderParams, slot));
+        // 播种用原始槽位键，使预览的浮动相位与世界一致
+        return slotStates.computeIfAbsent(stateKey, key -> new FollowerState(livingEntity, renderParams, slotKey));
     }
 
     /**
-     * 每帧采样佩戴者头部偏航并累加帧间转角，按佩戴者的 tick 推进状态，同一刻只推进一次。
+     * 每帧采样佩戴者头部偏航并累加帧间转角，按佩戴者的 tick 推进状态，同一刻只推进一次；
+     * 预览上下文不消费佩戴者位移，也不解析准心注视目标。
      */
-    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp, float partialTicks) {
+    public void update(FollowerRenderData renderParams, double layoutForward, double layoutRight, double layoutUp, float partialTicks, boolean preview) {
         this.renderParams = renderParams;
         this.layoutForward = layoutForward;
         this.layoutRight = layoutRight;
@@ -148,9 +153,10 @@ public class FollowerState {
         accumulatedYawDelta = 0;
 
         double followSpeed = renderParams.getFollowSpeed();
-        double motionX = entityX - lastEntityX;
-        double motionY = entityY - lastEntityY;
-        double motionZ = entityZ - lastEntityZ;
+        // 界面预览里佩戴者不移动，打开界面前残留的速度不应拖着跟随者
+        double motionX = preview ? 0 : entityX - lastEntityX;
+        double motionY = preview ? 0 : entityY - lastEntityY;
+        double motionZ = preview ? 0 : entityZ - lastEntityZ;
         double motionLength = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
         wearerMotion = new Vec3(motionX, motionY, motionZ);
         double targetOffsetX = 0;
@@ -188,7 +194,7 @@ public class FollowerState {
         lastEntityZ = entityZ;
         lastTick = currentTick;
 
-        Vec3 gazePosition = gazePositionOf(livingEntity, renderParams);
+        Vec3 gazePosition = preview ? null : gazePositionOf(livingEntity, renderParams);
         updateOrientation(gazePosition, tickGap);
         if (tailLength > 0) updateTail(gazePosition, tickGap);
     }
@@ -206,7 +212,7 @@ public class FollowerState {
     /**
      * 编队模式推进：全队共用一条状态，首件之外的各节由尾巴按首件两层状态与静止队形逐刻跟随。
      */
-    public void updateFormation(FollowerRenderData renderParams, int tailLength, double tailSpacing, double displaySize, float partialTicks) {
+    public void updateFormation(FollowerRenderData renderParams, int tailLength, double tailSpacing, double displaySize, float partialTicks, boolean preview) {
         this.renderParams = renderParams;
         this.tailLength = tailLength;
         this.tailSpacing = tailSpacing;
@@ -222,7 +228,7 @@ public class FollowerState {
                 livingEntity.getViewXRot(1.0F),
                 tailSpacing
         );
-        update(renderParams, 0, 0, 0, partialTicks);
+        update(renderParams, 0, 0, 0, partialTicks, preview);
     }
 
     /**
@@ -339,8 +345,8 @@ public class FollowerState {
         prevOrientationPitch = orientationPitch;
         prevGazeYaw = gazeYaw;
 
-        targetOrientationYaw = livingEntity.getViewYRot(1.0F);
-        targetOrientationPitch = livingEntity.getViewXRot(1.0F);
+        float targetOrientationYaw = livingEntity.getViewYRot(1.0F);
+        float targetOrientationPitch = livingEntity.getViewXRot(1.0F);
         // 长时间跳帧后直接落到目标，并把上一帧一并拉平，不从过期朝向插值过来
         if (snap) {
             orientationYaw = prevOrientationYaw = targetOrientationYaw;
@@ -490,53 +496,6 @@ public class FollowerState {
     }
 
     /**
-     * 背包等界面预览用的无状态横向偏移：取实体当前朝向，不含拖尾。
-     */
-    public static double previewXOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw, double layoutForward, double layoutRight) {
-        float entityScale = livingEntity.getScale();
-        return orbitXOffset(
-                renderParams.getFrontBackOffset() * entityScale + layoutForward,
-                renderParams.getLeftRightOffset() * entityScale + layoutRight,
-                viewYaw,
-                0
-        );
-    }
-
-    /**
-     * 背包等界面预览用的无状态竖直偏移：取实体当前锚点，叠加散布布局，不含拖尾。
-     */
-    public static double previewYOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks, double layoutUp) {
-        return orbitYOffset(
-                renderParams,
-                livingEntity,
-                anchorHeightOf(livingEntity, renderParams),
-                0,
-                layoutUp,
-                floatOffsetOf(livingEntity, renderParams, partialTicks)
-        );
-    }
-
-    /**
-     * 背包等界面预览用的无状态纵向偏移：取实体当前朝向，叠加散布布局，不含拖尾。
-     */
-    public static double previewZOffset(LivingEntity livingEntity, FollowerRenderData renderParams, float viewYaw, double layoutForward, double layoutRight) {
-        float entityScale = livingEntity.getScale();
-        return orbitZOffset(
-                renderParams.getFrontBackOffset() * entityScale + layoutForward,
-                renderParams.getLeftRightOffset() * entityScale + layoutRight,
-                viewYaw,
-                0
-        );
-    }
-
-    /**
-     * 背包等界面预览用的无状态缩放。
-     */
-    public static float previewScale(LivingEntity livingEntity, FollowerRenderData renderParams) {
-        return renderScale(livingEntity, renderParams);
-    }
-
-    /**
      * 取环绕偏航：弹簧运动优先，否则用转向延迟。
      */
     private float pickUsedYaw(float springYaw, float dragYaw) {
@@ -621,14 +580,6 @@ public class FollowerState {
         return renderParams.getFloatDistance() / 2
                 * Math.sin((livingEntity.tickCount + partialTicks) * Mth.TWO_PI
                 / (renderParams.getFloatCycleDuration() * floatPeriodScale) + floatPhase);
-    }
-
-    /**
-     * 浮动偏移：按佩戴者刻数与参数里的浮动距离与周期做往复，预览路径使用。
-     */
-    private static double floatOffsetOf(LivingEntity livingEntity, FollowerRenderData renderParams, float partialTicks) {
-        return renderParams.getFloatDistance() / 2
-                * Math.sin((livingEntity.tickCount + partialTicks) * Mth.TWO_PI / renderParams.getFloatCycleDuration());
     }
 
     /**

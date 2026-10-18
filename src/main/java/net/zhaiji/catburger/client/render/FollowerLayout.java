@@ -119,17 +119,6 @@ public class FollowerLayout {
     }
 
     /**
-     * 编队模式在背包预览里的无状态排布：首件在锚点，其后各件沿环绕前向的反方向按间距排成一列。
-     */
-    public static double[] line(int followerCount, double spacing) {
-        double[] layout = new double[followerCount * 3];
-        for (int index = 1; index < followerCount; index++) {
-            layout[index * 3] = -spacing * index;
-        }
-        return layout;
-    }
-
-    /**
      * 与已放置件的最小三维距离平方：够远时用于接受候选，都不够远时用于挑出最远的那一次作兜底。
      */
     private static double nearestPlacedDistanceSqr(
