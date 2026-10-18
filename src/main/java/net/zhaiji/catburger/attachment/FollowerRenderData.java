@@ -83,6 +83,24 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     }
 
     /**
+     * 复制一份独立实例，供有主生物持有主人的参数，避免有主生物与主人共享同一个可变实例。
+     * 复用NBT读写，新增配置项时不必再维护第二份字段清单。
+     */
+    public FollowerRenderData copy() {
+        FollowerRenderData copiedData = new FollowerRenderData();
+        copiedData.deserializeNBT(null, serializeNBT(null));
+        return copiedData;
+    }
+
+    /**
+     * 按NBT比较两份参数是否完全一致，用于跳过没有变化的副本写入与广播。
+     * 附件序列化用的provider参数在本类实现里没有被读取，因此直接传null。
+     */
+    public boolean matches(FollowerRenderData other) {
+        return serializeNBT(null).equals(other.serializeNBT(null));
+    }
+
+    /**
      * 把各数值字段收束到配置声明的边界内，用于校验跨端传入的值。
      */
     public void clampToBounds() {

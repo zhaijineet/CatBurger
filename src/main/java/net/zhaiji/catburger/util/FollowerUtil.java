@@ -1,17 +1,25 @@
 package net.zhaiji.catburger.util;
 
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
+import net.zhaiji.catburger.attachment.FollowerRenderData;
 import net.zhaiji.catburger.compat.CompatManager;
 import net.zhaiji.catburger.compat.curios.CuriosCompat;
+import net.zhaiji.catburger.init.CatBurgerAttachmentTypes;
 import net.zhaiji.catburger.item.FollowerItem;
 
 import java.util.*;
 
 /**
- * 跟随者中枢：给出原版头盔槽的身份、判定谁算跟随者、找出它戴在哪、把行为派发给它们。
+ * 跟随者中枢：给出原版头盔槽的身份、判定谁算跟随者、找出它戴在哪、把行为派发给它们，
+ * 并把主人的渲染参数复制给有主生物。
  */
 public class FollowerUtil {
     /**
@@ -66,6 +74,69 @@ public class FollowerUtil {
      */
     public static void onWakeUp(LivingEntity wearer, ItemCooldowns cooldowns) {
         resolveAll(wearer).forEach((followerItem, wornStack) -> followerItem.onWakeUp(wearer, wornStack, cooldowns));
+    }
+
+    /**
+     * 把主人的渲染参数复制到有主生物身上，客户端据此在本机渲染时不依赖主人是否在场。
+     * 主人UUID被清空时连同副本一起删除，避免继续沿用上一个主人的参数。
+     */
+    public static void inheritOwnerRenderData(LivingEntity livingEntity) {
+        if (!(livingEntity instanceof OwnableEntity ownableEntity)) return;
+
+        UUID ownerUUID = ownableEntity.getOwnerUUID();
+        if (ownerUUID == null) {
+            if (livingEntity.getExistingDataOrNull(CatBurgerAttachmentTypes.FOLLOWER_RENDER) != null) {
+                livingEntity.removeData(CatBurgerAttachmentTypes.FOLLOWER_RENDER);
+            }
+            return;
+        }
+
+        ServerPlayer owner = onlineOwnerOf(livingEntity, ownerUUID);
+        if (owner == null) return;
+
+        FollowerRenderData ownerData = owner.getExistingDataOrNull(CatBurgerAttachmentTypes.FOLLOWER_RENDER.get());
+        if (ownerData == null) return;
+
+        applyInheritedRenderData(livingEntity, ownerData);
+    }
+
+    /**
+     * 从全局玩家列表里找主人，原版getOwner在服务端只遍历本维度玩家，跨维度时会漏。
+     */
+    private static ServerPlayer onlineOwnerOf(LivingEntity livingEntity, UUID ownerUUID) {
+        if (!(livingEntity.level() instanceof ServerLevel serverLevel)) return null;
+
+        MinecraftServer server = serverLevel.getServer();
+        return server == null ? null : server.getPlayerList().getPlayer(ownerUUID);
+    }
+
+    /**
+     * 主人改完配置后刷新其名下全部有主生物的副本，横跨所有维度，否则其他维度里的生物会一直沿用旧参数。
+     */
+    public static void refreshInheritedRenderData(ServerPlayer owner, FollowerRenderData ownerData) {
+        MinecraftServer server = owner.getServer();
+        if (server == null) return;
+
+        UUID ownerUUID = owner.getUUID();
+        for (ServerLevel serverLevel : server.getAllLevels()) {
+            for (Entity entity : serverLevel.getAllEntities()) {
+                if (!(entity instanceof LivingEntity livingEntity)) continue;
+                if (!(entity instanceof OwnableEntity ownableEntity)) continue;
+                if (!ownerUUID.equals(ownableEntity.getOwnerUUID())) continue;
+
+                applyInheritedRenderData(livingEntity, ownerData);
+            }
+        }
+    }
+
+    /**
+     * 与现有副本一致就不写，避免把没有变化的数据重新广播给全部追踪者。
+     */
+    private static void applyInheritedRenderData(LivingEntity livingEntity, FollowerRenderData ownerData) {
+        FollowerRenderData currentData = livingEntity.getExistingDataOrNull(CatBurgerAttachmentTypes.FOLLOWER_RENDER.get());
+        if (currentData != null && currentData.matches(ownerData)) return;
+
+        livingEntity.setData(CatBurgerAttachmentTypes.FOLLOWER_RENDER.get(), ownerData.copy());
     }
 
     /**

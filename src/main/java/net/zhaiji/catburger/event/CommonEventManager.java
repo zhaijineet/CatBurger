@@ -23,6 +23,7 @@ public class CommonEventManager {
 
     public static void gameBusListener(IEventBus gameBus) {
         gameBus.addListener(EventPriority.HIGHEST, CommonEventHandler::handlerLivingDeathEvent);
+        gameBus.addListener(CommonEventHandler::handlerPlayerStartTrackingEvent);
         gameBus.addListener(CommonEventHandler::handlerPlayerWakeUpEvent);
         gameBus.addListener(CommonEventHandler::handlerEntityTickEvent$Post);
     }
