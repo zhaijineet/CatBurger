@@ -26,7 +26,7 @@ public class RenderParamsResolver {
     }
 
     /**
-     * 字段只读一次进局部变量，避免配置监听线程在判空与返回之间清空缓存导致返回null。
+     * 字段只读一次进局部变量，避免判空与返回之间被清空导致返回null。
      */
     private static FollowerRenderData localFallback() {
         FollowerRenderData renderParams = localFallback;

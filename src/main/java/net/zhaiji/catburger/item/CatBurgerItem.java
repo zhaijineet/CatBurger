@@ -48,9 +48,7 @@ public class CatBurgerItem extends FollowerItem {
             wearer.setHealth(CatBurgerServerConfig.RESTORE_HEALTH.get());
         }
 
-        Player player = wearer instanceof Player entity ? entity : null;
-
-        if (player != null) {
+        if (wearer instanceof Player player) {
             FoodData foodData = player.getFoodData();
             foodData.setFoodLevel(CatBurgerServerConfig.RESTORE_FOOD_LEVEL.get());
             foodData.setSaturation(CatBurgerServerConfig.RESTORE_SATURATION.get());
@@ -59,7 +57,7 @@ public class CatBurgerItem extends FollowerItem {
         cooldowns.addCooldown(this, CatBurgerServerConfig.COOLDOWN_DURATION.get());
         wearer.level().broadcastEntityEvent(wearer, (byte) 35);
 
-        if (player != null) PacketDistributor.sendToPlayer((ServerPlayer) player, new PlayerDeathPacket(wornStack));
+        if (wearer instanceof ServerPlayer serverPlayer) PacketDistributor.sendToPlayer(serverPlayer, new PlayerDeathPacket(wornStack));
 
         return true;
     }

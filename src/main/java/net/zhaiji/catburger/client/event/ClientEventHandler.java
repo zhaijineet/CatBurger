@@ -90,12 +90,16 @@ public class ClientEventHandler {
     /**
      * 服务端配置加载、被修改、从服务器同步或卸载时清空 tooltip 缓存，使效果说明行按新配置重建；
      * 客户端配置被修改时丢弃按旧配置构造的本机回退渲染参数，并把新参数上传给服务端。
+     * 配置监听来自文件监听线程，客户端分支必须回到主线程，发包与渲染参数都只在主线程动。
      */
     public static void handlerModConfigEvent(ModConfigEvent event) {
         if (event.getConfig().getSpec() == CatBurgerServerConfig.SPEC) TooltipUtil.invalidateEffectLineCache();
         if (event.getConfig().getSpec() == CatBurgerClientConfig.SPEC) {
-            RenderParamsResolver.invalidateLocalFallback();
-            ClientPacketHandler.sendFollowerRenderData();
+            Minecraft minecraft = Minecraft.getInstance();
+            minecraft.execute(() -> {
+                RenderParamsResolver.invalidateLocalFallback();
+                ClientPacketHandler.sendFollowerRenderData();
+            });
         }
     }
 }

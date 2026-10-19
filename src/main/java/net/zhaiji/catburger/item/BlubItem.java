@@ -25,7 +25,7 @@ public class BlubItem extends FollowerItem {
     public void tick(LivingEntity wearer, ItemStack wornStack) {
         if (!(wearer instanceof Player player)) return;
 
-        int interval = CatBurgerServerConfig.BLUB_NIGHT_VISION_INTERVAL.get();
+        int interval = CatBurgerServerConfig.BLUB_TICK_EFFECT_INTERVAL.get();
         if (interval > 0 && wearer.tickCount % interval != 0) return;
 
         ConfiguredEffect.resolve(CatBurgerServerConfig.BLUB_TICK_EFFECTS.get())
@@ -57,7 +57,7 @@ public class BlubItem extends FollowerItem {
         cooldowns.addCooldown(this, CatBurgerServerConfig.COOLDOWN_DURATION.get());
         wearer.level().broadcastEntityEvent(wearer, (byte) 35);
 
-        if (wearer instanceof Player player) PacketDistributor.sendToPlayer((ServerPlayer) player, new PlayerDeathPacket(wornStack));
+        if (wearer instanceof ServerPlayer serverPlayer) PacketDistributor.sendToPlayer(serverPlayer, new PlayerDeathPacket(wornStack));
 
         return true;
     }
@@ -94,7 +94,7 @@ public class BlubItem extends FollowerItem {
         String keyPrefix = TooltipUtil.itemKeyPrefix(this);
         List<Component> effectLines = new ArrayList<>();
 
-        int interval = CatBurgerServerConfig.BLUB_NIGHT_VISION_INTERVAL.get();
+        int interval = CatBurgerServerConfig.BLUB_TICK_EFFECT_INTERVAL.get();
         boolean refreshesEveryTick = interval <= 0;
         for (ConfiguredEffect tickEffect : ConfiguredEffect.resolve(CatBurgerServerConfig.BLUB_TICK_EFFECTS.get())) {
             Component tickEffectComponent = refreshesEveryTick

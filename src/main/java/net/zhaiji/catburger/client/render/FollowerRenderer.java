@@ -68,7 +68,15 @@ public class FollowerRenderer {
             return;
         }
 
-        double[] layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);
+        FollowerStateHolder followerStateHolder = (FollowerStateHolder) livingEntity;
+        double[] layout = followerStateHolder.catburger$layout();
+        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界
+        if (followerStateHolder.catburger$layoutParams() != renderParams
+                || followerStateHolder.catburger$layoutDisplaySize() != displaySize
+                || layout.length != renderedFollowers.size() * 3) {
+            layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);
+            followerStateHolder.catburger$setLayout(renderParams, displaySize, layout);
+        }
         for (int index = 0; index < renderedFollowers.size(); index++) {
             renderOne(
                     livingEntity,

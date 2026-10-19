@@ -78,8 +78,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreFoodLevel", "Restore Food Level", "Restored to this value");
         addConfig("restoreSaturation", "Restore Saturation", "Restored to this value");
 
-        addConfigGroup("Blub", "Jelly Bunny", "Follower that grants night vision while worn and protects the wearer from death");
-        addConfig("nightVisionInterval", "Night Vision Refresh Interval", "Ticks between refreshes, 0 refreshes every tick; keep it well below the effect duration or the effect expires and flickers");
+        addConfigGroup("Blub", "Jelly Bunny", "Follower that applies effects while worn and protects the wearer from death");
+        addConfig("tickEffectInterval", "Effect Refresh Interval", "Ticks between refreshes, 0 refreshes every tick; keep it well below the effect duration or the effect expires and flickers");
         addConfig("effects", "Effect List", "One entry per line, formatted as effect|duration|amplifier; amplifier 0 is level I, up to 255");
         addConfigGroup("RadiusEffects", "Range Effects", "Effects applied to nearby mobs when death protection triggers");
         addConfig("radius", "Range Radius", "Radius in blocks around the wearer");
@@ -88,8 +88,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "Affect Pets", "Whether tamed pets are affected, meaning any creature with an owner");
         addConfig("affectOtherMobs", "Affect Other Mobs", "Whether other mobs are affected, meaning creatures that are neither the wearer, nor players, nor tamed pets");
 
-        addConfigGroup("MobPickup", "Mob Pickup", "Whether mobs can pick up and wear followers");
-        addConfig("mobPickupEnabled", "Enable Mob Pickup", "Allow mobs to pick up and wear followers");
+        addConfigGroup("MobActiveWear", "Mob Active Wearing", "Whether mobs can actively wear followers");
+        addConfig("mobActiveWearEnabled", "Enable Mob Active Wearing", "Allow mobs to actively wear followers");
 
         addConfigGroup("MultipleFollowers", "Multiple Followers", "How multiple followers worn by the same wearer are arranged");
         addConfig("followerRenderMode", "Render Mode", "Independent scatters them loosely around the configured position, formation lines them up in a tail where each follows the one ahead");
@@ -199,8 +199,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreFoodLevel", "恢复饥饿值", "恢复至此数值");
         addConfig("restoreSaturation", "恢复饱和度", "恢复至此数值");
 
-        addConfigGroup("Blub", "果冻兔兔", "佩戴时提供夜视并在死亡时保护佩戴者的追随者");
-        addConfig("nightVisionInterval", "夜视刷新间隔", "刷新效果的间隔刻数，0为每刻刷新；需明显短于效果时长，否则效果会在到期后重新获得而闪烁");
+        addConfigGroup("Blub", "果冻兔兔", "佩戴时施加效果并在死亡时保护佩戴者的追随者");
+        addConfig("tickEffectInterval", "效果刷新间隔", "刷新效果的间隔刻数，0为每刻刷新；需明显短于效果时长，否则效果会在到期后重新获得而闪烁");
         addConfig("effects", "效果列表", "每行一条，格式为「效果|持续刻数|等级」，等级按原版计，0为I级，最高255级");
         addConfigGroup("RadiusEffects", "范围效果", "死亡保护触发时对周围生物施加的效果");
         addConfig("radius", "范围半径", "以佩戴者为中心的半径格数");
@@ -209,8 +209,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "影响宠物", "已驯服的宠物（任何有主人的生物）是否受影响");
         addConfig("affectOtherMobs", "影响其他生物", "既非佩戴者本人、也非玩家与宠物的生物是否受影响");
 
-        addConfigGroup("MobPickup", "生物拾取", "生物是否能捡起并佩戴追随者");
-        addConfig("mobPickupEnabled", "启用生物拾取", "允许生物捡起并佩戴追随者");
+        addConfigGroup("MobActiveWear", "生物主动佩戴", "生物是否能主动佩戴追随者");
+        addConfig("mobActiveWearEnabled", "启用生物主动佩戴", "允许生物主动佩戴追随者");
 
         addConfigGroup("MultipleFollowers", "多件追随者", "同一佩戴者佩戴多件追随者时的排布");
         addConfig("followerRenderMode", "排布方式", "独立让各件围绕配置位置松散散开，编队让它们排成一条尾巴、每件跟随前一件");
@@ -320,8 +320,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("restoreFoodLevel", "満腹度を回復", "この値まで回復する");
         addConfig("restoreSaturation", "隠し満腹度を回復", "この値まで回復する");
 
-        addConfigGroup("Blub", "ジェリーバニー", "装備中は暗視を付与し、死亡時に装備者を保護するフォロワー");
-        addConfig("nightVisionInterval", "暗視の更新間隔", "効果を更新する間隔のtick数、0で毎tick更新；効果時間より十分短くしないと効果が切れてちらつく");
+        addConfigGroup("Blub", "ジェリーバニー", "装備中は効果を付与し、死亡時に装備者を保護するフォロワー");
+        addConfig("tickEffectInterval", "効果の更新間隔", "効果を更新する間隔のtick数、0で毎tick更新；効果時間より十分短くしないと効果が切れてちらつく");
         addConfig("effects", "効果リスト", "1行に1件、「効果|効果時間|レベル」の形式；レベルは0がI、最大255");
         addConfigGroup("RadiusEffects", "範囲効果", "死亡保護の発動時に周囲のMobへ付与する効果");
         addConfig("radius", "効果範囲の半径", "装備者を中心とした半径のブロック数");
@@ -330,8 +330,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "ペットに影響", "手懐けたペット（飼い主のいるMob）が影響を受けるかどうか");
         addConfig("affectOtherMobs", "その他のMobに影響", "装備者でもプレイヤーでも手懐けたペットでもないMobが影響を受けるかどうか");
 
-        addConfigGroup("MobPickup", "Mobの拾得", "Mobがフォロワーを拾って装備できるかどうか");
-        addConfig("mobPickupEnabled", "Mobの拾得を有効化", "Mobがフォロワーを拾って装備できるようにする");
+        addConfigGroup("MobActiveWear", "Mobの自発的な装着", "Mobがフォロワーを自ら装備できるかどうか");
+        addConfig("mobActiveWearEnabled", "Mobの自発的な装着を有効化", "Mobがフォロワーを自ら装備できるようにする");
 
         addConfigGroup("MultipleFollowers", "複数のフォロワー", "同じ装備者が複数のフォロワーを装備した時の並べ方");
         addConfig("followerRenderMode", "配置方式", "独立は設定位置の周りに緩く散らばり、編隊は尻尾のように一列に並んで前のフォロワーを追う");

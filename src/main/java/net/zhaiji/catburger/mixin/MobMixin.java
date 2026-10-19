@@ -17,6 +17,6 @@ public abstract class MobMixin {
             cancellable = true
     )
     public void catburger$canHoldItem(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        if (!CatBurgerServerConfig.MOB_PICKUP_ENABLED.get() && FollowerUtil.isFollower(stack)) cir.setReturnValue(false);
+        if (!CatBurgerServerConfig.MOB_ACTIVE_WEAR_ENABLED.get() && FollowerUtil.isFollower(stack)) cir.setReturnValue(false);
     }
 }

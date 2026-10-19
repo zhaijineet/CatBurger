@@ -112,16 +112,16 @@ public class CatBurgerServerConfig {
                     20
             );
 
-    public static final ModConfigSpec.IntValue BLUB_NIGHT_VISION_INTERVAL = BUILDER
+    public static final ModConfigSpec.IntValue BLUB_TICK_EFFECT_INTERVAL = BUILDER
             .pop()
             .pop()
-            .comment("Follower that grants night vision while worn and protects the wearer from death")
+            .comment("Follower that applies effects while worn and protects the wearer from death")
             .push("Blub")
             .comment("Effects that trigger repeatedly while the follower is worn")
             .push("TickEffects")
             .comment("Ticks between refreshes, 0 refreshes every tick; keep it well below the effect duration or the effect expires and flickers")
             .defineInRange(
-                    "nightVisionInterval",
+                    "tickEffectInterval",
                     100,
                     0,
                     Integer.MAX_VALUE
@@ -219,16 +219,16 @@ public class CatBurgerServerConfig {
                     ConfiguredEffect::isValidElement
             );
 
-    public static final ModConfigSpec.BooleanValue MOB_PICKUP_ENABLED = BUILDER
+    public static final ModConfigSpec.BooleanValue MOB_ACTIVE_WEAR_ENABLED = BUILDER
             .pop()
             .pop()
             .pop()
             .pop()
-            .comment("Whether mobs can pick up and wear followers")
-            .push("MobPickup")
-            .comment("Allow mobs to pick up and wear followers")
+            .comment("Whether mobs can actively wear followers")
+            .push("MobActiveWear")
+            .comment("Allow mobs to actively wear followers")
             .define(
-                    "mobPickupEnabled",
+                    "mobActiveWearEnabled",
                     false
             );
 
