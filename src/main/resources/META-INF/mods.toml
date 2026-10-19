@@ -25,7 +25,7 @@ displayName = "${mod_name}" #mandatory
 # A URL for the "homepage" for this mod, displayed in the mod UI
 #displayURL="https://change.me.to.your.mods.homepage.example.invalid/" #optional
 # A file name (in the root of the mod JAR) containing a logo for display
-#logoFile="catburger.png" #optional
+logoFile="logo.png" #optional
 # A text field displayed in the mod UI
 #credits="Thanks for this example mod goes to Java" #optional
 # A text field displayed in the mod UI
@@ -65,6 +65,18 @@ side = "BOTH"
 [[dependencies."${mod_id}"]]
 modId="curios"
 mandatory=true
-versionRange="[5.12.1+1.20.1,)" #很奇怪，不能识别gradle.properties里的变量，我就手动标了
+versionRange="[${curios_version},)"
 ordering="NONE"
 side="BOTH"
+[[dependencies."${mod_id}"]]
+modId="touhou_little_maid"
+mandatory=false
+versionRange="[${tlm_version},)"
+ordering="AFTER"
+side="BOTH"
+[[dependencies."${mod_id}"]]
+modId="cloth_config"
+mandatory=false
+versionRange="[11,)"
+ordering="AFTER"
+side="CLIENT"

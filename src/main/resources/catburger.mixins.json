@@ -5,9 +5,13 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "catburger.refmap.json",
   "mixins": [
-    "MaidClearSleepTaskMixin"
+    "MaidClearSleepTaskMixin",
+    "MobMixin"
   ],
   "client": [
+    "CustomHeadLayerMixin",
+    "InventoryScreenMixin",
+    "LivingEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

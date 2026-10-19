@@ -8,11 +8,10 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.zhaiji.catburger.config.CatBurgerClientConfig;
-import net.zhaiji.catburger.config.CatBurgerCommonConfig;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.event.CommonEventManager;
-import net.zhaiji.catburger.init.InitCreativeModeTab;
-import net.zhaiji.catburger.init.InitItem;
+import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
+import net.zhaiji.catburger.init.CatBurgerItems;
 import net.zhaiji.catburger.network.PacketManager;
 
 @Mod(CatBurger.MOD_ID)
@@ -23,16 +22,14 @@ public class CatBurger {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         IEventBus gameBus = MinecraftForge.EVENT_BUS;
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, CatBurgerCommonConfig.SPEC);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, CatBurgerClientConfig.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, CatBurgerServerConfig.SPEC);
 
-        InitItem.ITEMS.register(modBus);
-        InitCreativeModeTab.CREATIVE_MODE_TAB.register(modBus);
+        CatBurgerItems.ITEMS.register(modBus);
+        CatBurgerCreativeModeTabs.CREATIVE_MODE_TAB.register(modBus);
 
         PacketManager.registry();
+
         CommonEventManager.init(modBus, gameBus);
-        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> {
-            CatBurgerClient.init(modBus, gameBus);
-        });
+        DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> () -> CatBurgerClient.init(modBus, gameBus));
     }
 }

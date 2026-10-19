@@ -1,16 +1,15 @@
 package net.zhaiji.catburger.compat;
 
-import net.minecraftforge.fml.ModList;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.loading.LoadingModList;
+import net.zhaiji.catburger.compat.curios.CuriosCompat;
 
 public class CompatManager {
-    private static boolean YSMLoad = ModList.get().isLoaded("yes_steve_model");
-    private static boolean TLMLoad = ModList.get().isLoaded("touhou_little_maid");
+    public static final boolean TLM_LOADED = LoadingModList.get().getModFileById("touhou_little_maid") != null;
+    public static final boolean CURIOS_LOADED = LoadingModList.get().getModFileById("curios") != null;
 
-    public static boolean isYSMLoad() {
-        return YSMLoad;
-    }
-
-    public static boolean isTLMLoad() {
-        return TLMLoad;
+    public static void init(IEventBus modBus, IEventBus gameBus) {
+        if (TLM_LOADED) TLMCompat.init(modBus, gameBus);
+        if (CURIOS_LOADED) CuriosCompat.init(modBus, gameBus);
     }
 }
