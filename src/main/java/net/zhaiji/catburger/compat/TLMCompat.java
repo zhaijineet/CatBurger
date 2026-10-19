@@ -1,21 +1,15 @@
-// TODO: TLM 更新到 26.1.2 后恢复以下代码
+// TLM（Touhou Little Maid）在 26.1.2 没有发布版本，包路径不存在，暂时整体停用，本文件当前不产生任何类（用户决策：保留代码不删除）。
+// 恢复条件：TLM 发布 26.1.2 版本后取消下方注释，并从 neoforge_1.21.1 分支取回同名实现做对照；
+// 恢复时需重新核对 MaidDeathEvent#getMaid、EntityMaid#getCooldowns 是否仍为这两个名字与签名。
+
 //package net.zhaiji.catburger.compat;
 //
 //import com.github.tartaricacid.touhoulittlemaid.api.event.MaidDeathEvent;
 //import com.github.tartaricacid.touhoulittlemaid.entity.passive.EntityMaid;
-//import net.minecraft.world.entity.LivingEntity;
-//import net.minecraft.world.item.Item;
-//import net.minecraft.world.item.ItemCooldowns;
 //import net.neoforged.bus.api.IEventBus;
-//import net.zhaiji.catburger.config.CatBurgerCommonConfig;
-//import net.zhaiji.catburger.init.InitItem;
-//import top.theillusivec4.curios.api.CuriosApi;
+//import net.zhaiji.catburger.util.FollowerUtil;
 //
 //public class TLMCompat {
-//    public static boolean canRender(LivingEntity entity) {
-//        return entity instanceof EntityMaid;
-//    }
-//
 //    public static void init(IEventBus modBus, IEventBus gameBus) {
 //        TLMCompat.modBusListener(modBus);
 //        TLMCompat.gameBusListener(gameBus);
@@ -29,23 +23,7 @@
 //    }
 //
 //    public static void handlerMaidDeathEvent(MaidDeathEvent event) {
-//        if (!CatBurgerCommonConfig.totemEffectActive) return;
 //        EntityMaid maid = event.getMaid();
-//        Item item = InitItem.CAT_BURGER.get();
-//        ItemCooldowns cooldowns = maid.getCooldowns();
-//        CuriosApi.getCuriosInventory(maid).ifPresent(iCuriosItemHandler -> {
-//            if (iCuriosItemHandler.findFirstCurio(item).isPresent() && !cooldowns.isOnCooldown(item)) {
-//                if (CatBurgerCommonConfig.usePercentageHealthRestoration) {
-//                    float maxHealth = maid.getMaxHealth();
-//                    float restoreAmount = maxHealth * ((float) CatBurgerCommonConfig.percentageHealthRestoration / 100.0f);
-//                    maid.setHealth(restoreAmount);
-//                } else {
-//                    maid.setHealth(CatBurgerCommonConfig.healthRestorationFromTotem);
-//                }
-//                cooldowns.addCooldown(item, CatBurgerCommonConfig.totemCooldown);
-//                maid.level().broadcastEntityEvent(maid, (byte) 35);
-//                event.setCanceled(true);
-//            }
-//        });
+//        if (FollowerUtil.onDeathProtection(maid, maid.getCooldowns())) event.setCanceled(true);
 //    }
 //}

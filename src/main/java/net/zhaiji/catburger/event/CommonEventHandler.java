@@ -1,54 +1,35 @@
 package net.zhaiji.catburger.event;
 
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.food.FoodData;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerWakeUpEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
-import net.zhaiji.catburger.config.CatBurgerCommonConfig;
-import net.zhaiji.catburger.init.InitItem;
-import net.zhaiji.catburger.network.client.packet.PlayerDeathPacket;
-import top.theillusivec4.curios.api.CuriosApi;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.zhaiji.catburger.util.FollowerUtil;
 
 public class CommonEventHandler {
     public static void handlerLivingDeathEvent(LivingDeathEvent event) {
-        if (!CatBurgerCommonConfig.totemEffectActive) return;
-        Item item = InitItem.CAT_BURGER.get();
-        ItemStack itemStack = item.getDefaultInstance();
-        if (event.getEntity() instanceof Player player && !player.getCooldowns().isOnCooldown(itemStack)) {
-            CuriosApi.getCuriosInventory(player).ifPresent(iCuriosItemHandler -> {
-                if (iCuriosItemHandler.findFirstCurio(item).isPresent()) {
-                    FoodData foodData = player.getFoodData();
-                    if (CatBurgerCommonConfig.usePercentageHealthRestoration) {
-                        float maxHealth = player.getMaxHealth();
-                        float restoreAmount = maxHealth * ((float) CatBurgerCommonConfig.percentageHealthRestoration / 100.0f);
-                        player.setHealth(restoreAmount);
-                    } else {
-                        player.setHealth(CatBurgerCommonConfig.healthRestorationFromTotem);
-                    }
-                    foodData.setFoodLevel(CatBurgerCommonConfig.foodRestorationFromTotem);
-                    foodData.setSaturation(CatBurgerCommonConfig.saturationRestorationFromTotem);
-                    player.getCooldowns().addCooldown(itemStack, CatBurgerCommonConfig.totemCooldown);
-                    player.level().broadcastEntityEvent(player, (byte) 35);
-                    PacketDistributor.sendToPlayer((ServerPlayer) player, new PlayerDeathPacket());
-                    event.setCanceled(true);
-                }
-            });
-        }
+        if (!(event.getEntity() instanceof Player player)) return;
+        if (player.level().isClientSide()) return;
+        if (FollowerUtil.onDeathProtection(player, player.getCooldowns())) event.setCanceled(true);
+    }
+
+    public static void handlerPlayerStartTrackingEvent(PlayerEvent.StartTracking event) {
+        if (!(event.getTarget() instanceof LivingEntity livingEntity)) return;
+        if (livingEntity.level().isClientSide()) return;
+        FollowerUtil.inheritOwnerRenderData(livingEntity);
     }
 
     public static void handlerPlayerWakeUpEvent(PlayerWakeUpEvent event) {
-        if (!CatBurgerCommonConfig.wakeUpCanResetCooldown) return;
         Player player = event.getEntity();
-        Item item = InitItem.CAT_BURGER.get();
-        ItemStack itemStack = item.getDefaultInstance();
-        CuriosApi.getCuriosInventory(player).ifPresent(iCuriosItemHandler -> {
-            if (iCuriosItemHandler.findFirstCurio(item).isPresent()) {
-                player.getCooldowns().removeCooldown(player.getCooldowns().getCooldownGroup(itemStack));
-            }
-        });
+        if (player.level().isClientSide()) return;
+        FollowerUtil.onWakeUp(player, player.getCooldowns());
+    }
+
+    public static void handlerEntityTickEvent$Post(EntityTickEvent.Post event) {
+        if (!(event.getEntity() instanceof LivingEntity livingEntity)) return;
+        if (livingEntity.level().isClientSide()) return;
+        FollowerUtil.tick(livingEntity);
     }
 }

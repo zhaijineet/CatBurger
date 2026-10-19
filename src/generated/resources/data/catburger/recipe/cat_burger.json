@@ -1,16 +1,6 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "misc",
-  "key": {
-    "A": "minecraft:bread",
-    "B": "minecraft:totem_of_undying",
-    "C": "minecraft:cooked_beef"
-  },
-  "pattern": [
-    " A ",
-    "BCB",
-    " A "
-  ],
+  "type": "minecraft:stonecutting",
+  "ingredient": "minecraft:totem_of_undying",
   "result": {
     "id": "catburger:cat_burger"
   }

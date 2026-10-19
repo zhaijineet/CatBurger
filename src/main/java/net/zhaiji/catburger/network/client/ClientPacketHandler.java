@@ -1,11 +1,24 @@
 package net.zhaiji.catburger.network.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.world.entity.player.Player;
-import net.zhaiji.catburger.init.InitItem;
+import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
+import net.zhaiji.catburger.attachment.FollowerRenderData;
+import net.zhaiji.catburger.network.server.packet.SyncFollowerRenderDataPacket;
 
 public class ClientPacketHandler {
-    public static void handlerPlayerDeathPacket(Player player) {
-        Minecraft.getInstance().gameRenderer.displayItemActivation(InitItem.CAT_BURGER.get().getDefaultInstance());
+    public static void handlerPlayerDeathPacket(ItemStack itemStack) {
+        Minecraft.getInstance().gameRenderer.displayItemActivation(itemStack);
+    }
+
+    /**
+     * 把本机渲染参数上传给服务端，未连接服务器时跳过。
+     */
+    public static void sendFollowerRenderData() {
+        if (Minecraft.getInstance().getConnection() == null) return;
+
+        FollowerRenderData followerRenderData = new FollowerRenderData();
+        followerRenderData.loadFromClientConfig();
+        ClientPacketDistributor.sendToServer(new SyncFollowerRenderDataPacket(followerRenderData));
     }
 }

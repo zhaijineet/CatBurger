@@ -15,7 +15,6 @@ group = mod_group_id
 sourceSets.main.resources {
     srcDir('src/generated/resources')
 
-    exclude("**/*.bbmodel")
     exclude("src/generated/**/.cache")
 }
 
@@ -69,6 +68,7 @@ neoForge {
         }
 
         configureEach {
+            gameDirectory = file("run-26.1.2/${name}")
             systemProperty 'forge.logging.markers', 'REGISTRIES'
 
             logLevel = org.slf4j.event.Level.DEBUG

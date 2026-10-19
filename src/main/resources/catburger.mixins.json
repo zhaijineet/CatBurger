@@ -1,12 +1,21 @@
 {
   "required": true,
+  "minVersion": "0.8",
   "package": "net.zhaiji.catburger.mixin",
   "compatibilityLevel": "JAVA_25",
-  "mixins": [],
+  "refmap": "catburger.refmap.json",
+  "mixins": [
+    "MobMixin"
+  ],
+  "client": [
+    "CustomHeadLayerMixin",
+    "EntityRendererMixin",
+    "InventoryScreenMixin",
+    "LevelRenderStateMixin",
+    "LivingEntityMixin",
+    "LivingEntityRenderStateMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "overwrites": {
-    "requireAnnotations": true
   }
 }
