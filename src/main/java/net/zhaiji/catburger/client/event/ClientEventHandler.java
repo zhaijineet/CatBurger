@@ -4,10 +4,12 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.zhaiji.catburger.client.render.FollowerRenderer;
@@ -78,6 +80,13 @@ public class ClientEventHandler {
         );
         poseStack.popPose();
         bufferSource.endLastBatch();
+    }
+
+    /**
+     * 资源重载会重建烘焙模型，跟随者按物品缓存的几何中心随之失效，这里挂上清空用的监听器。
+     */
+    public static void handlerRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener((ResourceManagerReloadListener) resourceManager -> FollowerRenderer.invalidateModelCenters());
     }
 
     /**

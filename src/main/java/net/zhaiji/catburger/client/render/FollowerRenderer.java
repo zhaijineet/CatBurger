@@ -4,24 +4,35 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.model.data.ModelData;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.util.WornFollower;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class FollowerRenderer {
     private static final double MIN_DISPLAY_SIZE = 0.1;
+    // 物品模型的几何中心，按物品缓存并记下算中心用的模型实例：实例变化时重算，动态模型也不会撑大缓存；
+    // 同一物品经 ItemOverrides 解析出多个模型时会互相覆盖、退化为各自重算，正确性不受影响
+    private static final Map<Item, ModelCenter> MODEL_CENTERS = new HashMap<>();
 
     // 背包等界面预览期间为 true，由 InventoryScreenMixin 在 renderEntityInInventory 前后置位与复位；
     // 它只决定状态取哪一份、partialTicks怎么取、是否消费位移与解析准心，跟随逻辑本身是同一套
@@ -160,14 +171,15 @@ public class FollowerRenderer {
             FollowerRenderData renderParams
     ) {
         List<WornFollower> renderedFollowers = new ArrayList<>(wornFollowers.size());
-        Set<RenderedModelKey> renderedModels = new HashSet<>();
+        Map<Item, Set<BakedModel>> renderedModels = new HashMap<>();
         for (WornFollower wornFollower : wornFollowers) {
             if (!wornFollower.renderable()) continue;
             if (renderParams.isDeduplicateRendering()) {
                 ItemStack itemStack = wornFollower.itemStack();
                 BakedModel model = Minecraft.getInstance().getItemRenderer()
-                        .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId());
-                if (!renderedModels.add(new RenderedModelKey(itemStack.getItem(), model))) continue;
+                        .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId() + ItemDisplayContext.HEAD.ordinal());
+                Item item = itemStack.getItem();
+                if (!renderedModels.computeIfAbsent(item, key -> new HashSet<>()).add(model)) continue;
             }
 
             renderedFollowers.add(wornFollower);
@@ -181,7 +193,7 @@ public class FollowerRenderer {
      */
     private static double displaySizeOf(LivingEntity livingEntity, ItemStack itemStack, FollowerRenderData renderParams) {
         BakedModel model = Minecraft.getInstance().getItemRenderer()
-                .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId());
+                .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId() + ItemDisplayContext.HEAD.ordinal());
         PoseStack transformStack = new PoseStack();
         model.applyTransform(ItemDisplayContext.HEAD, transformStack, false);
         Vector3f headScale = transformStack.last().pose().getScale(new Vector3f());
@@ -241,26 +253,82 @@ public class FollowerRenderer {
         poseStack.pushPose();
         poseStack.translate(xOffset, yOffset, zOffset);
         poseStack.scale(scale, scale, scale);
+        ItemRenderer itemRenderer = Minecraft.getInstance().getItemRenderer();
+        // seed 与 CustomHeadLayer 一致：entityId + 头部显示上下文的序号
+        BakedModel model = itemRenderer.getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId() + ItemDisplayContext.HEAD.ordinal());
+        // 几何中心不与模型原点重合，绕原点做俯仰会让整块几何划弧；先移到中心，转完再移回
+        Vec3 center = modelCenterOf(itemStack.getItem(), model);
+        poseStack.translate(center.x, center.y, center.z);
         // 模型正面朝北（-Z）建模，偏航按 (180 - 偏航) 换算，模型自身不再做任何翻转
         poseStack.mulPose(Axis.YP.rotationDegrees(180 - renderYaw));
         poseStack.mulPose(Axis.XP.rotationDegrees(-headPitch));
         poseStack.mulPose(Axis.YP.rotationDegrees(-gazeYaw));
-        // seed 与 CustomHeadLayer 一致：entityId + 头部显示上下文的序号
-        Minecraft.getInstance().getItemRenderer().renderStatic(
-                livingEntity,
+        poseStack.translate(-center.x, -center.y, -center.z);
+        itemRenderer.render(
                 itemStack,
                 ItemDisplayContext.HEAD,
                 false,
                 poseStack,
                 buffer,
-                livingEntity.level(),
                 packedLight,
                 OverlayTexture.NO_OVERLAY,
-                livingEntity.getId() + ItemDisplayContext.HEAD.ordinal()
+                model
         );
         poseStack.popPose();
     }
 
-    private record RenderedModelKey(Item item, BakedModel model) {
+    /**
+     * 取物品模型几何中心在渲染坐标系中的位置，按物品缓存：记录里的模型实例与当前一致时直接返回，否则重算。
+     */
+    private static Vec3 modelCenterOf(Item item, BakedModel model) {
+        ModelCenter cached = MODEL_CENTERS.get(item);
+        if (cached != null && cached.model() == model) {
+            return cached.center();
+        }
+
+        Vec3 center = computeModelCenter(model);
+        MODEL_CENTERS.put(item, new ModelCenter(model, center));
+        return center;
+    }
+
+    /**
+     * 遍历烘焙模型的全部顶点求包围盒，并换算到渲染坐标系：render 内部先施加头部显示变换、再整体平移 -0.5，
+     * 顶点落到调用者空间时是「先减半格、再乘变换」，中心照此换算。
+     * 这里只统计不带剔除面的四边形：全部面带剔除的方块模型与自定义渲染器物品会退回零中心，
+     * 前者对单位立方块恰好正确，后者等于不做中心修正；现有跟随者物品模型都是单层无剔除面。
+     */
+    private static Vec3 computeModelCenter(BakedModel model) {
+        AABB bounds = null;
+        // 传 null 渲染类型表示要全部四边形，与求包围盒的用途一致；三参重载已被 NeoForge 标记弃用
+        for (BakedQuad quad : model.getQuads(null, null, RandomSource.create(42), ModelData.EMPTY, null)) {
+            int[] vertices = quad.getVertices();
+            // 每顶点 8 个 int，前 3 个为 x/y/z，与 ModelBlockRenderer.calculateShape 的读法一致
+            for (int index = 0; index < vertices.length; index += 8) {
+                double x = Float.intBitsToFloat(vertices[index]);
+                double y = Float.intBitsToFloat(vertices[index + 1]);
+                double z = Float.intBitsToFloat(vertices[index + 2]);
+                AABB vertex = new AABB(x, y, z, x, y, z);
+                bounds = bounds == null ? vertex : bounds.minmax(vertex);
+            }
+        }
+        if (bounds == null) return Vec3.ZERO;
+
+        Vec3 center = bounds.getCenter();
+        PoseStack transformStack = new PoseStack();
+        model.applyTransform(ItemDisplayContext.HEAD, transformStack, false);
+        Vector3f centerInCallerSpace = new Vector3f(
+                (float) center.x - 0.5F,
+                (float) center.y - 0.5F,
+                (float) center.z - 0.5F
+        );
+        centerInCallerSpace.mulPosition(transformStack.last().pose());
+        return new Vec3(centerInCallerSpace.x, centerInCallerSpace.y, centerInCallerSpace.z);
+    }
+
+    /**
+     * 资源重载后模型实例必然重建，条目会按实例比对自行重算；这里主动清空只为及时释放旧模型引用。
+     */
+    public static void invalidateModelCenters() {
+        MODEL_CENTERS.clear();
     }
 }

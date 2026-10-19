@@ -10,6 +10,7 @@ public class ClientEventManager {
 
     public static void modBusListener(IEventBus modBus) {
         modBus.addListener(ClientEventHandler::handlerModConfigEvent);
+        modBus.addListener(ClientEventHandler::handlerRegisterClientReloadListeners);
     }
 
     public static void gameBusListener(IEventBus gameBus) {
