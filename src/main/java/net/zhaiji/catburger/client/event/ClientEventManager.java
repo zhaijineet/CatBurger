@@ -18,5 +18,6 @@ public class ClientEventManager {
         gameBus.addListener(ClientEventHandler::handlerExtractLevelRenderStateEvent);
         gameBus.addListener(ClientEventHandler::handlerSubmitCustomGeometryEvent);
         gameBus.addListener(ClientEventHandler::handlerClientPlayerNetworkEvent$LoggingIn);
+        gameBus.addListener(ClientEventHandler::handlerMouseScrollingEvent);
     }
 }

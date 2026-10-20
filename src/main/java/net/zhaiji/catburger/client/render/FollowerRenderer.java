@@ -86,7 +86,8 @@ public class FollowerRenderer {
 
         FollowerStateHolder followerStateHolder = (FollowerStateHolder) livingEntity;
         double[] layout = followerStateHolder.catburger$layout();
-        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界
+        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界；
+        // 渲染参数用引用比较即可，无附件实体共享同一个 CONFIG_DEFAULTS 实例，引用相等即内容相等
         if (followerStateHolder.catburger$layoutParams() != renderParams
                 || followerStateHolder.catburger$layoutDisplaySize() != displaySize
                 || layout.length != renderedFollowers.size() * 3) {

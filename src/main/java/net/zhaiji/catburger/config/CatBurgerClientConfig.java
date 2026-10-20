@@ -5,6 +5,13 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 public class CatBurgerClientConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    public static final ModConfigSpec.EnumValue<EntityDataFallback> ENTITY_DATA_FALLBACK = BUILDER
+            .comment("Where entities without follower render data take their render settings from, LOCAL uses the current local values and CONFIG_DEFAULT uses the config defaults regardless of local changes")
+            .defineEnum(
+                    "entityDataFallback",
+                    EntityDataFallback.LOCAL
+            );
+
     public static final ModConfigSpec.EnumValue<FollowerRenderMode> FOLLOWER_RENDER_MODE = BUILDER
             .comment("How multiple followers worn by the same wearer are arranged")
             .push("MultipleFollowers")

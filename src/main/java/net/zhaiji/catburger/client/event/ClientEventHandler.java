@@ -9,19 +9,25 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ExtractLevelRenderStateEvent;
+import net.neoforged.neoforge.client.event.InputEvent;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 import net.neoforged.neoforge.client.event.SubmitCustomGeometryEvent;
+import net.neoforged.neoforge.client.network.ClientPacketDistributor;
 import net.neoforged.neoforge.client.renderstate.RegisterRenderStateModifiersEvent;
 import net.zhaiji.catburger.client.render.FirstPersonFollowerHolder;
 import net.zhaiji.catburger.client.render.FollowerRenderer;
 import net.zhaiji.catburger.client.render.RenderParamsResolver;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
+import net.zhaiji.catburger.init.CatBurgerItems;
 import net.zhaiji.catburger.network.client.ClientPacketHandler;
+import net.zhaiji.catburger.network.server.packet.SetConfigCardModePacket;
 import net.zhaiji.catburger.util.TooltipUtil;
 
 public class ClientEventHandler {
@@ -119,5 +125,25 @@ public class ClientEventHandler {
                 ClientPacketHandler.sendFollowerRenderData();
             });
         }
+    }
+
+    /**
+     * 按住Shift滚轮在配置卡的三个模式间循环切换，拦截滚轮避免切换物品栏，并上报服务端同步服务端那份物品栈。
+     */
+    public static void handlerMouseScrollingEvent(InputEvent.MouseScrollingEvent event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen != null || minecraft.player == null) return;
+
+        Player player = minecraft.player;
+        if (!player.isShiftKeyDown()) return;
+
+        ItemStack stack = player.getMainHandItem();
+        if (!stack.is(CatBurgerItems.FOLLOWER_CONFIG_CARD.get())) return;
+
+        double scrollDeltaY = event.getScrollDeltaY();
+        if (scrollDeltaY == 0) return;
+
+        ClientPacketDistributor.sendToServer(new SetConfigCardModePacket(scrollDeltaY > 0));
+        event.setCanceled(true);
     }
 }

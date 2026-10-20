@@ -8,7 +8,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
-import net.zhaiji.catburger.item.FollowerItem;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -29,7 +28,7 @@ public class TooltipUtil {
     private static final String NON_BREAKING_SPACE = "\u00A0";
     private static final String LINE_PREFIX = NON_BREAKING_SPACE + "•" + NON_BREAKING_SPACE;
 
-    private static final Map<FollowerItem, List<Component>> EFFECT_LINE_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Item, List<Component>> EFFECT_LINE_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 按物品注册名派生效果文案的翻译键前缀，使每个物品描述自己的效果。
@@ -39,10 +38,10 @@ public class TooltipUtil {
     }
 
     /**
-     * 取物品的效果说明行，首次访问时用 builder 构建并缓存，使持有多件跟随者物品时也只各构建一次。
+     * 取物品的效果说明行，首次访问时用 builder 构建并缓存，使持有多件同类物品时也只各构建一次。
      */
-    public static List<Component> cachedEffectLines(FollowerItem followerItem, Function<FollowerItem, List<Component>> builder) {
-        return EFFECT_LINE_CACHE.computeIfAbsent(followerItem, builder);
+    public static <T extends Item> List<Component> cachedEffectLines(T item, Function<T, List<Component>> builder) {
+        return EFFECT_LINE_CACHE.computeIfAbsent(item, ignored -> builder.apply(item));
     }
 
     /**
@@ -53,11 +52,11 @@ public class TooltipUtil {
     }
 
     /**
-     * 追加按住 Shift 查看详细说明的提示行，返回当前是否已展开详情。
+     * 追加按住 Shift 查看详细说明的提示行，提示行写进tooltipSink，返回当前是否已展开详情。
      */
-    public static boolean appendShiftHint(Consumer<Component> tooltipComponents, TooltipFlag tooltipFlag) {
+    public static boolean appendShiftHint(Consumer<Component> tooltipSink, TooltipFlag tooltipFlag) {
         boolean shiftDown = tooltipFlag.hasShiftDown();
-        tooltipComponents.accept(Component.translatable(
+        tooltipSink.accept(Component.translatable(
                 TOOLTIP_PREFIX + "shift_hint",
                 Component.translatable(TOOLTIP_PREFIX + "hint.shift")
                          .withStyle(shiftDown ? ChatFormatting.YELLOW : ChatFormatting.DARK_GRAY)

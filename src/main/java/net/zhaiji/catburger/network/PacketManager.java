@@ -2,7 +2,9 @@ package net.zhaiji.catburger.network;
 
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
+import net.zhaiji.catburger.network.client.packet.ConfigCardFeedbackPacket;
 import net.zhaiji.catburger.network.client.packet.PlayerDeathPacket;
+import net.zhaiji.catburger.network.server.packet.SetConfigCardModePacket;
 import net.zhaiji.catburger.network.server.packet.SyncFollowerRenderDataPacket;
 
 public class PacketManager {
@@ -16,10 +18,22 @@ public class PacketManager {
                 PlayerDeathPacket::handler
         );
 
+        registrar.playToClient(
+                ConfigCardFeedbackPacket.TYPE,
+                ConfigCardFeedbackPacket.STREAM_CODEC,
+                ConfigCardFeedbackPacket::handler
+        );
+
         registrar.playToServer(
                 SyncFollowerRenderDataPacket.TYPE,
                 SyncFollowerRenderDataPacket.STREAM_CODEC,
                 SyncFollowerRenderDataPacket::handler
+        );
+
+        registrar.playToServer(
+                SetConfigCardModePacket.TYPE,
+                SetConfigCardModePacket.STREAM_CODEC,
+                SetConfigCardModePacket::handler
         );
     }
 }

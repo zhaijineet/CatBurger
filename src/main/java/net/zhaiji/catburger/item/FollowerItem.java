@@ -22,7 +22,7 @@ public abstract class FollowerItem extends Item {
     @Override
     public void appendHoverText(ItemStack itemStack, Item.TooltipContext tooltipContext, TooltipDisplay tooltipDisplay, Consumer<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         String keyPrefix = TooltipUtil.itemKeyPrefix(itemStack.getItem());
-        tooltipComponents.accept(Component.translatable(keyPrefix + "description.0"));
+        tooltipComponents.accept(Component.translatable(keyPrefix + "flavor_text"));
 
         List<Component> effectLines = TooltipUtil.cachedEffectLines(this, FollowerItem::buildEffectLines);
         if (effectLines.isEmpty()) return;
