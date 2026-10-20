@@ -20,6 +20,7 @@ import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.config.ConfiguredEffect;
+import net.zhaiji.catburger.config.EntityDataFallback;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
 import org.jetbrains.annotations.Nullable;
@@ -150,6 +151,13 @@ public class ClothConfigCompat {
     }
 
     private static void buildClientEntries(ConfigCategory category, ConfigEntryBuilder entryBuilder) {
+        category.addEntry(entryBuilder.startEnumSelector(entryName("entityDataFallback"), EntityDataFallback.class, CatBurgerClientConfig.ENTITY_DATA_FALLBACK.get())
+                                     .setDefaultValue(CatBurgerClientConfig.ENTITY_DATA_FALLBACK.getDefault())
+                                     .setEnumNameProvider(fallback -> Component.translatable(((EntityDataFallback) fallback).getTranslationKey()))
+                                     .setTooltip(entryTooltip("entityDataFallback"))
+                                     .setSaveConsumer(CatBurgerClientConfig.ENTITY_DATA_FALLBACK::set)
+                                     .build());
+
         SubCategoryBuilder independentMode = subCategory(entryBuilder, "IndependentMode",
                 doubleEntry(entryBuilder, "minSpacing", CatBurgerClientConfig.MIN_SPACING, CatBurgerClientConfig.MIN_SPACING_LOWER, CatBurgerClientConfig.MIN_SPACING_UPPER),
                 doubleEntry(entryBuilder, "maxSpacing", CatBurgerClientConfig.MAX_SPACING, CatBurgerClientConfig.MAX_SPACING_LOWER, CatBurgerClientConfig.MAX_SPACING_UPPER),
@@ -218,6 +226,9 @@ public class ClothConfigCompat {
     }
 
     private static void buildServerEntries(ConfigCategory category, ConfigEntryBuilder entryBuilder) {
+        category.addEntry(booleanEntry(entryBuilder, "petConfigSyncEnabled", CatBurgerServerConfig.PET_CONFIG_SYNC_ENABLED));
+        category.addEntry(booleanEntry(entryBuilder, "mobActiveWearEnabled", CatBurgerServerConfig.MOB_ACTIVE_WEAR_ENABLED));
+
         category.addEntry(subCategory(entryBuilder, "DeathProtectionCooldown",
                 intEntry(entryBuilder, "cooldownDuration", CatBurgerServerConfig.COOLDOWN_DURATION, 0, Integer.MAX_VALUE),
                 booleanEntry(entryBuilder, "resetCooldownOnWakeUp", CatBurgerServerConfig.RESET_COOLDOWN_ON_WAKE_UP)
@@ -273,10 +284,6 @@ public class ClothConfigCompat {
         category.addEntry(subCategory(entryBuilder, "Followers",
                 catBurger.build(),
                 blub.build()
-        ).build());
-
-        category.addEntry(subCategory(entryBuilder, "MobActiveWear",
-                booleanEntry(entryBuilder, "mobActiveWearEnabled", CatBurgerServerConfig.MOB_ACTIVE_WEAR_ENABLED)
         ).build());
     }
 

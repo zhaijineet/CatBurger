@@ -79,8 +79,10 @@ public class FollowerRenderer {
 
         FollowerStateHolder followerStateHolder = (FollowerStateHolder) livingEntity;
         double[] layout = followerStateHolder.catburger$layout();
-        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界
+        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界；
+        // 能力实例可能原地改写使引用不变，因此引用相同时还要比 revision；CONFIG_DEFAULTS 与本地回退实例不会原地改写
         if (followerStateHolder.catburger$layoutParams() != renderParams
+                || followerStateHolder.catburger$layoutRevision() != renderParams.getRevision()
                 || followerStateHolder.catburger$layoutDisplaySize() != displaySize
                 || layout.length != renderedFollowers.size() * 3) {
             layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);

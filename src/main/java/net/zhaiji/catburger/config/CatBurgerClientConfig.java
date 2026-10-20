@@ -44,6 +44,13 @@ public class CatBurgerClientConfig {
 
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
+    public static final ForgeConfigSpec.EnumValue<EntityDataFallback> ENTITY_DATA_FALLBACK = BUILDER
+            .comment("Where entities without follower render data take their render settings from, LOCAL uses the current local values and CONFIG_DEFAULT uses the config defaults regardless of local changes")
+            .defineEnum(
+                    "entityDataFallback",
+                    EntityDataFallback.LOCAL
+            );
+
     public static final ForgeConfigSpec.EnumValue<FollowerRenderMode> FOLLOWER_RENDER_MODE = BUILDER
             .comment("How multiple followers worn by the same wearer are arranged")
             .push("MultipleFollowers")

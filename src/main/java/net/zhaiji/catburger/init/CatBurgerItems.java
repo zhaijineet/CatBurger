@@ -7,9 +7,15 @@ import net.minecraftforge.registries.RegistryObject;
 import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.item.BlubItem;
 import net.zhaiji.catburger.item.CatBurgerItem;
+import net.zhaiji.catburger.item.FollowerConfigCardItem;
 
 public class CatBurgerItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, CatBurger.MOD_ID);
+
+    public static final RegistryObject<Item> FOLLOWER_CONFIG_CARD = ITEMS.register(
+            "follower_config_card",
+            FollowerConfigCardItem::new
+    );
 
     public static final RegistryObject<Item> CAT_BURGER = ITEMS.register(
             "cat_burger",

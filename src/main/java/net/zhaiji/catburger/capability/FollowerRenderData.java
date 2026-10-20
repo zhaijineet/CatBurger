@@ -13,6 +13,11 @@ import net.zhaiji.catburger.config.FormationGazeTarget;
  * 一名玩家用于渲染其跟随者的全部参数：客户端按本机配置填好后上传，服务端收束并广播给追踪者。
  */
 public class FollowerRenderData implements INBTSerializable<CompoundTag> {
+    /**
+     * 配置默认值实例，没有同步数据的实体回退到它；全局共享只读，任何写入都会污染所有这类实体。
+     */
+    public static final FollowerRenderData CONFIG_DEFAULTS = new FollowerRenderData();
+
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
     private boolean deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
     private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
@@ -44,8 +49,14 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     private boolean gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.getDefault();
 
+    // 配置卡手动设置过的标记：开启宠物配置同步时跳过这些实体，让卡片设置优先于主人继承
+    private boolean manualOverride;
+
     // 只活在运行期：表示这份参数是否已经由服务端同步过，未同步的实体渲染时应回落到本机配置
     private boolean synced;
+
+    // 只活在运行期：能力实例常驻实体、写入是原地改写，引用不会变，渲染方据此判断内容有没有变过
+    private int revision;
 
     /**
      * 是否已由服务端同步过，1.21.1 由附件的存在性表达同一件事。
@@ -55,34 +66,54 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     }
 
     /**
-     * 按本机客户端配置填充全部字段，只在客户端发送前调用。
+     * 这份参数被写入或重置过多少次，供按引用缓存的结果判断内容是否已经变过。
      */
-    public void loadFromClientConfig() {
-        renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
-        deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
-        independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
-        minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
-        maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
-        maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
-        formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
-        formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.get();
-        formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
-        scale = CatBurgerClientConfig.RENDER_SCALE.get();
-        frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
-        leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.get();
-        verticalOffset = CatBurgerClientConfig.VERTICAL_OFFSET.get();
-        crouchOffset = CatBurgerClientConfig.CROUCH_OFFSET.get();
-        floatDistance = CatBurgerClientConfig.FLOAT_DISTANCE.get();
-        floatCycleDuration = CatBurgerClientConfig.FLOAT_CYCLE_DURATION.get();
-        followSpeed = CatBurgerClientConfig.FOLLOW_SPEED.get();
-        maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
-        springMotionEnabled = CatBurgerClientConfig.SPRING_MOTION_ENABLED.get();
-        springStiffness = CatBurgerClientConfig.SPRING_STIFFNESS.get();
-        springDamping = CatBurgerClientConfig.SPRING_DAMPING.get();
-        rotationFollowSpeed = CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get();
-        useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.get();
-        orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get();
-        gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get();
+    public int getRevision() {
+        return revision;
+    }
+
+    /**
+     * 是否被配置卡手动设置过，1.21.1 由独立附件的存在性表达同一件事。
+     */
+    public boolean isManualOverride() {
+        return manualOverride;
+    }
+
+    public void setManualOverride(boolean manualOverride) {
+        this.manualOverride = manualOverride;
+    }
+
+    /**
+     * 按本机客户端配置造一份新实例，供上传与服务端以外的本地回退使用。
+     */
+    public static FollowerRenderData fromClientConfig() {
+        FollowerRenderData data = new FollowerRenderData();
+        data.renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
+        data.deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        data.independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
+        data.minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
+        data.maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
+        data.maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
+        data.formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
+        data.formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.get();
+        data.formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
+        data.scale = CatBurgerClientConfig.RENDER_SCALE.get();
+        data.frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
+        data.leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.get();
+        data.verticalOffset = CatBurgerClientConfig.VERTICAL_OFFSET.get();
+        data.crouchOffset = CatBurgerClientConfig.CROUCH_OFFSET.get();
+        data.floatDistance = CatBurgerClientConfig.FLOAT_DISTANCE.get();
+        data.floatCycleDuration = CatBurgerClientConfig.FLOAT_CYCLE_DURATION.get();
+        data.followSpeed = CatBurgerClientConfig.FOLLOW_SPEED.get();
+        data.maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
+        data.springMotionEnabled = CatBurgerClientConfig.SPRING_MOTION_ENABLED.get();
+        data.springStiffness = CatBurgerClientConfig.SPRING_STIFFNESS.get();
+        data.springDamping = CatBurgerClientConfig.SPRING_DAMPING.get();
+        data.rotationFollowSpeed = CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get();
+        data.useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.get();
+        data.orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get();
+        data.gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get();
+        return data;
     }
 
     /**
@@ -93,7 +124,8 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     }
 
     /**
-     * 把全部字段逐项恢复成配置默认值，并标记为未同步。能力实例常驻实体，没有「移除」这一动作，改用重置代替。
+     * 把全部渲染参数字段逐项恢复成配置默认值，并标记为未同步。能力实例常驻实体，没有「移除」这一动作，改用重置代替。
+     * 手动设置标记不属于渲染参数，由配置卡的移除模式单独清除。
      */
     public void markUnsynced() {
         renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
@@ -122,6 +154,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.getDefault();
         gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.getDefault();
         synced = false;
+        revision++;
     }
 
     /**
@@ -245,6 +278,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         tag.putBoolean("useShortestArc", useShortestArc);
         tag.putDouble("orientationFollowSpeed", orientationFollowSpeed);
         tag.putBoolean("gazeAtViewTarget", gazeAtViewTarget);
+        tag.putBoolean("manualOverride", manualOverride);
         return tag;
     }
 
@@ -278,6 +312,8 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.contains("useShortestArc")) useShortestArc = tag.getBoolean("useShortestArc");
         if (tag.contains("orientationFollowSpeed")) orientationFollowSpeed = tag.getDouble("orientationFollowSpeed");
         if (tag.contains("gazeAtViewTarget")) gazeAtViewTarget = tag.getBoolean("gazeAtViewTarget");
+        if (tag.contains("manualOverride")) manualOverride = tag.getBoolean("manualOverride");
+        revision++;
     }
 
     public FollowerRenderMode getRenderMode() {

@@ -26,7 +26,7 @@ public class FollowerRenderDataProvider implements ICapabilityProvider, ICapabil
 
     @Override
     public CompoundTag serializeNBT() {
-        // 未同步时不留任何数据，否则每个玩家与有主生物都会存一份完整标签，读回时还会把未同步误当成已同步
+        // 未同步时不留任何数据，否则每个已同步实体都会存一份完整标签，读回时还会把未同步误当成已同步
         if (!followerRenderData.isSynced()) return new CompoundTag();
 
         return followerRenderData.serializeNBT();

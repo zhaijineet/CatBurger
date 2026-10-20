@@ -6,8 +6,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
 import net.minecraftforge.client.event.RenderLevelStageEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
@@ -19,7 +22,10 @@ import net.zhaiji.catburger.client.render.RenderParamsResolver;
 import net.zhaiji.catburger.compat.cloth.ClothConfigCompat;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
+import net.zhaiji.catburger.init.CatBurgerItems;
+import net.zhaiji.catburger.network.PacketManager;
 import net.zhaiji.catburger.network.client.ClientPacketHandler;
+import net.zhaiji.catburger.network.server.packet.SetConfigCardModePacket;
 import net.zhaiji.catburger.util.FollowerUtil;
 import net.zhaiji.catburger.util.TooltipUtil;
 import net.zhaiji.catburger.util.WornFollower;
@@ -119,5 +125,25 @@ public class ClientEventHandler {
                 ClientPacketHandler.sendFollowerRenderData();
             });
         }
+    }
+
+    /**
+     * 按住Shift滚轮在配置卡的三个模式间循环切换，拦截滚轮避免切换物品栏，并上报服务端同步服务端那份物品栈。
+     */
+    public static void handlerMouseScrollingEvent(InputEvent.MouseScrollingEvent event) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.screen != null || minecraft.player == null) return;
+
+        Player player = minecraft.player;
+        if (!player.isShiftKeyDown()) return;
+
+        ItemStack stack = player.getMainHandItem();
+        if (!stack.is(CatBurgerItems.FOLLOWER_CONFIG_CARD.get())) return;
+
+        double scrollDelta = event.getScrollDelta();
+        if (scrollDelta == 0) return;
+
+        PacketManager.sendToServer(new SetConfigCardModePacket(scrollDelta > 0));
+        event.setCanceled(true);
     }
 }

@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.zhaiji.catburger.capability.FollowerRenderData;
 import net.zhaiji.catburger.compat.CompatManager;
 import net.zhaiji.catburger.compat.curios.CuriosCompat;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.init.CatBurgerCapabilities;
 import net.zhaiji.catburger.item.FollowerItem;
 import net.zhaiji.catburger.network.PacketManager;
@@ -139,16 +140,19 @@ public class FollowerUtil {
     }
 
     /**
-     * 副本与主人参数不一致时才写入，写完立刻同步给正在追踪该生物的客户端，避免它们继续按旧参数渲染。
+     * 宠物配置同步关闭时整条链路跳过；配置卡手动设置过的实体保持自身设置，其余实体与现有副本一致就不写，避免把没有变化的数据重新广播给全部追踪者。
      */
     private static void applyInheritedRenderData(LivingEntity livingEntity, FollowerRenderData ownerData) {
+        if (!CatBurgerServerConfig.PET_CONFIG_SYNC_ENABLED.get()) return;
+
         FollowerRenderData targetData = followerRenderDataOf(livingEntity);
         if (targetData == null) return;
+        if (targetData.isManualOverride()) return;
         if (targetData.isSynced() && targetData.matches(ownerData)) return;
 
         targetData.deserializeNBT(ownerData.serializeNBT());
 
-        PacketManager.sendToTrackingAndSelf(new ClientboundFollowerRenderDataPacket(livingEntity.getUUID(), targetData), livingEntity);
+        PacketManager.sendToTrackingAndSelf(new ClientboundFollowerRenderDataPacket(livingEntity.getUUID(), true, targetData), livingEntity);
     }
 
     /**

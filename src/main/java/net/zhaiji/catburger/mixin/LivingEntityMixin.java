@@ -27,6 +27,9 @@ public abstract class LivingEntityMixin implements FollowerStateHolder {
     private FollowerRenderData catburger$layoutParams;
 
     @Unique
+    private int catburger$layoutRevision;
+
+    @Unique
     private double catburger$layoutDisplaySize;
 
     @Unique
@@ -43,6 +46,11 @@ public abstract class LivingEntityMixin implements FollowerStateHolder {
     }
 
     @Override
+    public int catburger$layoutRevision() {
+        return catburger$layoutRevision;
+    }
+
+    @Override
     public double catburger$layoutDisplaySize() {
         return catburger$layoutDisplaySize;
     }
@@ -55,6 +63,7 @@ public abstract class LivingEntityMixin implements FollowerStateHolder {
     @Override
     public void catburger$setLayout(FollowerRenderData renderParams, double displaySize, double[] layout) {
         this.catburger$layoutParams = renderParams;
+        this.catburger$layoutRevision = renderParams.getRevision();
         this.catburger$layoutDisplaySize = displaySize;
         this.catburger$layout = layout;
     }

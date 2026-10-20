@@ -12,6 +12,8 @@ public interface FollowerStateHolder {
 
     FollowerRenderData catburger$layoutParams();
 
+    int catburger$layoutRevision();
+
     double catburger$layoutDisplaySize();
 
     double[] catburger$layout();

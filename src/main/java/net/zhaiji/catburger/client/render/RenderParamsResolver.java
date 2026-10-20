@@ -2,10 +2,12 @@ package net.zhaiji.catburger.client.render;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.zhaiji.catburger.capability.FollowerRenderData;
+import net.zhaiji.catburger.config.CatBurgerClientConfig;
+import net.zhaiji.catburger.config.EntityDataFallback;
 import net.zhaiji.catburger.util.FollowerUtil;
 
 /**
- * 取某个佩戴者的渲染参数：已由服务端同步过就用同步值，否则回落到本机客户端配置。
+ * 取某个佩戴者的渲染参数：已由服务端同步过就用同步值，否则按配置项回退到本地配置当前值或配置默认值。
  * 有主生物的同步值由服务端从主人那里复制过来，因此这里不需要再关心主人是谁、在不在场。
  */
 public class RenderParamsResolver {
@@ -15,7 +17,9 @@ public class RenderParamsResolver {
         FollowerRenderData attachedData = FollowerUtil.followerRenderDataOf(livingEntity);
         if (attachedData != null && attachedData.isSynced()) return attachedData;
 
-        return localFallback();
+        return CatBurgerClientConfig.ENTITY_DATA_FALLBACK.get() == EntityDataFallback.CONFIG_DEFAULT
+                ? FollowerRenderData.CONFIG_DEFAULTS
+                : localFallback();
     }
 
     /**
@@ -31,8 +35,7 @@ public class RenderParamsResolver {
     private static FollowerRenderData localFallback() {
         FollowerRenderData renderParams = localFallback;
         if (renderParams == null) {
-            renderParams = new FollowerRenderData();
-            renderParams.loadFromClientConfig();
+            renderParams = FollowerRenderData.fromClientConfig();
             localFallback = renderParams;
         }
 

@@ -8,12 +8,14 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.network.client.packet.ConfigCardFeedbackPacket;
 import net.zhaiji.catburger.network.client.packet.PlayerDeathPacket;
 import net.zhaiji.catburger.network.server.packet.ClientboundFollowerRenderDataPacket;
+import net.zhaiji.catburger.network.server.packet.SetConfigCardModePacket;
 import net.zhaiji.catburger.network.server.packet.SyncFollowerRenderDataPacket;
 
 public class PacketManager {
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "1.1";
 
     public static final SimpleChannel INSTANCE = NetworkRegistry.newSimpleChannel(
             ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, "main"),
@@ -38,6 +40,16 @@ public class PacketManager {
                 .encoder(ClientboundFollowerRenderDataPacket::encode)
                 .decoder(ClientboundFollowerRenderDataPacket::decode)
                 .consumerMainThread(ClientboundFollowerRenderDataPacket::handler)
+                .add();
+        INSTANCE.messageBuilder(ConfigCardFeedbackPacket.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ConfigCardFeedbackPacket::encode)
+                .decoder(ConfigCardFeedbackPacket::decode)
+                .consumerMainThread(ConfigCardFeedbackPacket::handler)
+                .add();
+        INSTANCE.messageBuilder(SetConfigCardModePacket.class, id++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SetConfigCardModePacket::encode)
+                .decoder(SetConfigCardModePacket::decode)
+                .consumerMainThread(SetConfigCardModePacket::handler)
                 .add();
     }
 

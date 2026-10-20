@@ -44,5 +44,7 @@ public class CatBurgerItemModelProvider extends ItemModelProvider {
                                         .end()
                                         .end();
                             });
+
+        basicItem(CatBurgerItems.FOLLOWER_CONFIG_CARD.get());
     }
 }
