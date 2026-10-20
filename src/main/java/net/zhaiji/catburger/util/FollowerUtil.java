@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
 import net.zhaiji.catburger.compat.CompatManager;
 import net.zhaiji.catburger.compat.curios.CuriosCompat;
+import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.init.CatBurgerAttachmentTypes;
 import net.zhaiji.catburger.item.FollowerItem;
 
@@ -130,9 +131,12 @@ public class FollowerUtil {
     }
 
     /**
-     * 与现有副本一致就不写，避免把没有变化的数据重新广播给全部追踪者。
+     * 宠物配置同步关闭时整条链路跳过；配置卡手动设置过的实体保持自身设置，其余实体与现有副本一致就不写，避免把没有变化的数据重新广播给全部追踪者。
      */
     private static void applyInheritedRenderData(LivingEntity livingEntity, FollowerRenderData ownerData) {
+        if (!CatBurgerServerConfig.PET_CONFIG_SYNC_ENABLED.get()) return;
+        if (livingEntity.getExistingDataOrNull(CatBurgerAttachmentTypes.MANUAL_OVERRIDE.get()) != null) return;
+
         FollowerRenderData currentData = livingEntity.getExistingDataOrNull(CatBurgerAttachmentTypes.FOLLOWER_RENDER.get());
         if (currentData != null && currentData.matches(ownerData)) return;
 

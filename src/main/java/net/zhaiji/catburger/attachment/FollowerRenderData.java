@@ -1,5 +1,6 @@
 package net.zhaiji.catburger.attachment;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -15,9 +16,26 @@ import net.zhaiji.catburger.config.FormationGazeTarget;
  * 一名玩家用于渲染其跟随者的全部参数：客户端按本机配置填好后上传，服务端收束并广播给追踪者。
  */
 public class FollowerRenderData implements INBTSerializable<CompoundTag> {
+    /**
+     * 配置默认值实例，无附件实体回退到它；全局共享只读，任何写入都会污染所有无附件实体。
+     */
+    public static final FollowerRenderData CONFIG_DEFAULTS = new FollowerRenderData();
+
     public static final StreamCodec<RegistryFriendlyByteBuf, FollowerRenderData> STREAM_CODEC = StreamCodec.of(
             FollowerRenderData::encode,
             FollowerRenderData::decode
+    );
+
+    /**
+     * 物品组件用的持久化编解码，复用NBT读写，不必再写一套逐字段的编解码。
+     */
+    public static final Codec<FollowerRenderData> CODEC = CompoundTag.CODEC.xmap(
+            tag -> {
+                FollowerRenderData data = new FollowerRenderData();
+                data.deserializeNBT(null, tag);
+                return data;
+            },
+            data -> data.serializeNBT(null)
     );
 
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
@@ -52,34 +70,36 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private boolean gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.getDefault();
 
     /**
-     * 按本机客户端配置填充全部字段，只在客户端发送前调用。
+     * 按本机客户端配置造一份新实例，供上传与服务端以外的本地回退使用。
      */
-    public void loadFromClientConfig() {
-        renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
-        deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
-        independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
-        minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
-        maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
-        maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
-        formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
-        formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.get();
-        formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
-        scale = CatBurgerClientConfig.RENDER_SCALE.get();
-        frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
-        leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.get();
-        verticalOffset = CatBurgerClientConfig.VERTICAL_OFFSET.get();
-        crouchOffset = CatBurgerClientConfig.CROUCH_OFFSET.get();
-        floatDistance = CatBurgerClientConfig.FLOAT_DISTANCE.get();
-        floatCycleDuration = CatBurgerClientConfig.FLOAT_CYCLE_DURATION.get();
-        followSpeed = CatBurgerClientConfig.FOLLOW_SPEED.get();
-        maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
-        springMotionEnabled = CatBurgerClientConfig.SPRING_MOTION_ENABLED.get();
-        springStiffness = CatBurgerClientConfig.SPRING_STIFFNESS.get();
-        springDamping = CatBurgerClientConfig.SPRING_DAMPING.get();
-        rotationFollowSpeed = CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get();
-        useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.get();
-        orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get();
-        gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get();
+    public static FollowerRenderData fromClientConfig() {
+        FollowerRenderData data = new FollowerRenderData();
+        data.renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
+        data.deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        data.independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
+        data.minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
+        data.maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
+        data.maxRadius = CatBurgerClientConfig.MAX_RADIUS.get();
+        data.formationSpacing = CatBurgerClientConfig.FORMATION_SPACING.get();
+        data.formationMaxLagDistance = CatBurgerClientConfig.FORMATION_MAX_LAG_DISTANCE.get();
+        data.formationGazeTarget = CatBurgerClientConfig.FORMATION_GAZE_TARGET.get();
+        data.scale = CatBurgerClientConfig.RENDER_SCALE.get();
+        data.frontBackOffset = CatBurgerClientConfig.FRONT_BACK_OFFSET.get();
+        data.leftRightOffset = CatBurgerClientConfig.LEFT_RIGHT_OFFSET.get();
+        data.verticalOffset = CatBurgerClientConfig.VERTICAL_OFFSET.get();
+        data.crouchOffset = CatBurgerClientConfig.CROUCH_OFFSET.get();
+        data.floatDistance = CatBurgerClientConfig.FLOAT_DISTANCE.get();
+        data.floatCycleDuration = CatBurgerClientConfig.FLOAT_CYCLE_DURATION.get();
+        data.followSpeed = CatBurgerClientConfig.FOLLOW_SPEED.get();
+        data.maxLagDistance = CatBurgerClientConfig.MAX_LAG_DISTANCE.get();
+        data.springMotionEnabled = CatBurgerClientConfig.SPRING_MOTION_ENABLED.get();
+        data.springStiffness = CatBurgerClientConfig.SPRING_STIFFNESS.get();
+        data.springDamping = CatBurgerClientConfig.SPRING_DAMPING.get();
+        data.rotationFollowSpeed = CatBurgerClientConfig.ROTATION_FOLLOW_SPEED.get();
+        data.useShortestArc = CatBurgerClientConfig.USE_SHORTEST_ARC.get();
+        data.orientationFollowSpeed = CatBurgerClientConfig.ORIENTATION_FOLLOW_SPEED.get();
+        data.gazeAtViewTarget = CatBurgerClientConfig.GAZE_AT_VIEW_TARGET.get();
+        return data;
     }
 
     /**
@@ -98,6 +118,25 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
      */
     public boolean matches(FollowerRenderData other) {
         return serializeNBT(null).equals(other.serializeNBT(null));
+    }
+
+    /**
+     * 物品组件要求值类按不可变对象对待，相等实例必须给出相同哈希，因此与matches共用同一份NBT比较。
+     */
+    @Override
+    public boolean equals(Object object) {
+        if (object == this) return true;
+        return object instanceof FollowerRenderData other && matches(other);
+    }
+
+    @Override
+    public int hashCode() {
+        return serializeNBT(null).hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return serializeNBT(null).toString();
     }
 
     /**

@@ -34,7 +34,7 @@ public abstract class FollowerItem extends Item implements Equipable {
     @Override
     public void appendHoverText(ItemStack itemStack, TooltipContext tooltipContext, List<Component> tooltipComponents, TooltipFlag tooltipFlag) {
         String keyPrefix = TooltipUtil.itemKeyPrefix(itemStack.getItem());
-        tooltipComponents.add(Component.translatable(keyPrefix + "description.0"));
+        tooltipComponents.add(Component.translatable(keyPrefix + "flavor_text"));
 
         List<Component> effectLines = TooltipUtil.cachedEffectLines(this, FollowerItem::buildEffectLines);
         if (effectLines.isEmpty()) return;

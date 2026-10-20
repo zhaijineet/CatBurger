@@ -33,5 +33,9 @@ public class CatBurgerRecipeProvider extends RecipeProvider implements IConditio
                             .forEach(deferredItem -> SingleItemRecipeBuilder.stonecutting(totem, RecipeCategory.MISC, deferredItem.get())
                                                                             .unlockedBy("has_totem", hasTotem)
                                                                             .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, deferredItem.getId().getPath())));
+
+        SingleItemRecipeBuilder.stonecutting(Ingredient.of(Items.BREAD), RecipeCategory.MISC, CatBurgerItems.FOLLOWER_CONFIG_CARD.get())
+                                .unlockedBy("has_bread", has(Items.BREAD))
+                                .save(recipeOutput, ResourceLocation.fromNamespaceAndPath(CatBurger.MOD_ID, "follower_config_card"));
     }
 }

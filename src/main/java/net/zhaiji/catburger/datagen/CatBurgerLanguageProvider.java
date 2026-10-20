@@ -3,6 +3,7 @@ package net.zhaiji.catburger.datagen;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.config.EntityDataFallback;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
 import net.zhaiji.catburger.init.CatBurgerCreativeModeTabs;
@@ -24,13 +25,44 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
     public void English() {
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "Cat Burger");
+        addItem(CatBurgerItems.FOLLOWER_CONFIG_CARD, "Follower Config Card");
+        String cardKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.FOLLOWER_CONFIG_CARD.get());
+        add(cardKeyPrefix + "mode", "Current mode: ");
+        add(cardKeyPrefix + "mode.add", "Add");
+        add(cardKeyPrefix + "mode.remove", "Remove");
+        add(cardKeyPrefix + "mode.wear", "Wear");
+        add(cardKeyPrefix + "hud", "Follower Config Card: ");
+        add(cardKeyPrefix + "effect.switch_mode", "Shift scroll: switch mode");
+        add(cardKeyPrefix + "effect.pet_sync_notice", "Pet config sync is enabled; settings on this card take priority over pet inheritance");
+        add(cardKeyPrefix + "effect.prefix.add", "Add mode");
+        add(cardKeyPrefix + "effect.prefix.remove", "Remove mode");
+        add(cardKeyPrefix + "effect.prefix.wear", "Wear mode");
+        add(cardKeyPrefix + "effect.add.write", ": right-click a creature to write the stored settings onto it");
+        add(cardKeyPrefix + "effect.add.copy", ": shift right-click to copy your own settings into the card");
+        add(cardKeyPrefix + "effect.remove.clear", ": right-click a creature to clear its settings");
+        add(cardKeyPrefix + "effect.remove.reset", ": shift right-click to clear the settings stored in the card");
+        add(cardKeyPrefix + "effect.wear.put", ": hold a follower in the off hand and right-click to put it on the creature");
+        add(cardKeyPrefix + "effect.wear.take", ": shift right-click to take the follower off the creature");
+        add(cardKeyPrefix + "applied", "Applied the settings to the target");
+        add(cardKeyPrefix + "removed", "Cleared the settings of the target");
+        add(cardKeyPrefix + "copied", "Copied your render settings into the card");
+        add(cardKeyPrefix + "cleared", "Cleared the settings stored in the card");
+        add(cardKeyPrefix + "copy_missing", "You have no render settings to copy yet");
+        add(cardKeyPrefix + "empty", "The card has no settings stored");
+        add(cardKeyPrefix + "reject.player", "Cannot be used on players");
+        add(cardKeyPrefix + "reject.owned", "This creature belongs to someone else");
+        add(cardKeyPrefix + "wear.applied", "Put the follower on the target");
+        add(cardKeyPrefix + "wear.removed", "Took the follower off the target");
+        add(cardKeyPrefix + "wear.not_follower", "Hold a follower in the off hand first");
+        add(cardKeyPrefix + "wear.empty", "The target is not wearing a follower");
+        add(cardKeyPrefix + "wear.locked", "Binding curse or similar effects keep the target's head slot locked");
         addItem(CatBurgerItems.CAT_BURGER, "Cat Burger");
 
         add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "Hold [%s] for details");
         add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
 
         String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
-        add(itemKeyPrefix + "description.0", "Meow!");
+        add(itemKeyPrefix + "flavor_text", "Meow!");
         add(itemKeyPrefix + "effect.food_level_restoration", "While worn, restores %2$s food level every %1$s seconds, up to %3$s");
         add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "While worn, restores %s food level every tick, up to %s");
         add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "On fatal damage, triggers death protection and restores health to %s%% of max health");
@@ -42,7 +74,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addItem(CatBurgerItems.BLUB, "Jelly Bunny");
 
         String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
-        add(blubKeyPrefix + "description.0", "Blub!");
+        add(blubKeyPrefix + "flavor_text", "Blub!");
         add(blubKeyPrefix + "effect.tick_effects.entry", "While worn, grants %2$s (%3$s seconds) every %1$s seconds");
         add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "While worn, grants %1$s (%2$s seconds) every tick");
         add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "On fatal damage, triggers death protection and restores health to %s%% of max health");
@@ -59,6 +91,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(blubKeyPrefix + "effect.death_protection.wake_up", "Waking up from sleep resets the death protection cooldown");
 
         addConfig("title", "Cat Burger Configuration");
+
+        addConfig("petConfigSyncEnabled", "Pet Config Sync", "When enabled, the render settings of a player are copied to their pets; the server walks every level and entity on every config change, which can lag with many players and mobs, enable with care");
+        addConfig("mobActiveWearEnabled", "Enable Mob Active Wearing", "Allow mobs to actively wear followers");
 
         addConfigGroup("DeathProtectionCooldown", "Death Protection Cooldown", "Death protection cooldown, applies to every follower");
         addConfig("cooldownDuration", "Cooldown Duration", "Ticks before death protection can trigger again, 0 disables the cooldown");
@@ -88,20 +123,18 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "Affect Pets", "Whether tamed pets are affected, meaning any creature with an owner");
         addConfig("affectOtherMobs", "Affect Other Mobs", "Whether other mobs are affected, meaning creatures that are neither the wearer, nor players, nor tamed pets");
 
-        addConfigGroup("MobActiveWear", "Mob Active Wearing", "Whether mobs can actively wear followers");
-        addConfig("mobActiveWearEnabled", "Enable Mob Active Wearing", "Allow mobs to actively wear followers");
+        addConfig("entityDataFallback", "Entity Data Fallback", "Where creatures without their own render settings take values from");
+        addEntityDataFallbacks("Local Values", "Config Defaults");
 
         addConfigGroup("MultipleFollowers", "Multiple Followers", "How multiple followers worn by the same wearer are arranged");
         addConfig("followerRenderMode", "Render Mode", "Independent scatters them loosely around the configured position, formation lines them up in a tail where each follows the one ahead");
         addFollowerRenderModes("Independent", "Formation");
         addConfig("deduplicateRendering", "Deduplicate Rendering", "Render only one follower of each kind when the same follower is worn in several slots");
         addConfig("independentFloat", "Independent Float", "Give each follower its own float rhythm and period instead of floating in sync");
-
         addConfigGroup("IndependentMode", "Independent Mode", "Settings for independent mode, where each follower drifts on its own");
         addConfig("minSpacing", "Min Spacing", "Minimum blocks between followers");
         addConfig("maxSpacing", "Max Spacing", "Maximum blocks between followers");
         addConfig("maxRadius", "Max Radius", "Maximum horizontal distance in blocks a follower may drift from the wearer, independent mode only");
-
         addConfigGroup("FormationMode", "Formation Mode", "Settings for formation mode, where followers line up in a tail");
         addConfig("formationSpacing", "Formation Spacing", "Blocks between each follower and the one ahead of it");
         addConfig("formationMaxLagDistance", "Formation Max Lag Distance", "Extra blocks a follower may be pulled beyond the formation spacing from the one ahead of it, 0 keeps it within the spacing; to stay out of the wearer's body it may be pushed up to about one wearer radius further");
@@ -145,13 +178,44 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
     public void Chinese() {
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "猫猫汉堡");
+        addItem(CatBurgerItems.FOLLOWER_CONFIG_CARD, "追随者配置卡");
+        String cardKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.FOLLOWER_CONFIG_CARD.get());
+        add(cardKeyPrefix + "mode", "当前模式：");
+        add(cardKeyPrefix + "mode.add", "添加");
+        add(cardKeyPrefix + "mode.remove", "移除");
+        add(cardKeyPrefix + "mode.wear", "穿戴");
+        add(cardKeyPrefix + "hud", "追随者配置卡：");
+        add(cardKeyPrefix + "effect.switch_mode", "Shift滚轮：切换模式");
+        add(cardKeyPrefix + "effect.pet_sync_notice", "宠物配置同步已开启，配置卡的设置优先于宠物继承");
+        add(cardKeyPrefix + "effect.prefix.add", "添加模式");
+        add(cardKeyPrefix + "effect.prefix.remove", "移除模式");
+        add(cardKeyPrefix + "effect.prefix.wear", "穿戴模式");
+        add(cardKeyPrefix + "effect.add.write", "：右键生物把卡里的设置写入目标");
+        add(cardKeyPrefix + "effect.add.copy", "：Shift右键把自己的设置复制进卡");
+        add(cardKeyPrefix + "effect.remove.clear", "：右键生物清除目标的设置");
+        add(cardKeyPrefix + "effect.remove.reset", "：Shift右键清空卡里的设置");
+        add(cardKeyPrefix + "effect.wear.put", "：副手持追随者右键把追随者戴到目标头上");
+        add(cardKeyPrefix + "effect.wear.take", "：Shift右键取下目标头上的追随者");
+        add(cardKeyPrefix + "applied", "已把配置写入目标");
+        add(cardKeyPrefix + "removed", "已清除目标的配置");
+        add(cardKeyPrefix + "copied", "已把你的渲染设置复制进配置卡");
+        add(cardKeyPrefix + "cleared", "已清空配置卡里的设置");
+        add(cardKeyPrefix + "copy_missing", "你还没有可复制的渲染设置");
+        add(cardKeyPrefix + "empty", "配置卡里没有设置");
+        add(cardKeyPrefix + "reject.player", "不能对玩家使用");
+        add(cardKeyPrefix + "reject.owned", "这个生物属于别人");
+        add(cardKeyPrefix + "wear.applied", "已把追随者戴到目标头上");
+        add(cardKeyPrefix + "wear.removed", "已取下目标头上的追随者");
+        add(cardKeyPrefix + "wear.not_follower", "副手需要持有追随者");
+        add(cardKeyPrefix + "wear.empty", "目标没有佩戴追随者");
+        add(cardKeyPrefix + "wear.locked", "绑定诅咒等效果使目标的头盔位置无法更改");
         addItem(CatBurgerItems.CAT_BURGER, "猫猫汉堡");
 
         add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "按住[%s]查看详细说明");
         add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
 
         String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
-        add(itemKeyPrefix + "description.0", "喵!");
+        add(itemKeyPrefix + "flavor_text", "喵!");
         add(itemKeyPrefix + "effect.food_level_restoration", "佩戴时每%s秒恢复%s点饥饿值，最多恢复至%s点");
         add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "佩戴时每刻恢复%s点饥饿值，最多恢复至%s点");
         add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "受到致命伤害时触发死亡保护，生命值恢复至最大生命值的%s%%");
@@ -163,7 +227,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addItem(CatBurgerItems.BLUB, "果冻兔兔");
 
         String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
-        add(blubKeyPrefix + "description.0", "布噜~");
+        add(blubKeyPrefix + "flavor_text", "布噜~");
         add(blubKeyPrefix + "effect.tick_effects.entry", "佩戴时每%1$s秒获得%2$s（%3$s秒）");
         add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "佩戴时每刻获得%1$s（%2$s秒）");
         add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "受到致命伤害时触发死亡保护，生命值恢复至最大生命值的%s%%");
@@ -180,6 +244,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(blubKeyPrefix + "effect.death_protection.wake_up", "睡醒后重置死亡保护的冷却时间");
 
         addConfig("title", "猫猫汉堡配置");
+
+        addConfig("petConfigSyncEnabled", "宠物配置同步", "开启后把玩家的渲染配置同步给其宠物，每次配置变化都会遍历所有维度与实体，玩家和生物多时可能卡顿，请慎重开启");
+        addConfig("mobActiveWearEnabled", "启用生物主动佩戴", "允许生物主动佩戴追随者");
 
         addConfigGroup("DeathProtectionCooldown", "死亡保护冷却", "死亡保护冷却，对所有追随者生效");
         addConfig("cooldownDuration", "冷却时长", "死亡保护再次触发所需的刻数，0为无冷却");
@@ -209,20 +276,18 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "影响宠物", "已驯服的宠物（任何有主人的生物）是否受影响");
         addConfig("affectOtherMobs", "影响其他生物", "既非佩戴者本人、也非玩家与宠物的生物是否受影响");
 
-        addConfigGroup("MobActiveWear", "生物主动佩戴", "生物是否能主动佩戴追随者");
-        addConfig("mobActiveWearEnabled", "启用生物主动佩戴", "允许生物主动佩戴追随者");
+        addConfig("entityDataFallback", "实体数据回退", "没有自身渲染设置的生物从何处取值");
+        addEntityDataFallbacks("本地配置值", "配置默认值");
 
         addConfigGroup("MultipleFollowers", "多件追随者", "同一佩戴者佩戴多件追随者时的排布");
         addConfig("followerRenderMode", "排布方式", "独立让各件围绕配置位置松散散开，编队让它们排成一条尾巴、每件跟随前一件");
         addFollowerRenderModes("独立", "编队");
         addConfig("deduplicateRendering", "渲染去重", "同一种追随者戴在多个槽位时只渲染一件");
         addConfig("independentFloat", "独立浮动", "每件追随者使用各自的浮动节奏与周期，而不是同步上下浮动");
-
         addConfigGroup("IndependentMode", "独立模式", "独立模式的设置，每件追随者各自漂移");
         addConfig("minSpacing", "最小间距", "追随者之间的最小间距，单位为格");
         addConfig("maxSpacing", "最大间距", "追随者之间的最大间距，单位为格");
         addConfig("maxRadius", "活动半径", "追随者与佩戴者之间的最大水平距离，单位为格，仅独立模式生效");
-
         addConfigGroup("FormationMode", "编队模式", "编队模式的设置，多件追随者排成一条尾巴");
         addConfig("formationSpacing", "编队间距", "每件追随者与它前面一件之间的间距，单位为格");
         addConfig("formationMaxLagDistance", "编队最大滞后距离", "每件追随者相对它前面一件最多比编队间距多拉开的格数，0为不超过编队间距；为避免穿进佩戴者身体，实际距离最多还会再多出约一个佩戴者半径");
@@ -266,13 +331,44 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
 
     public void Japanese() {
         add(CatBurgerCreativeModeTabs.CATBURGER_TAB_TRANSLATABLE, "猫バーガー");
+        addItem(CatBurgerItems.FOLLOWER_CONFIG_CARD, "フォロワー設定カード");
+        String cardKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.FOLLOWER_CONFIG_CARD.get());
+        add(cardKeyPrefix + "mode", "現在のモード：");
+        add(cardKeyPrefix + "mode.add", "追加");
+        add(cardKeyPrefix + "mode.remove", "削除");
+        add(cardKeyPrefix + "mode.wear", "装着");
+        add(cardKeyPrefix + "hud", "フォロワー設定カード：");
+        add(cardKeyPrefix + "effect.switch_mode", "Shiftスクロール：モードを切り替える");
+        add(cardKeyPrefix + "effect.pet_sync_notice", "ペット設定同期が有効なため、カードの設定はペットの継承より優先される");
+        add(cardKeyPrefix + "effect.prefix.add", "追加モード");
+        add(cardKeyPrefix + "effect.prefix.remove", "削除モード");
+        add(cardKeyPrefix + "effect.prefix.wear", "装着モード");
+        add(cardKeyPrefix + "effect.add.write", "：生物を右クリックしてカードの設定を対象に書き込む");
+        add(cardKeyPrefix + "effect.add.copy", "：Shift右クリックで自分の設定をカードにコピーする");
+        add(cardKeyPrefix + "effect.remove.clear", "：生物を右クリックして対象の設定を消去する");
+        add(cardKeyPrefix + "effect.remove.reset", "：Shift右クリックでカードの設定を空にする");
+        add(cardKeyPrefix + "effect.wear.put", "：オフハンドにフォロワーを持って右クリックすると対象の頭に付ける");
+        add(cardKeyPrefix + "effect.wear.take", "：Shift右クリックで対象の頭からフォロワーを外す");
+        add(cardKeyPrefix + "applied", "設定を対象に書き込みました");
+        add(cardKeyPrefix + "removed", "対象の設定を消去しました");
+        add(cardKeyPrefix + "copied", "レンダリング設定をカードにコピーしました");
+        add(cardKeyPrefix + "cleared", "カードに保存された設定を消去しました");
+        add(cardKeyPrefix + "copy_missing", "コピーできるレンダリング設定がありません");
+        add(cardKeyPrefix + "empty", "カードに設定が保存されていません");
+        add(cardKeyPrefix + "reject.player", "プレイヤーには使用できません");
+        add(cardKeyPrefix + "reject.owned", "この生物は他の人のものです");
+        add(cardKeyPrefix + "wear.applied", "フォロワーを対象の頭に付けました");
+        add(cardKeyPrefix + "wear.removed", "対象の頭からフォロワーを外しました");
+        add(cardKeyPrefix + "wear.not_follower", "オフハンドにフォロワーを持つ必要があります");
+        add(cardKeyPrefix + "wear.empty", "対象はフォロワーを装着していません");
+        add(cardKeyPrefix + "wear.locked", "呪いなどの効果により対象の頭装備を変更できません");
         addItem(CatBurgerItems.CAT_BURGER, "猫バーガー");
 
         add(TooltipUtil.TOOLTIP_PREFIX + "shift_hint", "[%s]を押して詳細を表示");
         add(TooltipUtil.TOOLTIP_PREFIX + "hint.shift", "Shift");
 
         String itemKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.CAT_BURGER.get());
-        add(itemKeyPrefix + "description.0", "にゃー!");
+        add(itemKeyPrefix + "flavor_text", "にゃー!");
         add(itemKeyPrefix + "effect.food_level_restoration", "装備中、%s秒ごとに満腹度を%s回復し、最大%sまで回復する");
         add(itemKeyPrefix + "effect.food_level_restoration.every_tick", "装備中、毎tick満腹度を%s回復し、最大%sまで回復する");
         add(itemKeyPrefix + "effect.death_protection.restore_health_percentage", "致死ダメージを受けると死亡保護が発動し、体力が最大体力の%s%%まで回復");
@@ -284,7 +380,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addItem(CatBurgerItems.BLUB, "ジェリーバニー");
 
         String blubKeyPrefix = TooltipUtil.itemKeyPrefix(CatBurgerItems.BLUB.get());
-        add(blubKeyPrefix + "description.0", "ぷるん");
+        add(blubKeyPrefix + "flavor_text", "ぷるん");
         add(blubKeyPrefix + "effect.tick_effects.entry", "装備中、%1$s秒ごとに%2$s（%3$s秒間）を付与する");
         add(blubKeyPrefix + "effect.tick_effects.entry.every_tick", "装備中、毎tick %1$s（%2$s秒間）を付与する");
         add(blubKeyPrefix + "effect.death_protection.restore_health_percentage", "致死ダメージを受けると死亡保護が発動し、体力が最大体力の%s%%まで回復");
@@ -301,6 +397,9 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         add(blubKeyPrefix + "effect.death_protection.wake_up", "起床すると死亡保護のクールダウンがリセットされる");
 
         addConfig("title", "猫バーガーの設定");
+
+        addConfig("petConfigSyncEnabled", "ペット設定同期", "有効にするとプレイヤーのレンダリング設定がペットにコピーされる。設定変更のたびに全ディメンションとエンティティを走査するため、プレイヤーやMobが多いとラグの原因になる。慎重に有効化すること");
+        addConfig("mobActiveWearEnabled", "Mobの自発的な装着を有効化", "Mobがフォロワーを自ら装備できるようにする");
 
         addConfigGroup("DeathProtectionCooldown", "死亡保護のクールダウン", "死亡保護のクールダウン、全てのフォロワーに適用");
         addConfig("cooldownDuration", "クールダウン時間", "死亡保護が再び発動するまでのtick数、0でクールダウンなし");
@@ -330,20 +429,18 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfig("affectPets", "ペットに影響", "手懐けたペット（飼い主のいるMob）が影響を受けるかどうか");
         addConfig("affectOtherMobs", "その他のMobに影響", "装備者でもプレイヤーでも手懐けたペットでもないMobが影響を受けるかどうか");
 
-        addConfigGroup("MobActiveWear", "Mobの自発的な装着", "Mobがフォロワーを自ら装備できるかどうか");
-        addConfig("mobActiveWearEnabled", "Mobの自発的な装着を有効化", "Mobがフォロワーを自ら装備できるようにする");
+        addConfig("entityDataFallback", "エンティティデータのフォールバック", "自身のレンダリング設定を持たない生物がどこから値を取るか");
+        addEntityDataFallbacks("ローカル値", "設定デフォルト");
 
         addConfigGroup("MultipleFollowers", "複数のフォロワー", "同じ装備者が複数のフォロワーを装備した時の並べ方");
         addConfig("followerRenderMode", "配置方式", "独立は設定位置の周りに緩く散らばり、編隊は尻尾のように一列に並んで前のフォロワーを追う");
         addFollowerRenderModes("独立", "編隊");
         addConfig("deduplicateRendering", "描画の重複排除", "同じフォロワーを複数のスロットに装備した時は1つだけ描画する");
         addConfig("independentFloat", "個別の浮遊", "フォロワーごとに浮遊のリズムと周期を変え、同期して浮遊しないようにする");
-
         addConfigGroup("IndependentMode", "独立モード", "独立モードの設定、各フォロワーが個別に漂う");
         addConfig("minSpacing", "最小間隔", "フォロワー同士の最小間隔、ブロック数");
         addConfig("maxSpacing", "最大間隔", "フォロワー同士の最大間隔、ブロック数");
         addConfig("maxRadius", "活動半径", "フォロワーと装着者との最大水平距離、ブロック数、独立モードのみ有効");
-
         addConfigGroup("FormationMode", "編隊モード", "編隊モードの設定、複数のフォロワーが尻尾のように一列に並ぶ");
         addConfig("formationSpacing", "編隊の間隔", "各フォロワーと前のフォロワーとの間隔、ブロック数");
         addConfig("formationMaxLagDistance", "編隊の最大遅延距離", "各フォロワーが前のフォロワーから編隊の間隔を超えて引き離される最大のブロック数、0で間隔を超えない；装備者の体にめり込まないよう、さらに装備者の半径ほど押し出されることがある");
@@ -390,7 +487,7 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
      */
     private void addFollowerRenderModes(String independent, String formation) {
         for (FollowerRenderMode renderMode : FollowerRenderMode.values()) {
-            addConfig("followerRenderMode." + renderMode.getSerializedName(), switch (renderMode) {
+            add(renderMode.getTranslationKey(), switch (renderMode) {
                 case INDEPENDENT -> independent;
                 case FORMATION -> formation;
             });
@@ -402,9 +499,21 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
      */
     private void addFormationGazeTargets(String wearerView, String frontFollower) {
         for (FormationGazeTarget gazeTarget : FormationGazeTarget.values()) {
-            addConfig("formationGazeTarget." + gazeTarget.getSerializedName(), switch (gazeTarget) {
+            add(gazeTarget.getTranslationKey(), switch (gazeTarget) {
                 case WEARER_VIEW -> wearerView;
                 case FRONT_FOLLOWER -> frontFollower;
+            });
+        }
+    }
+
+    /**
+     * 为回退来源枚举的每个常量写入显示名，穷尽 switch 使新增常量时编译失败以强制补译名。
+     */
+    private void addEntityDataFallbacks(String local, String configDefault) {
+        for (EntityDataFallback fallback : EntityDataFallback.values()) {
+            add(fallback.getTranslationKey(), switch (fallback) {
+                case LOCAL -> local;
+                case CONFIG_DEFAULT -> configDefault;
             });
         }
     }

@@ -7,6 +7,20 @@ import java.util.List;
 public class CatBurgerServerConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
+    public static final ModConfigSpec.BooleanValue PET_CONFIG_SYNC_ENABLED = BUILDER
+            .comment("Whether the follower render settings of a player are copied to their pets; the server walks every level and entity on every config change, which can lag with many players and mobs, enable with care")
+            .define(
+                    "petConfigSyncEnabled",
+                    false
+            );
+
+    public static final ModConfigSpec.BooleanValue MOB_ACTIVE_WEAR_ENABLED = BUILDER
+            .comment("Whether mobs can actively wear followers")
+            .define(
+                    "mobActiveWearEnabled",
+                    false
+            );
+
     public static final ModConfigSpec.IntValue COOLDOWN_DURATION = BUILDER
             .comment("Death protection cooldown, applies to every follower")
             .push("DeathProtectionCooldown")
@@ -219,18 +233,5 @@ public class CatBurgerServerConfig {
                     ConfiguredEffect::isValidElement
             );
 
-    public static final ModConfigSpec.BooleanValue MOB_ACTIVE_WEAR_ENABLED = BUILDER
-            .pop()
-            .pop()
-            .pop()
-            .pop()
-            .comment("Whether mobs can actively wear followers")
-            .push("MobActiveWear")
-            .comment("Allow mobs to actively wear followers")
-            .define(
-                    "mobActiveWearEnabled",
-                    false
-            );
-
-    public static final ModConfigSpec SPEC = BUILDER.pop().build();
+    public static final ModConfigSpec SPEC = BUILDER.pop().pop().pop().pop().build();
 }
