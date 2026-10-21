@@ -1,6 +1,7 @@
 package net.zhaiji.catburger.item;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.PacketDistributor;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
+import net.zhaiji.catburger.compat.CompatManager;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.config.FollowerConfigMode;
 import net.zhaiji.catburger.init.CatBurgerAttachmentTypes;
@@ -237,6 +239,9 @@ public class FollowerConfigCardItem extends Item {
         if (CatBurgerServerConfig.PET_CONFIG_SYNC_ENABLED.get()) {
             effectLines.add(TooltipUtil.effectLine(Component.translatable(keyPrefix + "effect.pet_sync_notice")));
         }
+        MutableComponent maidLine = Component.empty().append(Component.translatable(keyPrefix + "effect.maid_death_protection"));
+        if (CompatManager.TLM_LOADED) maidLine.append(Component.translatable(keyPrefix + "effect.maid_compat"));
+        effectLines.add(TooltipUtil.effectLine(maidLine));
         effectLines.add(modeEffectLine(keyPrefix, FollowerConfigMode.ADD, "effect.add.write"));
         effectLines.add(modeEffectLine(keyPrefix, FollowerConfigMode.ADD, "effect.add.copy"));
         effectLines.add(modeEffectLine(keyPrefix, FollowerConfigMode.REMOVE, "effect.remove.clear"));
