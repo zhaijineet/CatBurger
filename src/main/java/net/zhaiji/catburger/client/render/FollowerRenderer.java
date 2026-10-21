@@ -1,5 +1,6 @@
 package net.zhaiji.catburger.client.render;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
@@ -19,6 +20,7 @@ import net.zhaiji.catburger.capability.FollowerRenderData;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.util.WornFollower;
 import org.joml.Vector3f;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +48,8 @@ public class FollowerRenderer {
     }
 
     /**
-     * 渲染一名佩戴者身上的全部可渲染跟随者：去重后独立模式求一份散布布局逐件渲染，编队模式由尾巴逐节渲染。
+     * 渲染一名佩戴者身上的全部跟随者：去重后独立模式求一份散布布局逐件渲染，编队模式由尾巴逐节渲染；
+     * 背包预览时在绘制后清一次深度缓冲，避免模型挡住后画的界面元素。
      */
     public static void renderAll(
             LivingEntity livingEntity,
@@ -74,34 +77,40 @@ public class FollowerRenderer {
 
         if (renderParams.getRenderMode() == FollowerRenderMode.FORMATION) {
             renderFormation(livingEntity, renderedFollowers, renderParams, displaySize, poseStack, buffer, packedLight, partialTicks);
-            return;
+        } else {
+            FollowerStateHolder followerStateHolder = (FollowerStateHolder) livingEntity;
+            double[] layout = followerStateHolder.catburger$layout();
+            // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界；
+            // 能力实例可能原地改写使引用不变，因此引用相同时还要比 revision；CONFIG_DEFAULTS 与本地回退实例不会原地改写
+            if (followerStateHolder.catburger$layoutParams() != renderParams
+                    || followerStateHolder.catburger$layoutRevision() != renderParams.getRevision()
+                    || followerStateHolder.catburger$layoutDisplaySize() != displaySize
+                    || layout.length != renderedFollowers.size() * 3) {
+                layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);
+                followerStateHolder.catburger$setLayout(renderParams, displaySize, layout);
+            }
+            for (int index = 0; index < renderedFollowers.size(); index++) {
+                renderOne(
+                        livingEntity,
+                        renderedFollowers.get(index),
+                        layout[index * 3],
+                        layout[index * 3 + 1],
+                        layout[index * 3 + 2],
+                        displaySize,
+                        renderParams,
+                        poseStack,
+                        buffer,
+                        packedLight,
+                        partialTicks
+                );
+            }
         }
 
-        FollowerStateHolder followerStateHolder = (FollowerStateHolder) livingEntity;
-        double[] layout = followerStateHolder.catburger$layout();
-        // 去重开关或资源重载会改变参与渲染的件数，长度不符时必须重算，否则逐件取偏移会越界；
-        // 能力实例可能原地改写使引用不变，因此引用相同时还要比 revision；CONFIG_DEFAULTS 与本地回退实例不会原地改写
-        if (followerStateHolder.catburger$layoutParams() != renderParams
-                || followerStateHolder.catburger$layoutRevision() != renderParams.getRevision()
-                || followerStateHolder.catburger$layoutDisplaySize() != displaySize
-                || layout.length != renderedFollowers.size() * 3) {
-            layout = FollowerLayout.scatter(livingEntity, renderedFollowers, renderParams, displaySize);
-            followerStateHolder.catburger$setLayout(renderParams, displaySize, layout);
-        }
-        for (int index = 0; index < renderedFollowers.size(); index++) {
-            renderOne(
-                    livingEntity,
-                    renderedFollowers.get(index),
-                    layout[index * 3],
-                    layout[index * 3 + 1],
-                    layout[index * 3 + 2],
-                    displaySize,
-                    renderParams,
-                    poseStack,
-                    buffer,
-                    packedLight,
-                    partialTicks
-            );
+        // 预览里的跟随者照常写深度，绘制完清掉深度缓冲，让后画的界面元素不再被模型挡住；
+        // 必须用endBatch()而不是endLastBatch()：glint等固定缓冲里的批次要赶在clear之前绘制，否则光效的等值深度测试对不上
+        if (renderingInventoryPreview) {
+            ((MultiBufferSource.BufferSource) buffer).endBatch();
+            RenderSystem.clear(GL11.GL_DEPTH_BUFFER_BIT, Minecraft.ON_OSX);
         }
     }
 
