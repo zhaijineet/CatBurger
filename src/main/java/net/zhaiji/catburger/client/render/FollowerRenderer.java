@@ -9,10 +9,9 @@ import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.util.FollowerUtil;
 import net.zhaiji.catburger.util.WornFollower;
@@ -20,10 +19,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class FollowerRenderer {
     // 背包等界面预览期间的佩戴者，由 InventoryScreenMixin 在抽取预览渲染状态的那个方法前后置位与复位，
@@ -207,9 +204,10 @@ public class FollowerRenderer {
     }
 
     /**
-     * 取参与渲染的跟随者：跳过不可渲染的槽位，顺带按刻抽取物品渲染状态，
-     * 开启去重时按“物品 + 解析出的模型身份”只保留顺序最靠前的一件。
-     * 已知局限：模型身份只覆盖物品模型实例、附魔光效与染色值，资源重载后实例重建，跨重载不可比。
+     * 取参与渲染的跟随者：跳过不可渲染的槽位并顺带按刻抽取物品渲染状态，按渲染外观在“模型 + 各染色值”分组内取舍，
+     * 输出顺序始终与佩戴顺序一致。
+     * 已知局限：自定义渲染器物品的外观不由主模型与染色决定，可能把不同外观合并；
+     * 资源重载后模型实例重建，跨重载不可比。
      */
     private static List<WornFollower> selectRendered(
             LivingEntity livingEntity,
@@ -218,23 +216,70 @@ public class FollowerRenderer {
             FollowerRenderData renderParams,
             boolean preview
     ) {
-        List<WornFollower> renderedFollowers = new ArrayList<>(wornFollowers.size());
-        Map<Item, Set<Object>> renderedModels = new HashMap<>();
+        List<WornFollower> renderableFollowers = new ArrayList<>(wornFollowers.size());
+        List<FollowerState> followerStates = new ArrayList<>(wornFollowers.size());
         for (WornFollower wornFollower : wornFollowers) {
             if (!wornFollower.renderable()) continue;
             FollowerState followerState = FollowerState.of(livingEntity, renderState, wornFollower.slotKey(), renderParams, preview);
-            ItemStack itemStack = wornFollower.itemStack();
-            followerState.extractItem(itemStack, renderParams, renderState);
-            if (renderParams.isDeduplicateRendering()) {
-                Item item = itemStack.getItem();
-                Object modelIdentity = followerState.itemRenderState().getModelIdentity();
-                if (!renderedModels.computeIfAbsent(item, key -> new HashSet<>()).add(modelIdentity)) continue;
-            }
-
-            renderedFollowers.add(wornFollower);
+            followerState.extractItem(wornFollower.itemStack(), renderParams, renderState);
+            renderableFollowers.add(wornFollower);
+            followerStates.add(followerState);
         }
 
+        DeduplicateMode deduplicateMode = renderParams.getDeduplicateMode();
+        if (deduplicateMode == DeduplicateMode.OFF || renderableFollowers.size() < 2) return renderableFollowers;
+
+        List<List<Object>> appearanceKeys = new ArrayList<>(renderableFollowers.size());
+        for (FollowerState followerState : followerStates) {
+            appearanceKeys.add(appearanceKeyOf(followerState));
+        }
+
+        Map<List<Object>, WornFollower> plainFirstFollowers = new HashMap<>();
+        Map<List<Object>, WornFollower> glintFirstFollowers = new HashMap<>();
+        for (int index = 0; index < renderableFollowers.size(); index++) {
+            WornFollower wornFollower = renderableFollowers.get(index);
+            List<Object> appearanceKey = appearanceKeys.get(index);
+            if (wornFollower.itemStack().hasFoil()) {
+                glintFirstFollowers.putIfAbsent(appearanceKey, wornFollower);
+            } else {
+                plainFirstFollowers.putIfAbsent(appearanceKey, wornFollower);
+            }
+        }
+
+        List<WornFollower> renderedFollowers = new ArrayList<>(renderableFollowers.size());
+        for (int index = 0; index < renderableFollowers.size(); index++) {
+            WornFollower wornFollower = renderableFollowers.get(index);
+            List<Object> appearanceKey = appearanceKeys.get(index);
+            WornFollower plainFirst = plainFirstFollowers.get(appearanceKey);
+            WornFollower glintFirst = glintFirstFollowers.get(appearanceKey);
+            if (isSelected(plainFirst, glintFirst, wornFollower.itemStack().hasFoil(), wornFollower, deduplicateMode)) {
+                renderedFollowers.add(wornFollower);
+            }
+        }
         return renderedFollowers;
+    }
+
+    /**
+     * 按渲染外观生成去重键：取抽取出的渲染状态身份，剔除其中的附魔光效，光效由调用方单独分档。
+     */
+    private static List<Object> appearanceKeyOf(FollowerState followerState) {
+        List<Object> appearanceElements = new ArrayList<>();
+        for (Object element : (List<?>) followerState.itemRenderState().getModelIdentity()) {
+            if (!(element instanceof ItemStackRenderState.FoilType)) appearanceElements.add(element);
+        }
+        return appearanceElements;
+    }
+
+    /**
+     * 判断某一件在分组内是否被该档位选中。
+     */
+    private static boolean isSelected(WornFollower plainFirst, WornFollower glintFirst, boolean glint, WornFollower current, DeduplicateMode deduplicateMode) {
+        return switch (deduplicateMode) {
+            case SPLIT_BY_GLINT -> glint ? glintFirst == current : plainFirst == current;
+            case PREFER_NO_GLINT -> plainFirst != null ? plainFirst == current : glintFirst == current;
+            case PREFER_GLINT -> glintFirst != null ? glintFirst == current : plainFirst == current;
+            case OFF -> true;
+        };
     }
 
     /**

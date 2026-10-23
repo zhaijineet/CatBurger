@@ -14,6 +14,7 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.util.ValueIOSerializable;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
 
@@ -44,7 +45,7 @@ public class FollowerRenderData implements ValueIOSerializable {
     );
 
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
-    private boolean deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
+    private DeduplicateMode deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.getDefault();
     private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
     private double minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
     private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
@@ -80,7 +81,7 @@ public class FollowerRenderData implements ValueIOSerializable {
     public static FollowerRenderData fromClientConfig() {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
-        data.deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        data.deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.get();
         data.independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
         data.minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
         data.maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
@@ -185,7 +186,7 @@ public class FollowerRenderData implements ValueIOSerializable {
 
     private static void encode(RegistryFriendlyByteBuf buf, FollowerRenderData data) {
         FollowerRenderMode.STREAM_CODEC.encode(buf, data.renderMode);
-        buf.writeBoolean(data.deduplicateRendering);
+        DeduplicateMode.STREAM_CODEC.encode(buf, data.deduplicateMode);
         buf.writeBoolean(data.independentFloat);
         buf.writeDouble(data.minSpacing);
         buf.writeDouble(data.maxSpacing);
@@ -214,7 +215,7 @@ public class FollowerRenderData implements ValueIOSerializable {
     private static FollowerRenderData decode(RegistryFriendlyByteBuf buf) {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = FollowerRenderMode.STREAM_CODEC.decode(buf);
-        data.deduplicateRendering = buf.readBoolean();
+        data.deduplicateMode = DeduplicateMode.STREAM_CODEC.decode(buf);
         data.independentFloat = buf.readBoolean();
         data.minSpacing = buf.readDouble();
         data.maxSpacing = buf.readDouble();
@@ -244,7 +245,7 @@ public class FollowerRenderData implements ValueIOSerializable {
     @Override
     public void serialize(ValueOutput output) {
         output.putString("renderMode", renderMode.getSerializedName());
-        output.putBoolean("deduplicateRendering", deduplicateRendering);
+        output.putString("deduplicateMode", deduplicateMode.getSerializedName());
         output.putBoolean("independentFloat", independentFloat);
         output.putDouble("minSpacing", minSpacing);
         output.putDouble("maxSpacing", maxSpacing);
@@ -276,7 +277,7 @@ public class FollowerRenderData implements ValueIOSerializable {
     @Override
     public void deserialize(ValueInput input) {
         input.getString("renderMode").ifPresent(name -> renderMode = FollowerRenderMode.byName(name));
-        deduplicateRendering = input.getBooleanOr("deduplicateRendering", deduplicateRendering);
+        input.getString("deduplicateMode").ifPresent(name -> deduplicateMode = DeduplicateMode.byName(name));
         independentFloat = input.getBooleanOr("independentFloat", independentFloat);
         minSpacing = input.getDoubleOr("minSpacing", minSpacing);
         maxSpacing = input.getDoubleOr("maxSpacing", maxSpacing);
@@ -370,8 +371,8 @@ public class FollowerRenderData implements ValueIOSerializable {
         return gazeAtViewTarget;
     }
 
-    public boolean isDeduplicateRendering() {
-        return deduplicateRendering;
+    public DeduplicateMode getDeduplicateMode() {
+        return deduplicateMode;
     }
 
     public boolean isIndependentFloat() {

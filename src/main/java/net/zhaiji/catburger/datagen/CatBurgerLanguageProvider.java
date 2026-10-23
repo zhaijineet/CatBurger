@@ -3,6 +3,7 @@ package net.zhaiji.catburger.datagen;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.LanguageProvider;
 import net.zhaiji.catburger.CatBurger;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.EntityDataFallback;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
@@ -131,7 +132,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("MultipleFollowers", "Multiple Followers", "How multiple followers worn by the same wearer are arranged");
         addConfig("followerRenderMode", "Render Mode", "Independent scatters them loosely around the configured position, formation lines them up in a tail where each follows the one ahead");
         addFollowerRenderModes("Independent", "Formation");
-        addConfig("deduplicateRendering", "Deduplicate Rendering", "Render only one follower of each kind when the same follower is worn in several slots");
+        addConfig("deduplicateMode", "Deduplicate Rendering", "How duplicates of the same item worn in several slots are resolved, split by glint keeps one of each glint state while the prefer modes keep only the stated one");
+        addDeduplicateModes("Off", "Split by Glint", "Prefer No Glint", "Prefer Glint");
         addConfig("independentFloat", "Independent Float", "Give each follower its own float rhythm and period instead of floating in sync");
         addConfigGroup("IndependentMode", "Independent Mode", "Settings for independent mode, where each follower drifts on its own");
         addConfig("minSpacing", "Min Spacing", "Minimum blocks between followers");
@@ -286,7 +288,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("MultipleFollowers", "多件追随者", "同一佩戴者佩戴多件追随者时的排布");
         addConfig("followerRenderMode", "排布方式", "独立让各件围绕配置位置松散散开，编队让它们排成一条尾巴、每件跟随前一件");
         addFollowerRenderModes("独立", "编队");
-        addConfig("deduplicateRendering", "渲染去重", "同一种追随者戴在多个槽位时只渲染一件");
+        addConfig("deduplicateMode", "渲染去重", "同一物品戴在多个槽位时如何取舍：区分附魔光效按有无附魔光效各保留一件，优先档位只保留对应档位的一件");
+        addDeduplicateModes("关闭", "区分附魔光效", "优先无附魔光效", "优先有附魔光效");
         addConfig("independentFloat", "独立浮动", "每件追随者使用各自的浮动节奏与周期，而不是同步上下浮动");
         addConfigGroup("IndependentMode", "独立模式", "独立模式的设置，每件追随者各自漂移");
         addConfig("minSpacing", "最小间距", "追随者之间的最小间距，单位为格");
@@ -441,7 +444,8 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
         addConfigGroup("MultipleFollowers", "複数のフォロワー", "同じ装備者が複数のフォロワーを装備した時の並べ方");
         addConfig("followerRenderMode", "配置方式", "独立は設定位置の周りに緩く散らばり、編隊は尻尾のように一列に並んで前のフォロワーを追う");
         addFollowerRenderModes("独立", "編隊");
-        addConfig("deduplicateRendering", "描画の重複排除", "同じフォロワーを複数のスロットに装備した時は1つだけ描画する");
+        addConfig("deduplicateMode", "描画の重複排除", "同じアイテムを複数のスロットに装備した時の扱い：オーラで区別するとオーラの有無ごとに1つずつ描画し、優先設定では指定した側だけを描画する");
+        addDeduplicateModes("オフ", "オーラで区別", "オーラなしを優先", "オーラありを優先");
         addConfig("independentFloat", "個別の浮遊", "フォロワーごとに浮遊のリズムと周期を変え、同期して浮遊しないようにする");
         addConfigGroup("IndependentMode", "独立モード", "独立モードの設定、各フォロワーが個別に漂う");
         addConfig("minSpacing", "最小間隔", "フォロワー同士の最小間隔、ブロック数");
@@ -520,6 +524,20 @@ public class CatBurgerLanguageProvider extends LanguageProvider {
             add(fallback.getTranslationKey(), switch (fallback) {
                 case LOCAL -> local;
                 case CONFIG_DEFAULT -> configDefault;
+            });
+        }
+    }
+
+    /**
+     * 为去重档位枚举的每个常量写入显示名，穷尽 switch 使新增常量时编译失败以强制补译名。
+     */
+    private void addDeduplicateModes(String off, String splitByGlint, String preferNoGlint, String preferGlint) {
+        for (DeduplicateMode deduplicateMode : DeduplicateMode.values()) {
+            add(deduplicateMode.getTranslationKey(), switch (deduplicateMode) {
+                case OFF -> off;
+                case SPLIT_BY_GLINT -> splitByGlint;
+                case PREFER_NO_GLINT -> preferNoGlint;
+                case PREFER_GLINT -> preferGlint;
             });
         }
     }
