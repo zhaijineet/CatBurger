@@ -9,6 +9,7 @@ import net.minecraft.util.Mth;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.util.INBTSerializable;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
 
@@ -39,7 +40,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     );
 
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
-    private boolean deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
+    private DeduplicateMode deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.getDefault();
     private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
     private double minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
     private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
@@ -75,7 +76,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public static FollowerRenderData fromClientConfig() {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
-        data.deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        data.deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.get();
         data.independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
         data.minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
         data.maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
@@ -174,7 +175,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
 
     private static void encode(RegistryFriendlyByteBuf buf, FollowerRenderData data) {
         FollowerRenderMode.STREAM_CODEC.encode(buf, data.renderMode);
-        buf.writeBoolean(data.deduplicateRendering);
+        DeduplicateMode.STREAM_CODEC.encode(buf, data.deduplicateMode);
         buf.writeBoolean(data.independentFloat);
         buf.writeDouble(data.minSpacing);
         buf.writeDouble(data.maxSpacing);
@@ -203,7 +204,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     private static FollowerRenderData decode(RegistryFriendlyByteBuf buf) {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = FollowerRenderMode.STREAM_CODEC.decode(buf);
-        data.deduplicateRendering = buf.readBoolean();
+        data.deduplicateMode = DeduplicateMode.STREAM_CODEC.decode(buf);
         data.independentFloat = buf.readBoolean();
         data.minSpacing = buf.readDouble();
         data.maxSpacing = buf.readDouble();
@@ -234,7 +235,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public CompoundTag serializeNBT(HolderLookup.Provider provider) {
         CompoundTag tag = new CompoundTag();
         tag.putString("renderMode", renderMode.getSerializedName());
-        tag.putBoolean("deduplicateRendering", deduplicateRendering);
+        tag.putString("deduplicateMode", deduplicateMode.getSerializedName());
         tag.putBoolean("independentFloat", independentFloat);
         tag.putDouble("minSpacing", minSpacing);
         tag.putDouble("maxSpacing", maxSpacing);
@@ -264,7 +265,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     @Override
     public void deserializeNBT(HolderLookup.Provider provider, CompoundTag tag) {
         if (tag.contains("renderMode")) renderMode = FollowerRenderMode.byName(tag.getString("renderMode"));
-        if (tag.contains("deduplicateRendering")) deduplicateRendering = tag.getBoolean("deduplicateRendering");
+        if (tag.contains("deduplicateMode")) deduplicateMode = DeduplicateMode.byName(tag.getString("deduplicateMode"));
         if (tag.contains("independentFloat")) independentFloat = tag.getBoolean("independentFloat");
         if (tag.contains("minSpacing")) minSpacing = tag.getDouble("minSpacing");
         if (tag.contains("maxSpacing")) maxSpacing = tag.getDouble("maxSpacing");
@@ -358,8 +359,8 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         return gazeAtViewTarget;
     }
 
-    public boolean isDeduplicateRendering() {
-        return deduplicateRendering;
+    public DeduplicateMode getDeduplicateMode() {
+        return deduplicateMode;
     }
 
     public boolean isIndependentFloat() {

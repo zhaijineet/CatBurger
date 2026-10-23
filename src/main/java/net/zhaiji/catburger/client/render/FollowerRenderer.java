@@ -4,11 +4,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.color.item.ItemColors;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
@@ -18,8 +20,10 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.zhaiji.catburger.attachment.FollowerRenderData;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.util.WornFollower;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
@@ -172,30 +176,93 @@ public class FollowerRenderer {
     }
 
     /**
-     * 取参与渲染的跟随者：跳过不可渲染的槽位，开启去重时按“物品 + 解析出的模型实例”只保留顺序最靠前的一件。
-     * 已知局限：只换颜色不换模型会被误合并；资源重载后模型实例重建，跨重载不可比。
+     * 取参与渲染的跟随者：跳过不可渲染的槽位，按渲染外观在“模型实例 + 各染色索引颜色”分组内取舍，
+     * 输出顺序始终与佩戴顺序一致。
+     * 已知局限：多渲染通道模型中不在主模型上的颜色不会被采集；自定义渲染器物品的外观不由主模型与染色决定，可能把不同外观合并；
+     * 资源重载后模型实例重建，跨重载不可比。
      */
     private static List<WornFollower> selectRendered(
             LivingEntity livingEntity,
             List<WornFollower> wornFollowers,
             FollowerRenderData renderParams
     ) {
-        List<WornFollower> renderedFollowers = new ArrayList<>(wornFollowers.size());
-        Map<Item, Set<BakedModel>> renderedModels = new HashMap<>();
+        List<WornFollower> renderableFollowers = new ArrayList<>(wornFollowers.size());
         for (WornFollower wornFollower : wornFollowers) {
-            if (!wornFollower.renderable()) continue;
-            if (renderParams.isDeduplicateRendering()) {
-                ItemStack itemStack = wornFollower.itemStack();
-                BakedModel model = Minecraft.getInstance().getItemRenderer()
-                        .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId() + ItemDisplayContext.HEAD.ordinal());
-                Item item = itemStack.getItem();
-                if (!renderedModels.computeIfAbsent(item, key -> new HashSet<>()).add(model)) continue;
-            }
-
-            renderedFollowers.add(wornFollower);
+            if (wornFollower.renderable()) renderableFollowers.add(wornFollower);
         }
 
+        DeduplicateMode deduplicateMode = renderParams.getDeduplicateMode();
+        if (deduplicateMode == DeduplicateMode.OFF || renderableFollowers.size() < 2) return renderableFollowers;
+
+        Map<RenderAppearanceKey, WornFollower> plainFirstFollowers = new HashMap<>();
+        Map<RenderAppearanceKey, WornFollower> glintFirstFollowers = new HashMap<>();
+        List<RenderAppearanceKey> appearanceKeys = new ArrayList<>(renderableFollowers.size());
+        for (WornFollower wornFollower : renderableFollowers) {
+            ItemStack itemStack = wornFollower.itemStack();
+            RenderAppearanceKey appearanceKey = appearanceKeyOf(livingEntity, itemStack);
+            appearanceKeys.add(appearanceKey);
+            if (itemStack.hasFoil()) {
+                glintFirstFollowers.putIfAbsent(appearanceKey, wornFollower);
+            } else {
+                plainFirstFollowers.putIfAbsent(appearanceKey, wornFollower);
+            }
+        }
+
+        List<WornFollower> renderedFollowers = new ArrayList<>(renderableFollowers.size());
+        for (int index = 0; index < renderableFollowers.size(); index++) {
+            WornFollower wornFollower = renderableFollowers.get(index);
+            RenderAppearanceKey appearanceKey = appearanceKeys.get(index);
+            WornFollower plainFirst = plainFirstFollowers.get(appearanceKey);
+            WornFollower glintFirst = glintFirstFollowers.get(appearanceKey);
+            if (isSelected(plainFirst, glintFirst, wornFollower.itemStack().hasFoil(), wornFollower, deduplicateMode)) {
+                renderedFollowers.add(wornFollower);
+            }
+        }
         return renderedFollowers;
+    }
+
+    /**
+     * 按渲染外观生成去重键：模型实例加上模型里每个染色索引在该物品上的颜色，光效由调用方单独分档。
+     */
+    private static RenderAppearanceKey appearanceKeyOf(LivingEntity livingEntity, ItemStack itemStack) {
+        BakedModel model = Minecraft.getInstance().getItemRenderer()
+                .getModel(itemStack, livingEntity.level(), livingEntity, livingEntity.getId() + ItemDisplayContext.HEAD.ordinal());
+        Set<Integer> tintIndices = new HashSet<>();
+        RandomSource randomSource = RandomSource.create();
+        for (Direction direction : Direction.values()) {
+            randomSource.setSeed(42);
+            collectTintIndices(model, direction, randomSource, tintIndices);
+        }
+        randomSource.setSeed(42);
+        collectTintIndices(model, null, randomSource, tintIndices);
+
+        ItemColors itemColors = Minecraft.getInstance().getItemColors();
+        List<Integer> colors = new ArrayList<>(tintIndices.size());
+        for (int tintIndex : tintIndices) {
+            colors.add(itemColors.getColor(itemStack, tintIndex));
+        }
+        return new RenderAppearanceKey(model, colors);
+    }
+
+    /**
+     * 收集一个方向上全部带染色索引的四边形，索引放进入参集合。
+     */
+    private static void collectTintIndices(BakedModel model, @Nullable Direction direction, RandomSource randomSource, Set<Integer> tintIndices) {
+        for (BakedQuad quad : model.getQuads(null, direction, randomSource, ModelData.EMPTY, null)) {
+            if (quad.isTinted()) tintIndices.add(quad.getTintIndex());
+        }
+    }
+
+    /**
+     * 判断某一件在分组内是否被该档位选中。
+     */
+    private static boolean isSelected(WornFollower plainFirst, WornFollower glintFirst, boolean glint, WornFollower current, DeduplicateMode deduplicateMode) {
+        return switch (deduplicateMode) {
+            case SPLIT_BY_GLINT -> glint ? glintFirst == current : plainFirst == current;
+            case PREFER_NO_GLINT -> plainFirst != null ? plainFirst == current : glintFirst == current;
+            case PREFER_GLINT -> glintFirst != null ? glintFirst == current : plainFirst == current;
+            case OFF -> true;
+        };
     }
 
     /**
