@@ -6,6 +6,7 @@ import net.minecraft.util.Mth;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
 
@@ -19,7 +20,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public static final FollowerRenderData CONFIG_DEFAULTS = new FollowerRenderData();
 
     private FollowerRenderMode renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
-    private boolean deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
+    private DeduplicateMode deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.getDefault();
     private boolean independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
     private double minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
     private double maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
@@ -89,7 +90,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public static FollowerRenderData fromClientConfig() {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.get();
-        data.deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.get();
+        data.deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.get();
         data.independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.get();
         data.minSpacing = CatBurgerClientConfig.MIN_SPACING.get();
         data.maxSpacing = CatBurgerClientConfig.MAX_SPACING.get();
@@ -129,7 +130,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
      */
     public void markUnsynced() {
         renderMode = CatBurgerClientConfig.FOLLOWER_RENDER_MODE.getDefault();
-        deduplicateRendering = CatBurgerClientConfig.DEDUPLICATE_RENDERING.getDefault();
+        deduplicateMode = CatBurgerClientConfig.DEDUPLICATE_MODE.getDefault();
         independentFloat = CatBurgerClientConfig.INDEPENDENT_FLOAT.getDefault();
         minSpacing = CatBurgerClientConfig.MIN_SPACING.getDefault();
         maxSpacing = CatBurgerClientConfig.MAX_SPACING.getDefault();
@@ -194,7 +195,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
      */
     public void encode(FriendlyByteBuf buf) {
         buf.writeEnum(renderMode);
-        buf.writeBoolean(deduplicateRendering);
+        buf.writeEnum(deduplicateMode);
         buf.writeBoolean(independentFloat);
         buf.writeDouble(minSpacing);
         buf.writeDouble(maxSpacing);
@@ -223,7 +224,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public static FollowerRenderData decode(FriendlyByteBuf buf) {
         FollowerRenderData data = new FollowerRenderData();
         data.renderMode = buf.readEnum(FollowerRenderMode.class);
-        data.deduplicateRendering = buf.readBoolean();
+        data.deduplicateMode = buf.readEnum(DeduplicateMode.class);
         data.independentFloat = buf.readBoolean();
         data.minSpacing = buf.readDouble();
         data.maxSpacing = buf.readDouble();
@@ -254,7 +255,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
     public CompoundTag serializeNBT() {
         CompoundTag tag = new CompoundTag();
         tag.putString("renderMode", renderMode.getSerializedName());
-        tag.putBoolean("deduplicateRendering", deduplicateRendering);
+        tag.putString("deduplicateMode", deduplicateMode.getSerializedName());
         tag.putBoolean("independentFloat", independentFloat);
         tag.putDouble("minSpacing", minSpacing);
         tag.putDouble("maxSpacing", maxSpacing);
@@ -288,7 +289,7 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         if (tag.isEmpty()) return;
         synced = true;
         if (tag.contains("renderMode")) renderMode = FollowerRenderMode.byName(tag.getString("renderMode"));
-        if (tag.contains("deduplicateRendering")) deduplicateRendering = tag.getBoolean("deduplicateRendering");
+        if (tag.contains("deduplicateMode")) deduplicateMode = DeduplicateMode.byName(tag.getString("deduplicateMode"));
         if (tag.contains("independentFloat")) independentFloat = tag.getBoolean("independentFloat");
         if (tag.contains("minSpacing")) minSpacing = tag.getDouble("minSpacing");
         if (tag.contains("maxSpacing")) maxSpacing = tag.getDouble("maxSpacing");
@@ -384,8 +385,8 @@ public class FollowerRenderData implements INBTSerializable<CompoundTag> {
         return gazeAtViewTarget;
     }
 
-    public boolean isDeduplicateRendering() {
-        return deduplicateRendering;
+    public DeduplicateMode getDeduplicateMode() {
+        return deduplicateMode;
     }
 
     public boolean isIndependentFloat() {

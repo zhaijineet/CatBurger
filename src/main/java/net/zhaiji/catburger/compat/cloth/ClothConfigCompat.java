@@ -20,6 +20,7 @@ import net.zhaiji.catburger.CatBurger;
 import net.zhaiji.catburger.config.CatBurgerClientConfig;
 import net.zhaiji.catburger.config.CatBurgerServerConfig;
 import net.zhaiji.catburger.config.ConfiguredEffect;
+import net.zhaiji.catburger.config.DeduplicateMode;
 import net.zhaiji.catburger.config.EntityDataFallback;
 import net.zhaiji.catburger.config.FollowerRenderMode;
 import net.zhaiji.catburger.config.FormationGazeTarget;
@@ -182,7 +183,12 @@ public class ClothConfigCompat {
                              .setTooltip(entryTooltip("followerRenderMode"))
                              .setSaveConsumer(CatBurgerClientConfig.FOLLOWER_RENDER_MODE::set)
                              .build(),
-                booleanEntry(entryBuilder, "deduplicateRendering", CatBurgerClientConfig.DEDUPLICATE_RENDERING),
+                entryBuilder.startEnumSelector(entryName("deduplicateMode"), DeduplicateMode.class, CatBurgerClientConfig.DEDUPLICATE_MODE.get())
+                             .setDefaultValue(CatBurgerClientConfig.DEDUPLICATE_MODE.getDefault())
+                             .setEnumNameProvider(deduplicateMode -> Component.translatable(((DeduplicateMode) deduplicateMode).getTranslationKey()))
+                             .setTooltip(entryTooltip("deduplicateMode"))
+                             .setSaveConsumer(CatBurgerClientConfig.DEDUPLICATE_MODE::set)
+                             .build(),
                 booleanEntry(entryBuilder, "independentFloat", CatBurgerClientConfig.INDEPENDENT_FLOAT),
                 independentMode.build(),
                 formationMode.build()

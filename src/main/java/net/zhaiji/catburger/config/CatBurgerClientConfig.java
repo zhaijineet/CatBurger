@@ -60,11 +60,11 @@ public class CatBurgerClientConfig {
                     FollowerRenderMode.INDEPENDENT
             );
 
-    public static final ForgeConfigSpec.BooleanValue DEDUPLICATE_RENDERING = BUILDER
-            .comment("Render only one follower of each kind when the same follower is worn in several slots")
-            .define(
-                    "deduplicateRendering",
-                    true
+    public static final ForgeConfigSpec.EnumValue<DeduplicateMode> DEDUPLICATE_MODE = BUILDER
+            .comment("How duplicates of the same item worn in several slots are resolved, split by glint keeps one of each glint state while the prefer modes keep only the stated one")
+            .defineEnum(
+                    "deduplicateMode",
+                    DeduplicateMode.SPLIT_BY_GLINT
             );
 
     public static final ForgeConfigSpec.BooleanValue INDEPENDENT_FLOAT = BUILDER
