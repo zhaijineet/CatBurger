@@ -94,18 +94,9 @@ minecraft {
             }
         }
 
-        client_1 {
+        client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
-            // 自定义 run 名不会由 ForgeGradle 注入客户端主类，必须显式指定
-            main 'cpw.mods.bootstraplauncher.BootstrapLauncher'
-        }
-
-        client_2 {
-            property 'forge.enabledGameTestNamespaces', mod_id
-            args '--username', 'CIM_LFL'
-            // 自定义 run 名不会由 ForgeGradle 注入客户端主类，必须显式指定
-            main 'cpw.mods.bootstraplauncher.BootstrapLauncher'
         }
 
         server {
